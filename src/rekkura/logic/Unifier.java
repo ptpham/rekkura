@@ -9,7 +9,12 @@ import rekkura.model.Dob;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-public class Unifer {
+/**
+ * This class describes how to transform one dob to match another dob.
+ * @author ptpham
+ *
+ */
+public class Unifier {
 	
 	public Dob replace(Dob base, Map<Dob, Dob> substitution) {
 		if (substitution.containsKey(base)) return substitution.get(base);

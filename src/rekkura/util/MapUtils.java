@@ -16,4 +16,9 @@ public class MapUtils {
 		set.add(val);
 	}
 	
+	public static <U, V> void safeRemove(Map<U, Set<V>> map, U key, V val) {
+		Set<V> set = map.get(key);
+		if (set == null) return;
+		set.remove(val);
+	}
 }

@@ -12,7 +12,7 @@ import com.google.common.collect.Maps;
 
 public class Topper {
 
-	public Unifer unifer = new Unifer();
+	public Unifier unifer = new Unifier();
 	
 	/**
 	 * Computes for each target dob the set of source dobs that unify with it.
