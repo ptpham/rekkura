@@ -34,7 +34,7 @@ public class Fortre {
 	 * @param allVars
 	 */
 	public Fortre(Set<Dob> allVars) {
-		Preconditions.checkArgument(allVars.size() > 0, "No variables provided!");
+		Preconditions.checkArgument(Colut.nonEmpty(allVars), "No variables provided!");
 		this.allVars = allVars;
 		
 		// Pick an arbitrary variable as the root
@@ -76,7 +76,7 @@ public class Fortre {
 	 */
 	public void addDob(Dob dob) {
 		List<Dob> trunk = getUnifyTrunk(dob);
-		Dob end = trunk.get(trunk.size() - 1);
+		Dob end = Colut.end(trunk);
 		Set<Dob> endChildren = this.allChildren.get(end);
 
 		if (trunk.size() == 1 && Colut.nonEmpty(endChildren)) {
