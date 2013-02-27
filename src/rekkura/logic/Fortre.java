@@ -70,7 +70,7 @@ public class Fortre {
 	 * The dob is added at the lowest level such that all of its 
 	 * ancestors unify with it. If there is a non-trivial subset of
 	 * its siblings that unify with it and it does not unify with any
-	 * of its siblings, then the siblings will be added as allChildren 
+	 * of its siblings, then the siblings will be added as children 
 	 * of the new dob. 
 	 * @param dob
 	 */
