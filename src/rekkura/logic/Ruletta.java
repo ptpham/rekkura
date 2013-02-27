@@ -1,7 +1,6 @@
 package rekkura.logic;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,23 +20,12 @@ import com.google.common.collect.Sets;
  */
 public class Ruletta {
 
-	public Pool pool;
 	public Set<Rule> allRules;
 	public Set<Dob> allVars, allDobs, posDobs, negDobs;
 	public Map<Dob, Set<Rule>> bodyToRule, headToRule;
-
-	public Fortre fortre;
-	
-	public Topper toper;
-	public Map<Dob, List<Dob>> deps;
-	
 	
 	public void construct(Collection<Rule> rules) {
-		this.pool = new Pool();
-		this.toper = new Topper();
-		
-		this.allRules = Sets.newHashSetWithExpectedSize(rules.size());
-		for (Rule rule : rules) { this.allRules.add(pool.submerge(rule)); }
+		this.allRules = Sets.newHashSet(rules);
 		
 		this.allVars = Sets.newHashSet();
 		this.allDobs = Sets.newHashSet();
@@ -67,9 +55,6 @@ public class Ruletta {
 				OTMUtil.safePut(this.bodyToRule, body, rule);	
 			}
 		}
-		
-		this.deps = toper.dependencies(headToRule.keySet(), 
-				bodyToRule.keySet(), this.allVars);
 	}
 
 }
