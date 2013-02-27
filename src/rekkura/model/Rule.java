@@ -32,26 +32,7 @@ public class Rule {
 	}
 	
 	public static Iterator<Atom> atomIteratorFromRule(final Rule rule) {
-		return new Iterator<Atom>() {
-			Iterator<Atom> body = rule.body.iterator();
-			Atom head = rule.head;
-			
-			@Override public boolean hasNext() {
-				return body.hasNext() || head != null; 
-			}
-
-			@Override
-			public Atom next() {
-				if (head != null) { 
-					Atom result = head;
-					head = null;
-					return result;
-				}
-				return body.next();
-			}
-
-			@Override public void remove() {}
-		};
+		return Iterators.concat(rule.body.iterator(), Iterators.forArray(rule.head));
 	}
 	
 	public static Iterator<Atom> atomIteratorFromRules(final Collection<Rule> rules) {

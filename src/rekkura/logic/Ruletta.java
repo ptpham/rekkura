@@ -8,7 +8,7 @@ import java.util.Set;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.MapUtils;
+import rekkura.util.OTMUtil;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -21,15 +21,21 @@ import com.google.common.collect.Sets;
  */
 public class Ruletta {
 
-	public Pool pool = new Pool();
+	public Pool pool;
 	public Set<Rule> allRules;
 	public Set<Dob> allVars, allDobs, posDobs, negDobs;
 	public Map<Dob, Set<Rule>> bodyToRule, headToRule;
+
+	public Fortre fortre;
 	
-	public Topper toper = new Topper();
+	public Topper toper;
 	public Map<Dob, List<Dob>> deps;
 	
+	
 	public void construct(Collection<Rule> rules) {
+		this.pool = new Pool();
+		this.toper = new Topper();
+		
 		this.allRules = Sets.newHashSetWithExpectedSize(rules.size());
 		for (Rule rule : rules) { this.allRules.add(pool.submerge(rule)); }
 		
@@ -56,9 +62,9 @@ public class Ruletta {
 		for (Rule rule : this.allRules) { 
 			this.allVars.addAll(rule.vars);
 			
-			MapUtils.safePut(this.headToRule, rule.head.dob, rule);
+			OTMUtil.safePut(this.headToRule, rule.head.dob, rule);
 			for (Dob body : Atom.dobIterableFromAtoms(rule.body)) {
-				MapUtils.safePut(this.bodyToRule, body, rule);	
+				OTMUtil.safePut(this.bodyToRule, body, rule);	
 			}
 		}
 		

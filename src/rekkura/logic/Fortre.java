@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Dob;
-import rekkura.util.MapUtils;
+import rekkura.util.OTMUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -66,7 +66,7 @@ public class Fortre {
 		}
 		
 		// Add the dob as a child of insertion location
-		MapUtils.safePut(this.children, cur, dob);
+		OTMUtil.safePut(this.children, cur, dob);
 	}
 
 	/**
