@@ -13,6 +13,15 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+/**
+ * A pool represents a set of dobs that can be compared 
+ * with reference equality. Submerging a dob means to 
+ * construct a corresponding dob such that all sub-trees
+ * of the dob can be compared with reference equality against
+ * all other dobs currently in the pool.
+ * @author ptpham
+ *
+ */
 public class Pool {
 
 	StdFmt fmt = new StdFmt();

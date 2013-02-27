@@ -50,9 +50,9 @@ public class Ruletta {
 		for (Rule rule : this.allRules) { 
 			this.allVars.addAll(rule.vars);
 			
-			OTMUtil.safePut(this.headToRule, rule.head.dob, rule);
+			OTMUtil.put(this.headToRule, rule.head.dob, rule);
 			for (Dob body : Atom.dobIterableFromAtoms(rule.body)) {
-				OTMUtil.safePut(this.bodyToRule, body, rule);	
+				OTMUtil.put(this.bodyToRule, body, rule);	
 			}
 		}
 	}

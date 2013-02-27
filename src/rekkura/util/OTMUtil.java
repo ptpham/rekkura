@@ -6,13 +6,19 @@ import java.util.Set;
 import com.google.common.collect.Sets;
 
 /**
- * (One-to-many utilities)
+ * (One-to-Many Utilities)
  * @author ptpham
  *
  */
 public class OTMUtil {
 	
-	public static <U, V> void safePut(Map<U, Set<V>> map, U key, V val) {
+	public static <U, V> boolean contains(Map<U, Set<V>> map, U key, V val) {
+		Set<V> set = map.get(key);
+		if (set == null) return false;
+		return set.contains(val);
+	}
+	
+	public static <U, V> void put(Map<U, Set<V>> map, U key, V val) {
 		Set<V> set = map.get(key);
 		if (set == null) {
 			set = Sets.newHashSet();
@@ -21,7 +27,7 @@ public class OTMUtil {
 		set.add(val);
 	}
 	
-	public static <U, V> void safeRemove(Map<U, Set<V>> map, U key, V val) {
+	public static <U, V> void remove(Map<U, Set<V>> map, U key, V val) {
 		Set<V> set = map.get(key);
 		if (set == null) return;
 		set.remove(val);

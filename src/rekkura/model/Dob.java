@@ -5,6 +5,12 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
+/**
+ * (Discrete Object) A dob represents a node with ordered 
+ * children that may have a name attached.
+ * @author ptpham
+ *
+ */
 public class Dob implements Iterable<Dob> {
 	public final String name;
 	private List<Dob> children;

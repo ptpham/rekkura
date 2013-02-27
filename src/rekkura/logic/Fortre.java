@@ -1,12 +1,15 @@
 package rekkura.logic;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Dob;
 import rekkura.util.OTMUtil;
+import rekkura.util.Colut;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -20,7 +23,7 @@ import com.google.common.collect.Sets;
 public class Fortre {
 
 	private final Unifier unifier = new Unifier();
-	private final Map<Dob, Set<Dob>> children = Maps.newHashMap();
+	private final Map<Dob, Set<Dob>> allChildren = Maps.newHashMap();
 	private final Set<Dob> allVars;
 	
 	public final Dob root;
@@ -38,35 +41,52 @@ public class Fortre {
 		this.root = allVars.iterator().next();
 	}
 	
-	public boolean contains(Dob dob) { return this.children.containsKey(dob); }
+	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }
 	
 	/**
-	 * The dob is added at the lowest level such that it unifies
-	 * will all of its ancestors. If there is a non-trivial subset of
+	 * Returns the path from the root down to the last node N
+	 * such that N unifies with the given dob but the siblings
+	 * of N do not.
+	 * @param dob
+	 * @return
+	 */
+	public List<Dob> getUnifyTrunk(Dob dob) {
+		
+		List<Dob> path = Lists.newArrayList();
+		Dob cur = this.root;
+		
+		while (cur != null) {
+			path.add(cur);
+			
+			Set<Dob> curChildren = this.allChildren.get(cur);
+			if (Colut.empty(curChildren)) break;
+			cur = downwardUnify(dob, curChildren);
+		}
+		
+		return path;
+	}
+	
+	/**
+	 * The dob is added at the lowest level such that all of its 
+	 * ancestors unify with it. If there is a non-trivial subset of
 	 * its siblings that unify with it and it does not unify with any
-	 * of its siblings, then the siblings will be added as children 
+	 * of its siblings, then the siblings will be added as allChildren 
 	 * of the new dob. 
 	 * @param dob
 	 */
 	public void addDob(Dob dob) {
-		Dob cur = this.root;
-		while (true) {
-			Set<Dob> children = this.children.get(cur);
-			if (children == null || children.size() == 0) break;
-			
-			Dob down = downwardUnify(dob, children);
-			
-			if (down != null) { cur = down; } 
-			else if (down == null) {
-				Set<Dob> up = upwardUnify(dob, children);
-				children.removeAll(up);
-				this.children.put(dob, up);
-				break;
-			}
+		List<Dob> trunk = getUnifyTrunk(dob);
+		Dob end = trunk.get(trunk.size() - 1);
+		Set<Dob> endChildren = this.allChildren.get(end);
+
+		if (trunk.size() == 1 && Colut.nonEmpty(endChildren)) {
+			Set<Dob> up = upwardUnify(dob, endChildren);
+			endChildren.removeAll(up);
+			this.allChildren.put(dob, up);
 		}
 		
 		// Add the dob as a child of insertion location
-		OTMUtil.safePut(this.children, cur, dob);
+		OTMUtil.put(this.allChildren, end, dob);
 	}
 
 	/**

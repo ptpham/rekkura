@@ -12,7 +12,6 @@ import com.google.common.collect.Maps;
 /**
  * This class describes how to transform one dob to match another dob.
  * @author ptpham
- *
  */
 public class Unifier {
 	
@@ -36,7 +35,7 @@ public class Unifier {
 		boolean mismatch = false;
 		if (base.size() != target.size()) mismatch = true;
 		else if(base.isTerminal() && target.isTerminal()
-				&& !base.name.equals(target.name)) mismatch = true;
+				&& base != target) mismatch = true;
 		
 		if (mismatch) {
 			Dob existing = current.get(base);

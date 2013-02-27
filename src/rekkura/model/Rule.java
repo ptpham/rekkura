@@ -44,7 +44,6 @@ public class Rule {
 			@Override protected Iterator<Atom> prepareNext(Rule u) { return u.body.iterator(); }
 		};
 	}
-
 	
 	public static Iterable<Atom> atomIterableFromRules(final Collection<Rule> rules) {
 		return new Iterable<Atom>() {
