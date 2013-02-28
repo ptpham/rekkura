@@ -1,12 +1,13 @@
 package rekkura.logic;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Dob;
-import rekkura.util.OTMUtil;
 import rekkura.util.Colut;
+import rekkura.util.OTMUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -38,10 +39,30 @@ public class Fortre {
 		this.allVars = allVars;
 		
 		// Pick an arbitrary variable as the root
-		this.root = allVars.iterator().next();
+		this.root = Colut.any(allVars);
 	}
 	
 	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }
+	
+	private class SubtreeIterator implements Iterator<Dob> {
+		Set<Dob> unexplored = Sets.newHashSet();
+		public SubtreeIterator(Dob root) { unexplored.add(root); }
+		@Override public boolean hasNext() { return Colut.nonEmpty(unexplored); }
+		@Override public void remove() { throw new IllegalAccessError("Remove not allowed!"); }
+
+		@Override
+		public Dob next() {
+			Dob next = Colut.any(unexplored);
+			Colut.addAll(unexplored, Fortre.this.allChildren.get(next));
+			return next;
+		}
+	};
+	
+	public Iterable<Dob> getSubtreeIterable(final Dob dob) {
+		return new Iterable<Dob>() {
+			@Override public Iterator<Dob> iterator() { return new SubtreeIterator(dob); }
+		};
+	}
 	
 	/**
 	 * Returns the path from the root down to the last node N
@@ -108,6 +129,13 @@ public class Fortre {
 		return result;
 	}
 	
+	/**
+	 * Tries to unify the dob with the children.
+	 * Returns the set of children with which the dob successfully unified.
+	 * @param dob
+	 * @param children
+	 * @return
+	 */
 	private Set<Dob> upwardUnify(Dob dob, Set<Dob> children) {
 		Set<Dob> result = Sets.newHashSet();
 		for (Dob child : children) {

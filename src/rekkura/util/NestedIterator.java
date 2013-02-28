@@ -13,7 +13,7 @@ public abstract class NestedIterator<U, V> implements Iterator<V> {
 	
 	@Override
 	public boolean hasNext() {
-		if (!outerHasNext()) {
+		while (!outerHasNext()) {
 			if (!inner.hasNext()) return false;
 			outer = prepareNext(inner.next());
 		}
@@ -25,5 +25,7 @@ public abstract class NestedIterator<U, V> implements Iterator<V> {
 		return outer.next();
 	}
 
-	@Override public void remove() { }
+	@Override public void remove() { 
+		throw new IllegalAccessError("Remove not allowed!");
+	}
 }

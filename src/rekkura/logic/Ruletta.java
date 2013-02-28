@@ -1,12 +1,14 @@
 package rekkura.logic;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.util.NestedIterator;
 import rekkura.util.OTMUtil;
 
 import com.google.common.collect.Maps;
@@ -35,11 +37,6 @@ public class Ruletta {
 		this.bodyToRule = Maps.newHashMap();
 		this.headToRule = Maps.newHashMap();
 		
-		for (Rule rule : this.allRules) {
-			if (!rule.head.truth) 
-				throw new IllegalArgumentException("Rules can not have negative heads!");
-		}
-
 		for (Dob dob : Rule.dobIterableFromRules(this.allRules)) { allDobs.add(dob); }
 		for (Atom atom : Rule.atomIterableFromRules(this.allRules)) {
 			if (atom.truth) posDobs.add(atom.dob);
@@ -57,4 +54,19 @@ public class Ruletta {
 		}
 	}
 
+	public Iterator<Rule> ruleIteratorFromBodyDobs(Iterator<Dob> dobs) {
+		return new NestedIterator<Dob, Rule>(dobs) {
+			@Override protected Iterator<Rule> prepareNext(Dob u) {
+				return Ruletta.this.bodyToRule.get(u).iterator();
+			}
+		};
+	}
+	
+	public Iterable<Rule> ruleIterableFromBodyDobs(final Iterable<Dob> dobs) {
+		return new Iterable<Rule>() {
+			@Override public Iterator<Rule> iterator() {
+				return ruleIteratorFromBodyDobs(dobs.iterator());
+			}
+		};
+	}
 }
