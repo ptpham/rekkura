@@ -52,7 +52,7 @@ public class Fortre {
 
 		@Override
 		public Dob next() {
-			Dob next = Colut.any(unexplored);
+			Dob next = Colut.popAny(unexplored);
 			Colut.addAll(unexplored, Fortre.this.allChildren.get(next));
 			return next;
 		}

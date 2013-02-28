@@ -32,6 +32,17 @@ public class Colut {
 		return s.iterator().next();
 	}
 	
+	public static <T> T popAny(Collection<T> s) {
+		T result = any(s);
+		remove(s, result);
+		return result;
+	}
+	
+	public static <T> boolean remove(Collection<T> s, T t){
+		if (s == null) return false;
+		return s.remove(t);
+	}
+	
 	public static <T> T end(List<T> list) {
 		if (nonEmpty(list)) return list.get(list.size() - 1);
 		return null;

@@ -67,4 +67,10 @@ public class Rule {
 			@Override public Iterator<Dob> iterator() { return dobIteratorFromRules(rules); }
 		};
 	}
+	
+	public static Iterable<Dob> dobIterableFromRule(final Rule rule) {
+		return new Iterable<Dob>() {
+			@Override public Iterator<Dob> iterator() { return dobIteratorFromRule(rule); }
+		};
+	}
 }

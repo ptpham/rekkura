@@ -8,7 +8,6 @@ import java.util.Set;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.NestedIterator;
 import rekkura.util.OTMUtil;
 
 import com.google.common.collect.Maps;
@@ -55,18 +54,10 @@ public class Ruletta {
 	}
 
 	public Iterator<Rule> ruleIteratorFromBodyDobs(Iterator<Dob> dobs) {
-		return new NestedIterator<Dob, Rule>(dobs) {
-			@Override protected Iterator<Rule> prepareNext(Dob u) {
-				return Ruletta.this.bodyToRule.get(u).iterator();
-			}
-		};
+		return OTMUtil.valueIterator(bodyToRule, dobs);
 	}
 	
 	public Iterable<Rule> ruleIterableFromBodyDobs(final Iterable<Dob> dobs) {
-		return new Iterable<Rule>() {
-			@Override public Iterator<Rule> iterator() {
-				return ruleIteratorFromBodyDobs(dobs.iterator());
-			}
-		};
+		return OTMUtil.valueIterable(bodyToRule, dobs);
 	}
 }

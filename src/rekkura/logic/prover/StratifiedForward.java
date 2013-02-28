@@ -97,10 +97,8 @@ public class StratifiedForward {
 	
 	public Set<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
-		Dob dob = Colut.any(unexpanded);
+		Dob dob = Colut.popAny(unexpanded);
 		Set<Dob> raw = expand(dob);
-		
-		unexpanded.remove(dob);
 		truths.add(dob);
 		
 		// Submerge all of the newly generated dobs
@@ -140,7 +138,14 @@ public class StratifiedForward {
 		return result;
 	}
 	
-	public Set<Dob> expand(Rule rule, Set<Dob> forces, Dob pivot) {
+	public Set<Dob> expand(Rule rule, Set<Dob> forces, Dob dob) {
+		// Verify that this is in fact a rule that we can pivot on
+		// by finding one of the forces in the body of the rule.
+		for (Dob pivot : Rule.dobIterableFromRule(rule)) {
+			if (!Colut.contains(forces, pivot)) continue;
+			
+			
+		}
 		
 		return null;
 	}
