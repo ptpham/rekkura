@@ -1,14 +1,13 @@
 package rekkura.logic;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Dob;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * 
@@ -24,11 +23,11 @@ public class Topper {
 	 * @param vars
 	 * @return
 	 */
-	public Map<Dob, List<Dob>> dependencies(Collection<Dob> targetDobs, 
+	public Map<Dob, Set<Dob>> dependencies(Collection<Dob> targetDobs, 
 			Collection<Dob> sourceDobs, Set<Dob> vars) {
-		Map<Dob, List<Dob>> result = Maps.newHashMapWithExpectedSize(targetDobs.size());
+		Map<Dob, Set<Dob>> result = Maps.newHashMapWithExpectedSize(targetDobs.size());
 		
-		for (Dob dob : targetDobs) { result.put(dob, Lists.<Dob>newArrayList()); }
+		for (Dob dob : targetDobs) { result.put(dob, Sets.<Dob>newHashSet()); }
 		
 		for (Dob target : targetDobs) {
 			for (Dob source : sourceDobs) {
@@ -42,7 +41,4 @@ public class Topper {
 		return result;
 	}
 	
-	public List<Dob> order(Map<Dob, List<Dob>> deps) {
-		return null;
-	}
 }

@@ -2,6 +2,7 @@ package rekkura.util;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * (Collection Utilities)
@@ -51,5 +52,14 @@ public class Colut {
 	public static Character end(String s) {
 		if (s == null || s.length() == 0) return null;
 		return s.charAt(s.length() - 1);
+	}
+	
+	public static <U> void incrementIntegerMap(Map<U, Integer> map, U key) {
+		if (map == null) return;
+		Integer val = map.get(key);
+		if (val == null) val = 0;
+		
+		val += 1;
+		map.put(key, val);
 	}
 }

@@ -30,7 +30,11 @@ public class StratifiedForward {
 	public Ruletta rta;
 	
 	public Topper toper;
-	public Map<Dob, List<Dob>> deps;
+	
+	/**
+	 * This holds the set of dobs that may generate 
+	 */
+	public Map<Dob, Set<Dob>> deps;
 
 	public Pool pool;
 	
@@ -54,8 +58,13 @@ public class StratifiedForward {
 	 * new ground terms.
 	 */
 	private Set<Dob> unexpanded;
-
 	
+	/**
+	 * This map has a size which is the number of negative bodies
+	 * times the number of bodies.
+	 */
+	private Map<Dob, Set<Dob>> negDepMap;
+
 	public StratifiedForward(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
 		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
@@ -68,6 +77,13 @@ public class StratifiedForward {
 		
 		this.deps = toper.dependencies(rta.headToRule.keySet(), 
 				rta.bodyToRule.keySet(), rta.allVars);
+		
+		this.negDepMap = Maps.newHashMap();
+		for (Dob dob : rta.negDobs) {
+			Set<Dob> ancestors = OTMUtil.flood(deps, dob);
+			ancestors.remove(dob);
+			this.negDepMap.put(dob, ancestors);
+		}
 		
 		this.fortre = new Fortre(rta.allVars);
 		
