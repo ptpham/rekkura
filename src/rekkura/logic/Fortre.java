@@ -2,16 +2,15 @@ package rekkura.logic;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Dob;
 import rekkura.util.Colut;
-import rekkura.util.OTMUtil;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -24,7 +23,7 @@ import com.google.common.collect.Sets;
 public class Fortre {
 
 	private final Unifier unifier = new Unifier();
-	private final Map<Dob, Set<Dob>> allChildren = Maps.newHashMap();
+	private final SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private final Set<Dob> allVars;
 	
 	public final Dob root;
@@ -103,11 +102,11 @@ public class Fortre {
 		if (trunk.size() == 1 && Colut.nonEmpty(endChildren)) {
 			Set<Dob> up = upwardUnify(dob, endChildren);
 			endChildren.removeAll(up);
-			this.allChildren.put(dob, up);
+			this.allChildren.putAll(dob, up);
 		}
 		
 		// Add the dob as a child of insertion location
-		OTMUtil.put(this.allChildren, end, dob);
+		this.allChildren.put(end, dob);
 	}
 
 	/**

@@ -2,7 +2,6 @@ package rekkura.logic;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Atom;
@@ -10,7 +9,8 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.util.OTMUtil;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -23,7 +23,7 @@ public class Ruletta {
 
 	public Set<Rule> allRules;
 	public Set<Dob> allVars, allDobs, posDobs, negDobs;
-	public Map<Dob, Set<Rule>> bodyToRule, headToRule;
+	public Multimap<Dob, Rule> bodyToRule, headToRule;
 	
 	public void construct(Collection<Rule> rules) {
 		this.allRules = Sets.newHashSet(rules);
@@ -33,8 +33,8 @@ public class Ruletta {
 		this.posDobs = Sets.newHashSet();
 		this.negDobs = Sets.newHashSet();
 
-		this.bodyToRule = Maps.newHashMap();
-		this.headToRule = Maps.newHashMap();
+		this.bodyToRule = HashMultimap.create();
+		this.headToRule = HashMultimap.create();
 		
 		for (Dob dob : Rule.dobIterableFromRules(this.allRules)) { allDobs.add(dob); }
 		for (Atom atom : Rule.atomIterableFromRules(this.allRules)) {
@@ -46,9 +46,9 @@ public class Ruletta {
 		for (Rule rule : this.allRules) { 
 			this.allVars.addAll(rule.vars);
 			
-			OTMUtil.put(this.headToRule, rule.head.dob, rule);
+			this.headToRule.put(rule.head.dob, rule);
 			for (Dob body : Atom.dobIterableFromAtoms(rule.body)) {
-				OTMUtil.put(this.bodyToRule, body, rule);	
+				this.bodyToRule.put(body, rule);	
 			}
 		}
 	}

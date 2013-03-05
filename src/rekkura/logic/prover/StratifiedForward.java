@@ -12,9 +12,7 @@ import rekkura.util.Colut;
 import rekkura.util.OTMUtil;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * The set of rules provided to this prover must satisfy the following:
@@ -32,9 +30,20 @@ public class StratifiedForward {
 	public Topper toper;
 	
 	/**
-	 * This holds the set of dobs that may generate 
+	 * This holds the set of head dobs that may generate a body dob.
 	 */
-	public Map<Dob, Set<Dob>> deps;
+	public Multimap<Dob, Dob> headDeps;
+	
+	/**
+	 * This holds the set of rules that may generate a body dob.
+	 */
+	public Multimap<Dob, Rule> dobRuleDeps;
+
+	/**
+	 * This holds the set of rules that may generate dobs for the body
+	 * of the given rule.
+	 */
+	public Multimap<Rule, Rule> ruleRuleDeps;
 
 	public Pool pool;
 	
@@ -51,7 +60,7 @@ public class StratifiedForward {
 	 * These hold the mappings from a body term B in a rule to grounds 
 	 * that are known to successfully unify with B.
 	 */
-	protected Map<Dob, Set<Dob>> unisuccess;
+	protected Multimap<Dob, Dob> unisuccess;
 	
 	/**
 	 * This is the set of ground terms that have not been used to generate
@@ -59,12 +68,18 @@ public class StratifiedForward {
 	 */
 	private Set<Dob> unexpanded;
 	
-	/**
-	 * This map has a size which is the number of negative bodies
-	 * times the number of bodies.
-	 */
-	private Map<Dob, Set<Dob>> negDepMap;
-
+	private static class Pivot {
+		public final Dob ground;
+		public final int position;
+		
+		public Pivot(int position, Dob ground) {
+			this.position = position;
+			this.ground = ground;
+		}
+	}
+	
+	private Map<Rule, Set<Pivot>> pendingPivots;
+	
 	public StratifiedForward(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
 		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
@@ -75,23 +90,20 @@ public class StratifiedForward {
 			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
 		}
 		
-		this.deps = toper.dependencies(rta.headToRule.keySet(), 
-				rta.bodyToRule.keySet(), rta.allVars);
+		this.headDeps = toper.dependencies(rta.bodyToRule.keySet(), 
+				rta.headToRule.keySet(), rta.allVars);
 		
-		this.negDepMap = Maps.newHashMap();
-		for (Dob dob : rta.negDobs) {
-			Set<Dob> ancestors = OTMUtil.flood(deps, dob);
-			ancestors.remove(dob);
-			this.negDepMap.put(dob, ancestors);
-		}
+		this.dobRuleDeps = OTMUtil.joinRight(this.headDeps, this.rta.headToRule);
+		this.ruleRuleDeps = OTMUtil.joinLeft(this.dobRuleDeps, this.rta.bodyToRule);
 		
 		this.fortre = new Fortre(rta.allVars);
 		
 		for (Dob dob : rta.bodyToRule.keySet()) { this.fortre.addDob(dob); }
 		
-		this.unisuccess = Maps.newHashMap();
+		this.unisuccess = HashMultimap.create();
 		this.unexpanded = Sets.newHashSet();
 		this.truths = Sets.newHashSet();
+		this.pendingPivots = Maps.newHashMap();
 	}
 
 	/**
@@ -102,8 +114,8 @@ public class StratifiedForward {
 	public void queueTruth(Dob dob) {
 		List<Dob> trunk = this.fortre.getUnifyTrunk(dob);
 		Dob end = Colut.end(trunk);
-		if (!OTMUtil.contains(unisuccess, end, dob)) {
-			OTMUtil.put(unisuccess, end, dob);
+		if (!unisuccess.containsEntry(end, dob)) {
+			unisuccess.put(end, dob);
 		}
 		
 		this.unexpanded.add(dob);
@@ -114,7 +126,10 @@ public class StratifiedForward {
 	public Set<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
 		Dob dob = Colut.popAny(unexpanded);
-		Set<Dob> raw = expand(dob);
+		
+		// TODO: Generate new dobs
+		Set<Dob> raw = Sets.newHashSet();
+		
 		truths.add(dob);
 		
 		// Submerge all of the newly generated dobs
@@ -129,14 +144,13 @@ public class StratifiedForward {
 	}
 	
 	/**
-	 * This method holds the meat of this class. This method takes a dob
-	 * and returns the set of dobs that are entailed by the given dob and 
-	 * the current set of exhausted truths.
+	 * This method takes a dob and returns the pivots
+	 * where it can be applied.
 	 * @param dob
 	 * @return
 	 */
-	public Set<Dob> expand(Dob dob) {
-		Set<Dob> result = Sets.newHashSet();
+	public Multimap<Rule, Pivot> generatePivots(Dob dob) {
+		Multimap<Rule, Pivot> result = HashMultimap.create();
 		
 		List<Dob> trunk = fortre.getUnifyTrunk(dob);
 		Dob end = Colut.end(trunk);
@@ -148,20 +162,24 @@ public class StratifiedForward {
 		Iterables.addAll(subtree, fortre.getSubtreeIterable(end));
 		Iterable<Rule> rules = rta.ruleIterableFromBodyDobs(subtree);
 		for (Rule rule : rules) {
-			Colut.addAll(result, expand(rule, subtree, dob));
+			Set<Pivot> pivots = pivotize(rule, subtree, dob);
+			result.putAll(rule, pivots);
 		}
 		
 		return result;
 	}
 	
-	public Set<Dob> expand(Rule rule, Set<Dob> forces, Dob dob) {
-		// Verify that this is in fact a rule that we can pivot on
-		// by finding one of the forces in the body of the rule.
-		for (Dob pivot : Rule.dobIterableFromRule(rule)) {
-			if (!Colut.contains(forces, pivot)) continue;
-			
-			
+	public static Set<Pivot> pivotize(Rule rule, Set<Dob> forces, Dob ground) {
+		Set<Pivot> result = Sets.newHashSet();
+		for (int i = 0; i < rule.body.size(); i++) {
+			Dob body = rule.body.get(i).dob;
+			if (forces.contains(body)) { result.add(new Pivot(i, ground)); }
 		}
+		return result;
+	}
+	
+	public Set<Dob> expand(Rule rule, int position, Dob dob) {
+		
 		
 		return null;
 	}

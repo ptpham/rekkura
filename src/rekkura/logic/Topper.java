@@ -6,8 +6,8 @@ import java.util.Set;
 
 import rekkura.model.Dob;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * 
@@ -23,18 +23,15 @@ public class Topper {
 	 * @param vars
 	 * @return
 	 */
-	public Map<Dob, Set<Dob>> dependencies(Collection<Dob> targetDobs, 
+	public Multimap<Dob, Dob> dependencies(Collection<Dob> targetDobs, 
 			Collection<Dob> sourceDobs, Set<Dob> vars) {
-		Map<Dob, Set<Dob>> result = Maps.newHashMapWithExpectedSize(targetDobs.size());
-		
-		for (Dob dob : targetDobs) { result.put(dob, Sets.<Dob>newHashSet()); }
+		Multimap<Dob, Dob> result = HashMultimap.create(targetDobs.size(), sourceDobs.size());
 		
 		for (Dob target : targetDobs) {
 			for (Dob source : sourceDobs) {
 				Map<Dob, Dob> unify = unifer.unifyVars(source, target, vars);
 				if (unify == null) continue;
-				
-				result.get(target).add(source);
+				result.put(target, source);
 			}
 		}
 		
