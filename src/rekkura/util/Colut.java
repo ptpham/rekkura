@@ -2,7 +2,8 @@ package rekkura.util;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+
+import com.google.common.collect.Multiset;
 
 /**
  * (Collection Utilities)
@@ -54,12 +55,10 @@ public class Colut {
 		return s.charAt(s.length() - 1);
 	}
 	
-	public static <U> void incrementIntegerMap(Map<U, Integer> map, U key) {
-		if (map == null) return;
-		Integer val = map.get(key);
-		if (val == null) val = 0;
-		
-		val += 1;
-		map.put(key, val);
+	public static <U> void shiftAll(Multiset<U> counter, Iterable<U> keys, int shift) {
+		for (U u : keys) {
+			int newValue = counter.count(u) + shift;
+			counter.setCount(u, newValue);
+		}
 	}
 }

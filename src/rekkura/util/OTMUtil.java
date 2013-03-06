@@ -2,15 +2,15 @@ package rekkura.util;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import rekkura.model.Dob;
-import rekkura.model.Rule;
-
 import com.google.common.base.Function;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 
 /**
  * (One-to-Many Utilities)
@@ -28,10 +28,6 @@ public class OTMUtil {
 		};
 	}
 	
-	public static <U, V> Iterator<V> valueIterator(Multimap<U, V> map) {
-		return valueIterator(map, map.keySet().iterator());
-	}
-	
 	public static <U, V> Iterable<V> valueIterable(final Multimap<U, V> map, final Iterable<U> keys) {
 		return new Iterable<V>() {
 			@Override public Iterator<V> iterator() {
@@ -40,22 +36,30 @@ public class OTMUtil {
 		};
 	}
 	
-	public static <U, V> Iterable<V> valueIterable(Multimap<U, V> map) {
-		return valueIterable(map, map.keySet());
+	public static <U> Set<U> flood(Multimap<U, U> deps, U root) {
+		Set<U> result = Sets.newHashSet();
+		return flood(deps, root, result);
 	}
 
-	public static <U> Set<U> flood(Map<U, Set<U>> deps, U root) {
-		Set<U> result = Sets.newHashSet();
+	/**
+	 * This method will not expand any visited nodes. It will return the 
+	 * same set that was passed in.
+	 * @param deps
+	 * @param root
+	 * @param visited
+	 * @return
+	 */
+	public static <U> Set<U> flood(Multimap<U, U> deps, U root, Set<U> visited) {
 		Queue<U> remaining = Queues.newLinkedBlockingQueue();
 		remaining.add(root);
 		
 		while (!remaining.isEmpty()) {
 			U next = remaining.poll();
-			result.add(next);
+			if (!visited.add(next)) continue;
 			remaining.addAll(deps.get(next));
 		}
 		
-		return result;
+		return visited;
 	}
 	
 	public static <T, U, V> Multimap<U, T> expandRight(Multimap<U, V> map, Function<V, Collection<T>> fn) {

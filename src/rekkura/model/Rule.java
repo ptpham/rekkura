@@ -31,6 +31,16 @@ public class Rule {
 		this.vars = Sets.newHashSet(variables);
 	}
 	
+	public static class Assignment {
+		public final Dob ground;
+		public final int position;
+		
+		public Assignment(int position, Dob ground) {
+			this.position = position;
+			this.ground = ground;
+		}
+	}
+	
 	public static Iterator<Atom> atomIteratorFromRule(final Rule rule) {
 		return Iterators.concat(rule.body.iterator(), Iterators.forArray(rule.head));
 	}
