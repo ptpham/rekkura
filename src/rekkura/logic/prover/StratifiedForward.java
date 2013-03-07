@@ -32,7 +32,7 @@ public class StratifiedForward {
 	
 	public Ruletta rta;
 	
-	public Topper toper;
+	public Topper topper;
 	
 	/**
 	 * This holds the set of head dobs that may generate a body dob.
@@ -80,6 +80,10 @@ public class StratifiedForward {
 	
 	public StratifiedForward(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
+		this.pool = new Pool();
+		this.rta = new Ruletta();
+		this.topper = new Topper();
+		
 		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
 		
 		rta.construct(submerged);
@@ -88,7 +92,7 @@ public class StratifiedForward {
 			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
 		}
 		
-		this.headDeps = toper.dependencies(rta.bodyToRule.keySet(), 
+		this.headDeps = topper.dependencies(rta.bodyToRule.keySet(), 
 				rta.headToRule.keySet(), rta.allVars);
 		
 		this.dobRuleDeps = OTMUtil.joinRight(this.headDeps, this.rta.headToRule);
@@ -125,19 +129,28 @@ public class StratifiedForward {
 	 * @param dob
 	 */
 	public void queueTruth(Dob dob) {
+		dob = this.pool.submerge(dob);
 		List<Dob> trunk = storeGround(dob);
-		Multimap<Rule, Assignment> assignments = this.generateAssignments(dob);
+		Multimap<Rule, Assignment> generated = this.generateAssignments(dob, trunk);
 		
-		for (Rule rule : assignments.keySet()) {
-			int increase = assignments.get(rule).size();
+		for (Rule rule : generated.keySet()) {
+			int increase = generated.get(rule).size();
 			Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
 			Colut.shiftAll(negDepCounter, negDescs, increase);
 		}
 		
-		// TODO: Split the rules into pending vs. waiting
-		Multimap<Rule, Assignment> generated = this.generateAssignments(dob, trunk);
-		
-		
+		// Split the rules into pending vs waiting.
+		// An assignment is pending if it is ready to be expanded.
+		// An assignment is waiting if it's rule is being blocked by a non-zero 
+		// number of pending/waiting ancestors.
+		for (Rule rule : generated.keySet()) {
+			Collection<Assignment> assignments = generated.get(rule);
+			if (this.negDepCounter.count(rule) > 0) {
+				this.waiting.putAll(rule, assignments);
+			} else {
+				this.pending.putAll(rule, assignments);
+			}
+		}
 	}
 
 	/**

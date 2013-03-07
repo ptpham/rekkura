@@ -10,8 +10,9 @@ import rekkura.model.Rule;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class StdFmt {
+public class StandardFormat extends LogicFormat {
 	
+	@Override
 	public String toString(Dob dob) {
 		if (dob.isTerminal()) return "(" + dob.name + ")";
 		return "(" + dobsToString(dob) + ")";
@@ -23,6 +24,7 @@ public class StdFmt {
 		return builder.toString();
 	}
 	
+	@Override
 	public Dob dobFromString(String s) {
 		s = s.trim();
 		int endIdx = s.length() - 1;
@@ -55,6 +57,7 @@ public class StdFmt {
 		return result;
 	}
 	
+	@Override
 	public String toString(Atom atom) {
 		return "<" + toString(atom.dob) + "," + atom.truth + ">";
 	}
@@ -65,6 +68,7 @@ public class StdFmt {
 		return builder.toString();
 	}
 	
+	@Override
 	public Atom atomFromString(String s) {
 		s = s.trim();
 		int endIdx = s.length() - 1;
@@ -76,9 +80,10 @@ public class StdFmt {
 		}
 		
 		return new Atom(dobFromString(parts[0].replace("<", "")), 
-				Boolean.parseBoolean(parts[1].replace(">", "")));
+				Boolean.parseBoolean(parts[1].replace(">", "").trim()));
 	}
 	
+	@Override
 	public String toString(Rule rule) {
 		return "{" + dobsToString(rule.vars) + "|" + 
 			toString(rule.head) + ":-" + atomsToString(rule.body) + "}";
@@ -98,6 +103,7 @@ public class StdFmt {
 		return Sets.newHashSet(dobFromString("(" + s + ")"));
 	}
 
+	@Override
 	public Rule ruleFromString(String s) {
 		s = s.trim();
 		int endIdx = s.length() - 1;

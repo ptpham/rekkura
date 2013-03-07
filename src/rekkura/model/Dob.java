@@ -32,5 +32,9 @@ public class Dob implements Iterable<Dob> {
 	
 	@Override public Iterator<Dob> iterator() { return this.children.iterator(); }
 
+	@Override public String toString() {
+		if (isTerminal()) return super.toString() + "(" + this.name + ")";
+		return super.toString() + "(" + this.children + ")";
+	}
 
 }

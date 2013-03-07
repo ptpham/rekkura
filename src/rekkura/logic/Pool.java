@@ -4,7 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import rekkura.fmt.StdFmt;
+import rekkura.fmt.LogicFormat;
+import rekkura.fmt.StandardFormat;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
@@ -24,7 +25,7 @@ import com.google.common.collect.Sets;
  */
 public class Pool {
 
-	StdFmt fmt = new StdFmt();
+	LogicFormat fmt = new StandardFormat();
 	Map<String, Dob> dobMap = Maps.newHashMap();
 	
 	public Dob submerge(Dob dob) {
