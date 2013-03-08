@@ -100,8 +100,9 @@ public class StandardFormat extends LogicFormat {
 	public List<Atom> atomListFromString(String s) {
 		List<Atom> result = Lists.newArrayList();
 		for (String part : s.split("<|>")) {
+			part = part.trim();
 			if (part.length() > 0) {
-				result.add(atomFromString("<" + s + ">"));
+				result.add(atomFromString("<" + part + ">"));
 			}
 		}
 		return result;

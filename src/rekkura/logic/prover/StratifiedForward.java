@@ -37,7 +37,7 @@ public class StratifiedForward {
 	/**
 	 * This holds the set of head dobs that may generate a body dob.
 	 */
-	public Multimap<Dob, Dob> headDeps;
+	public Multimap<Dob, Dob> headBodyDeps;
 	
 	/**
 	 * This holds the set of rules that may generate a body dob.
@@ -78,7 +78,7 @@ public class StratifiedForward {
 	private Multimap<Rule, Assignment> waiting;
 	private Multiset<Rule> negDepCounter;
 	
-	public StratifiedForward(Collection<Rule> rules) {
+	public StratifiedForward(Collection<Rule> rules, Collection<Dob> truths) {
 		Set<Rule> submerged = Sets.newHashSet();
 		this.pool = new Pool();
 		this.rta = new Ruletta();
@@ -92,23 +92,22 @@ public class StratifiedForward {
 			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
 		}
 		
-		this.headDeps = topper.dependencies(rta.bodyToRule.keySet(), 
+		this.headBodyDeps = topper.dependencies(rta.bodyToRule.keySet(), 
 				rta.headToRule.keySet(), rta.allVars);
 		
-		this.dobRuleDeps = OTMUtil.joinRight(this.headDeps, this.rta.headToRule);
+		this.dobRuleDeps = OTMUtil.joinRight(this.headBodyDeps, this.rta.headToRule);
 		this.ruleRuleDeps = OTMUtil.joinLeft(this.dobRuleDeps, this.rta.bodyToRule);
 		
+		// For each negative dob, flood out from the rules that can generate it.
+		// Store a mapping from each of the rules that we saw to the rules that 
+		// contain the negative dob.
 		this.ruleNegDesc = HashMultimap.create();
 		for (Dob neg : this.rta.negDobs) {
 			Set<Rule> seen = Sets.newHashSet();
-			for (Rule rule : this.dobRuleDeps.get(neg)) {
-				OTMUtil.flood(this.ruleRuleDeps, rule, seen);
-			}
+			OTMUtil.flood(this.ruleRuleDeps, this.dobRuleDeps.get(neg), seen);
 			
 			Collection<Rule> negRules = this.rta.bodyToRule.get(neg);
-			for (Rule rule : seen) {
-				this.ruleNegDesc.putAll(rule, negRules);
-			}
+			for (Rule rule : seen) this.ruleNegDesc.putAll(rule, negRules);
 		}
 		
 		this.fortre = new Fortre(rta.allVars);
@@ -120,15 +119,21 @@ public class StratifiedForward {
 		this.pending = HashMultimap.create();
 		this.waiting = HashMultimap.create();
 		this.negDepCounter = HashMultiset.create();
+		
+		for (Dob truth : truths) queueTruth(truth);
 	}
 
 	/**
 	 * Add a dob that is true. The dob will be stored (attached to the last
 	 * node on its unify trunk of the fortre) and potential assignments for
 	 * the dob will be generated privately.
+	 * 
+	 * If a truth is queued by the user after the prover starts proving,
+	 * there is no longer a guarantee of correctness if rules have negative
+	 * body terms.
 	 * @param dob
 	 */
-	public void queueTruth(Dob dob) {
+	protected void queueTruth(Dob dob) {
 		dob = this.pool.submerge(dob);
 		List<Dob> trunk = storeGround(dob);
 		Multimap<Rule, Assignment> generated = this.generateAssignments(dob, trunk);

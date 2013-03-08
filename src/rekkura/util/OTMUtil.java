@@ -62,6 +62,15 @@ public class OTMUtil {
 		return visited;
 	}
 	
+	public static <U> Set<U> flood(Multimap<U, U> deps, Collection<U> roots, Set<U> visited) {
+		for (U u : roots) flood(deps, u, visited);
+		return visited;
+	}
+	
+	public static <U> Set<U> flood(Multimap<U, U> deps, Collection<U> roots) {
+		return flood(deps, roots, Sets.<U>newHashSet());
+	}
+	
 	public static <T, U, V> Multimap<U, T> expandRight(Multimap<U, V> map, Function<V, Collection<T>> fn) {
 		Multimap<U, T> result = HashMultimap.create();
 		
