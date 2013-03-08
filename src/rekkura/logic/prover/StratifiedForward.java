@@ -1,10 +1,6 @@
 package rekkura.logic.prover;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.util.*;
 
 import rekkura.logic.Fortre;
 import rekkura.logic.Pool;
@@ -67,7 +63,7 @@ public class StratifiedForward {
 	 */
 	protected Multimap<Dob, Dob> unisuccess;
 	
-	private List<Assignment> pendingAssignments;
+	private Stack<Assignment> pendingAssignments;
 	private List<Assignment> waitingAssignments;
 	private Multiset<Rule> negDepCounter;
 	private Set<Dob> pendingTruths, exhaustedTruths;
@@ -129,8 +125,8 @@ public class StratifiedForward {
 		this.exhaustedTruths = Sets.newHashSet();
 		this.pendingTruths = Sets.newHashSet();
 
-		this.pendingAssignments = Lists.newArrayList();
-		this.waitingAssignments = Lists.newArrayList();
+		this.pendingAssignments = new Stack<Assignment>();
+		this.waitingAssignments = new Stack<Assignment>();
 		
 		this.negDepCounter = HashMultiset.create();
 		this.dobAssignmentCounter = HashMultiset.create();
@@ -148,8 +144,7 @@ public class StratifiedForward {
 	 */
 	protected void queueTruth(Dob dob) {
 		dob = this.pool.submerge(dob);
-		List<Dob> trunk = storeGround(dob);
-		Multimap<Rule, Assignment> generated = this.generateAssignments(dob, trunk);
+		Multimap<Rule, Assignment> generated = this.generateAssignments(dob);
 		
 		for (Rule rule : generated.keySet()) {
 			int increase = generated.get(rule).size();
@@ -197,17 +192,26 @@ public class StratifiedForward {
 	public Set<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
 		
-		// Find a pendingAssignments assignment on which we can actually operate.
-		// We can only operate on a rule R that doesn't have any ancestors
-		// that still might generate grounds that potentially
-		// unify with a negative body term in R.
+		Assignment assignment = nextPending();
+		
+		// If the assignment is null here, it means we need to 
+		// look in the waiting assignments
+		if (assignment == null) {
+			reconsiderWaiting();
+			assignment = nextPending();
+		}
+		
+		// If we still don't have an assignment, it is sad times.
+		if (assignment == null) throw new IllegalStateException("No pending assignments!");
 		
 		Dob dob = null;
 		
 		// TODO: Generate new dobs
 		Set<Dob> raw = Sets.newHashSet();
 		
+		// Exhaust the dob for this assignment if appropriate
 		exhaustedTruths.add(dob);
+		storeGround(dob);
 		
 		// Submerge all of the newly generated dobs
 		Set<Dob> result = Sets.newHashSetWithExpectedSize(raw.size());
@@ -217,7 +221,37 @@ public class StratifiedForward {
 		
 		return result;
 	}
+
+	/**
+	 * Find a pendingAssignments assignment on which we can actually operate.
+	 * We can only operate on a rule R that doesn't have any ancestors
+	 * that still might generate grounds that potentially
+	 * unify with a negative body term in R.
+	 * @return
+	 */
+	private Assignment nextPending() {
+		Assignment assignment = null;
+		while (assignment == null && !this.pendingAssignments.empty()) {
+			assignment = this.pendingAssignments.pop();
+
+			if (this.negDepCounter.count(assignment.rule) > 0) {
+				this.waitingAssignments.add(assignment);
+				assignment = null;
+			}
+		}
+		return assignment;
+	}
 	
+	private void reconsiderWaiting() {
+		List<Assignment> stillWaiting = Lists.newArrayList();
+		
+		for (Assignment assignment : this.waitingAssignments) {
+			
+		}
+		
+		this.waitingAssignments = stillWaiting;
+	}
+
 	public Set<Dob> expand(Rule rule, int position, Dob dob) {
 		
 		

@@ -7,7 +7,6 @@ import java.util.Set;
 
 import rekkura.util.NestedIterator;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
