@@ -2,6 +2,7 @@ package rekkura.fmt;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 
 import rekkura.model.Atom;
 import rekkura.model.Dob;
@@ -26,35 +27,42 @@ public class StandardFormat extends LogicFormat {
 	
 	@Override
 	public Dob dobFromString(String s) {
-		s = s.trim();
-		int endIdx = s.length() - 1;
-		if (s.length() < 2 || s.charAt(0) != '(' || s.charAt(endIdx) != ')') {
-			throw new Error("Dob parse error: " + s);
-		}
+		try { return dobParse(s); }
+		catch (Exception e) { dobParseError(s); }
+		return null;
+	}
+
+	protected void dobParseError(String s) {
+		new Error("Dob parse error: " + s);
+	}
+
+	private Dob dobParse(String s) {
+		Stack<List<Dob>> dobs = new Stack<List<Dob>>();
+		StringBuilder builder = new StringBuilder();
 		
-		String inner = s.substring(1, endIdx);
-		if (!inner.contains("(") && !inner.contains(")")) {
-			return new Dob(inner);
-		}
-		
-		List<Dob> dobs = Lists.newArrayList();
-		int layer = 0;
-		int lastIdx = 0;
+		dobs.push(Lists.<Dob>newArrayList());
 		for (int i = 0; i < s.length(); i++) {
 			char curChar = s.charAt(i);
-			if (curChar == '(') layer++;
-			else if (curChar == ')') {
-				layer--;
-				if (layer == 1) {
-					Dob child = dobFromString(s.substring(lastIdx + 1, i + 1));
-					dobs.add(child);
-					lastIdx = i;
-				}
+			if (curChar == '(') {
+				dobs.push(Lists.<Dob>newArrayList());
+			} else if (curChar == ')') {
+				String name = builder.toString();
+				Dob created = null;
+				List<Dob> curList = dobs.pop();
+				if (name.length() > 0) created = new Dob(name);
+				else created = new Dob(curList);
+				dobs.peek().add(created);
+				builder = new StringBuilder();
+			} else if (Character.isLetterOrDigit(curChar)) {
+				builder.append(curChar);
 			}
 		}
 		
-		Dob result = new Dob(dobs);
-		return result;
+		if (dobs.size() != 1) dobParseError(s);
+		List<Dob> result = dobs.pop();
+		
+		if (result.size() != 1) dobParseError(s);
+		return result.get(0);
 	}
 	
 	@Override

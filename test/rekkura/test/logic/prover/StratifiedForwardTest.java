@@ -30,6 +30,10 @@ public class StratifiedForwardTest {
 		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
 		List<Dob> dobs = fmt.dobsFromStrings(Arrays.asList(rawDobs));
 		
+		for (Rule rule : rules) {
+			System.out.println(fmt.toString(rule));
+		}
+		
 		StratifiedForward prover = new StratifiedForward(rules);
 		prover.queueTruth(dobs.get(0));
 		Assert.assertTrue("Prover should have something to prove!", prover.hasMore());
