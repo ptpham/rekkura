@@ -62,23 +62,22 @@ public class StratifiedForward {
 	public Fortre fortre;
 	
 	/**
-	 * This is the set of ground terms that have been exhausted.
-	 * A dob is exhausted if it has been formally used as the pivot
-	 * to prove dobs in this class. (i.e. used in proveNext())
-	 */
-	public Set<Dob> truths;
-	
-	/**
 	 * These hold the mappings from a body term B in a rule to grounds 
 	 * that are known to successfully unify with B.
 	 */
 	protected Multimap<Dob, Dob> unisuccess;
 	
-	private Multimap<Rule, Assignment> pending;
-	private Multimap<Rule, Assignment> waiting;
+	private List<Assignment> pendingAssignments;
+	private List<Assignment> waitingAssignments;
 	private Multiset<Rule> negDepCounter;
+	private Set<Dob> pendingTruths, exhaustedTruths;
 	
-	public StratifiedForward(Collection<Rule> rules, Collection<Dob> truths) {
+	/**
+	 * When this counter gets to 0, a pending truth becomes exhausted.
+	 */
+	private Multiset<Dob> dobAssignmentCounter;
+	
+	public StratifiedForward(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
 		this.pool = new Pool();
 		this.rta = new Ruletta();
@@ -115,12 +114,26 @@ public class StratifiedForward {
 		for (Dob dob : rta.bodyToRule.keySet()) { this.fortre.addDob(dob); }
 		
 		this.unisuccess = HashMultimap.create();
-		this.truths = Sets.newHashSet();
-		this.pending = HashMultimap.create();
-		this.waiting = HashMultimap.create();
-		this.negDepCounter = HashMultiset.create();
+		clear();
+	}
+	
+	public void reset(Collection<Dob> truths) {
+		clear();
+		for (Dob truth : pendingTruths) queueTruth(truth);
+	}
+	
+	/**
+	 * Initialize private variables that track the state of the prover
+	 */
+	public void clear() {
+		this.exhaustedTruths = Sets.newHashSet();
+		this.pendingTruths = Sets.newHashSet();
+
+		this.pendingAssignments = Lists.newArrayList();
+		this.waitingAssignments = Lists.newArrayList();
 		
-		for (Dob truth : truths) queueTruth(truth);
+		this.negDepCounter = HashMultiset.create();
+		this.dobAssignmentCounter = HashMultiset.create();
 	}
 
 	/**
@@ -144,18 +157,24 @@ public class StratifiedForward {
 			Colut.shiftAll(negDepCounter, negDescs, increase);
 		}
 		
-		// Split the rules into pending vs waiting.
-		// An assignment is pending if it is ready to be expanded.
-		// An assignment is waiting if it's rule is being blocked by a non-zero 
-		// number of pending/waiting ancestors.
+		// Split the rules into pendingAssignments vs waitingAssignments.
+		// An assignment is pendingAssignments if it is ready to be expanded.
+		// An assignment is waitingAssignments if it's rule is being blocked by a non-zero 
+		// number of pendingAssignments/waitingAssignments ancestors.
 		for (Rule rule : generated.keySet()) {
 			Collection<Assignment> assignments = generated.get(rule);
 			if (this.negDepCounter.count(rule) > 0) {
-				this.waiting.putAll(rule, assignments);
+				this.waitingAssignments.addAll(assignments);
 			} else {
-				this.pending.putAll(rule, assignments);
+				this.pendingAssignments.addAll(assignments);
 			}
 		}
+		
+		for (Assignment assignment : generated.values()) {
+			this.dobAssignmentCounter.add(assignment.ground);
+		}
+		
+		this.pendingTruths.add(dob);
 	}
 
 	/**
@@ -173,12 +192,12 @@ public class StratifiedForward {
 		return trunk;
 	}
 	
-	public boolean hasMore() { return this.pending.size() > 0; }
+	public boolean hasMore() { return this.pendingAssignments.size() > 0; }
 	
 	public Set<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
 		
-		// Find a pending assignment on which we can actually operate.
+		// Find a pendingAssignments assignment on which we can actually operate.
 		// We can only operate on a rule R that doesn't have any ancestors
 		// that still might generate grounds that potentially
 		// unify with a negative body term in R.
@@ -188,13 +207,13 @@ public class StratifiedForward {
 		// TODO: Generate new dobs
 		Set<Dob> raw = Sets.newHashSet();
 		
-		truths.add(dob);
+		exhaustedTruths.add(dob);
 		
 		// Submerge all of the newly generated dobs
 		Set<Dob> result = Sets.newHashSetWithExpectedSize(raw.size());
 		result.addAll(this.pool.submergeDobs(raw));
 		
-		result.removeAll(truths);
+		result.removeAll(exhaustedTruths);
 		
 		return result;
 	}
@@ -206,8 +225,8 @@ public class StratifiedForward {
 	}
 	
 	/**
-	 * This method takes a dob and returns the pivots
-	 * where it can be applied.
+	 * This method takes a dob and returns the rules where
+	 * it can be applied.
 	 * @param dob
 	 * @return
 	 */
@@ -228,8 +247,8 @@ public class StratifiedForward {
 		Iterables.addAll(subtree, fortre.getSubtreeIterable(end));
 		Iterable<Rule> rules = rta.ruleIterableFromBodyDobs(subtree);
 		for (Rule rule : rules) {
-			Set<Assignment> pivots = generateAssignments(rule, subtree, dob);
-			result.putAll(rule, pivots);
+			Set<Assignment> assignments = generateAssignments(rule, subtree, dob);
+			result.putAll(rule, assignments);
 		}
 		
 		return result;
@@ -239,7 +258,7 @@ public class StratifiedForward {
 		Set<Assignment> result = Sets.newHashSet();
 		for (int i = 0; i < rule.body.size(); i++) {
 			Dob body = rule.body.get(i).dob;
-			if (forces.contains(body)) { result.add(new Assignment(i, ground)); }
+			if (forces.contains(body)) { result.add(new Assignment(ground, i, rule)); }
 		}
 		return result;
 	}

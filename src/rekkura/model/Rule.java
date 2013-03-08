@@ -7,6 +7,7 @@ import java.util.Set;
 
 import rekkura.util.NestedIterator;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -34,10 +35,12 @@ public class Rule {
 	public static class Assignment {
 		public final Dob ground;
 		public final int position;
+		public final Rule rule;
 		
-		public Assignment(int position, Dob ground) {
+		public Assignment(Dob ground, int position, Rule rule) {
 			this.position = position;
 			this.ground = ground;
+			this.rule = rule;
 		}
 	}
 	
@@ -84,3 +87,4 @@ public class Rule {
 		};
 	}
 }
+

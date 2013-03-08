@@ -3,6 +3,9 @@ package rekkura.util;
 import java.util.Collection;
 import java.util.List;
 
+import com.google.common.base.Function;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
 /**
@@ -60,5 +63,11 @@ public class Colut {
 			int newValue = counter.count(u) + shift;
 			counter.setCount(u, newValue);
 		}
+	}
+	
+	public static <U, V> Multimap<U, V> indexBy(Collection<V> collection, Function<V, U> fn) {
+		Multimap<U, V> result = HashMultimap.create();
+		for (V v : collection) result.put(fn.apply(v), v);
+		return result;
 	}
 }
