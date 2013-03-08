@@ -45,14 +45,14 @@ public class Rule {
 		return Iterators.concat(rule.body.iterator(), Iterators.forArray(rule.head));
 	}
 	
-	public static Iterator<Atom> atomIteratorFromRules(final Collection<Rule> rules) {
-		return atomIteratorFromRules(rules.iterator());
-	}
-	
 	public static Iterator<Atom> atomIteratorFromRules(final Iterator<Rule> rules) {
 		return new NestedIterator<Rule, Atom>(rules) {
-			@Override protected Iterator<Atom> prepareNext(Rule u) { return u.body.iterator(); }
+			@Override protected Iterator<Atom> prepareNext(Rule u) { return atomIteratorFromRule(u); }
 		};
+	}
+	
+	public static Iterator<Atom> atomIteratorFromRules(final Collection<Rule> rules) {
+		return atomIteratorFromRules(rules.iterator());
 	}
 	
 	public static Iterable<Atom> atomIterableFromRules(final Collection<Rule> rules) {
