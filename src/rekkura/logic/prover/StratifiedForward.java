@@ -95,6 +95,8 @@ public class StratifiedForward {
 		this.rta = new Ruletta();
 		this.topper = new Topper();
 		
+		// TODO: Reorder rules so that negative terms come last.
+		
 		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
 		
 		rta.construct(submerged);
@@ -229,8 +231,8 @@ public class StratifiedForward {
 		// Submerge all of the newly generated dobs
 		Set<Dob> result = Sets.newHashSetWithExpectedSize(generated.size());
 		result.addAll(this.pool.submergeDobs(generated));
-		
 		result.removeAll(exhaustedTruths);
+		for (Dob dob : result) queueTruth(dob);
 		
 		return result;
 	}
@@ -281,42 +283,56 @@ public class StratifiedForward {
 		
 		// Nothing can be entailed if the body is empty
 		int bodySize = rule.body.size();
-		if (bodySize == 0) return result;
 		
 		// Prepare the domains of each positive body in the rule
 		List<Iterable<Dob>> candidates = getAssignmentSpace(rule, position, dob);
 		
 		// Iterate through the Cartesian product of possibilities
 		AssignmentIterator assignments = new AssignmentIterator(candidates);
+		
+		// Initialize the unify with the unification we are applying 
+		// at the given position.
+		Map<Dob, Dob> reference = unifier.unify(rule.body.get(position).dob, dob);
 		Map<Dob, Dob> unify = Maps.newHashMap();
+		Set<Dob> vars = rule.vars;
+		
 		while (assignments.nextAssignment()) {
 			List<Dob> assignment = assignments.current;
 			boolean success = true;
-			for (int i = 0; i < bodySize; i++) {
+			for (int i = 0; i < bodySize && success; i++) {
+				if (i == position) continue;
 				Atom atom = rule.body.get(i);
 				
 				// If the atom must be true, use the possibility provided
 				// in the full assignment.
+				Dob base = atom.dob;
 				if (atom.truth) {
-					Dob base = rule.body.get(i).dob;
 					Dob target = assignment.get(i);
-					if (unifier.unifyAssignment(base, target, unify) == null) {
-						success = false;
-						break;
-					}
+					Map<Dob, Dob> unifyResult = unifier.unifyAssignment(base, target, unify);
+					if (unifyResult == null || !vars.containsAll(unify.keySet())) success = false;
 				// If the atom must be false, check that the current 
 				// substitution applied to the dob does not yield 
 				// something that is true.
-				} else {
-					
+				} else if (!vars.containsAll(unify.keySet())) { 
+					success = false;
+				} else { 
+					Dob generated = this.pool.submerge(unifier.replace(base, unify));
+					if (this.exhaustedTruths.contains(generated)) success = false;
 				}
 			}
 			
+			// If we manage to unify against all bodies, apply the substitution
+			// to the head and render it. If the generated head still has variables
+			// in it, then do not add it to the result.
 			if (success) {
-				
+				Dob generated = this.pool.submerge(unifier.replace(rule.head.dob, unify));
+				if (Colut.containsNone(generated.fullIterable(), vars)) {
+					result.add(generated);
+				}
 			}
 			
 			unify.clear();
+			unify.putAll(reference);
 		}
 		
 		return result;
@@ -429,7 +445,10 @@ public class StratifiedForward {
 	public static Set<Assignment> generateAssignments(Rule rule, Set<Dob> forces, Dob ground) {
 		Set<Assignment> result = Sets.newHashSet();
 		for (int i = 0; i < rule.body.size(); i++) {
-			Dob body = rule.body.get(i).dob;
+			Atom atom = rule.body.get(i);
+			if (!atom.truth) continue;
+			
+			Dob body = atom.dob;
 			if (forces.contains(body)) { result.add(new Assignment(ground, i, rule)); }
 		}
 		return result;
