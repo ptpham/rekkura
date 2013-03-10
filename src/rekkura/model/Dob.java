@@ -13,7 +13,7 @@ import com.google.common.collect.Lists;
  * @author ptpham
  *
  */
-public class Dob implements Iterable<Dob> {
+public class Dob {
 	public final String name;
 	private List<Dob> children;
 	
@@ -43,7 +43,7 @@ public class Dob implements Iterable<Dob> {
 			@Override
 			public Dob next() {
 				Dob result = unused.pop();
-				Iterables.addAll(unused, result);
+				Iterables.addAll(unused, result.childIterable());
 				return result;
 			}
 
@@ -59,12 +59,11 @@ public class Dob implements Iterable<Dob> {
 			}
 		};
 	}
-	
-	@Override public Iterator<Dob> iterator() { return this.children.iterator(); }
 
+	public Iterable<Dob> childIterable() { return this.children; }
+	
 	@Override public String toString() {
 		if (isTerminal()) return super.toString() + "(" + this.name + ")";
 		return super.toString() + "(" + this.children + ")";
 	}
-
 }

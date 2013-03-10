@@ -133,7 +133,7 @@ public class StratifiedForward {
 	
 	public void reset(Collection<Dob> truths) {
 		clear();
-		for (Dob truth : pendingTruths) queueTruth(truth);
+		for (Dob truth : truths) queueTruth(truth);
 	}
 	
 	/**
@@ -351,6 +351,7 @@ public class StratifiedForward {
 		}
 		
 		boolean nextAssignment() {
+			if (current.size() > 0) current.remove(current.size() - 1);
 			while (current.size() < candidates.size()) {
 				int position = current.size();
 				
@@ -365,7 +366,7 @@ public class StratifiedForward {
 				}
 
 				Dob dob = ongoing.peek().next();
-				current.set(position, dob);
+				current.add(dob);
 			}
 			
 			return true;

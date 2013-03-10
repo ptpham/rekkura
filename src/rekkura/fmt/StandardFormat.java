@@ -16,7 +16,7 @@ public class StandardFormat extends LogicFormat {
 	@Override
 	public String toString(Dob dob) {
 		if (dob.isTerminal()) return "(" + dob.name + ")";
-		return "(" + dobsToString(dob) + ")";
+		return "(" + dobsToString(dob.childIterable()) + ")";
 	}
 
 	private String dobsToString(Iterable<Dob> iterator) {
