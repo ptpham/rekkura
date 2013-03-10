@@ -9,6 +9,7 @@ import rekkura.util.Colut;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -84,6 +85,18 @@ public class Fortre {
 		}
 		
 		return path;
+	}
+	
+	/**
+	 * Returns an iterable that covers the truck down to the given
+	 * dob as well as the subtree from the end of the trunk.
+	 * @param dob
+	 * @return
+	 */
+	public Iterable<Dob> getUnifySubtree(Dob dob) {
+		List<Dob> trunk = this.getUnifyTrunk(dob);
+		Iterable<Dob> subtree = this.getSubtreeIterable(Colut.end(trunk));
+		return Iterables.concat(trunk, subtree);
 	}
 	
 	/**

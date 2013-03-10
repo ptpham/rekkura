@@ -1,19 +1,35 @@
 package rekkura.logic.prover;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.Stack;
 
 import rekkura.logic.Fortre;
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
 import rekkura.logic.Topper;
+import rekkura.logic.Unifier;
+import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.model.Rule.Assignment;
 import rekkura.util.Colut;
+import rekkura.util.NestedIterable;
 import rekkura.util.OTMUtil;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * The set of rules provided to this prover must satisfy the following:
@@ -203,23 +219,25 @@ public class StratifiedForward {
 		
 		// If we still don't have an assignment, it is sad times.
 		if (assignment == null) throw new IllegalStateException("No pending assignments!");
-		
-		Dob dob = null;
-		
-		// TODO: Generate new dobs
-		Set<Dob> raw = Sets.newHashSet();
+		Set<Dob> generated = expand(assignment.rule, assignment.position, assignment.ground);
 		
 		// Exhaust the dob for this assignment if appropriate
-		exhaustedTruths.add(dob);
-		storeGround(dob);
+		Dob ground = assignment.ground;
+		this.dobAssignmentCounter.remove(ground);
+		if (this.dobAssignmentCounter.count(ground) == 0) exhaustGround(ground);
 		
 		// Submerge all of the newly generated dobs
-		Set<Dob> result = Sets.newHashSetWithExpectedSize(raw.size());
-		result.addAll(this.pool.submergeDobs(raw));
+		Set<Dob> result = Sets.newHashSetWithExpectedSize(generated.size());
+		result.addAll(this.pool.submergeDobs(generated));
 		
 		result.removeAll(exhaustedTruths);
 		
 		return result;
+	}
+
+	private void exhaustGround(Dob ground) {
+		exhaustedTruths.add(ground);
+		storeGround(ground);
 	}
 
 	/**
@@ -234,28 +252,148 @@ public class StratifiedForward {
 		while (assignment == null && !this.pendingAssignments.empty()) {
 			assignment = this.pendingAssignments.pop();
 
-			if (this.negDepCounter.count(assignment.rule) > 0) {
+			if (assignmentReady(assignment)) {
 				this.waitingAssignments.add(assignment);
 				assignment = null;
 			}
 		}
 		return assignment;
 	}
+
+	private boolean assignmentReady(Assignment assignment) {
+		return this.negDepCounter.count(assignment.rule) > 0;
+	}
 	
 	private void reconsiderWaiting() {
 		List<Assignment> stillWaiting = Lists.newArrayList();
 		
 		for (Assignment assignment : this.waitingAssignments) {
-			
+			if (assignmentReady(assignment)) pendingAssignments.add(assignment);
+			else stillWaiting.add(assignment);
 		}
 		
 		this.waitingAssignments = stillWaiting;
 	}
 
 	public Set<Dob> expand(Rule rule, int position, Dob dob) {
+		Set<Dob> result = Sets.newHashSet();
+		Unifier unifier = this.topper.unifier;
 		
+		// Nothing can be entailed if the body is empty
+		int bodySize = rule.body.size();
+		if (bodySize == 0) return result;
 		
-		return null;
+		// Prepare the domains of each positive body in the rule
+		List<Iterable<Dob>> candidates = getAssignmentSpace(rule, position, dob);
+		
+		// Iterate through the Cartesian product of possibilities
+		AssignmentIterator assignments = new AssignmentIterator(candidates);
+		Map<Dob, Dob> unify = Maps.newHashMap();
+		while (assignments.nextAssignment()) {
+			List<Dob> assignment = assignments.current;
+			boolean success = true;
+			for (int i = 0; i < bodySize; i++) {
+				Atom atom = rule.body.get(i);
+				
+				// If the atom must be true, use the possibility provided
+				// in the full assignment.
+				if (atom.truth) {
+					Dob base = rule.body.get(i).dob;
+					Dob target = assignment.get(i);
+					if (unifier.unifyAssignment(base, target, unify) == null) {
+						success = false;
+						break;
+					}
+				// If the atom must be false, check that the current 
+				// substitution applied to the dob does not yield 
+				// something that is true.
+				} else {
+					
+				}
+			}
+			
+			if (success) {
+				
+			}
+			
+			unify.clear();
+		}
+		
+		return result;
+	}
+	
+	private class AssignmentIterator {
+		List<Dob> current;
+		Stack<Iterator<Dob>> ongoing = new Stack<Iterator<Dob>>();
+		List<Iterable<Dob>> candidates;
+		
+		public AssignmentIterator(List<Iterable<Dob>> candidates) {
+			this.current = Lists.newArrayListWithCapacity(candidates.size());
+			this.candidates = Lists.newArrayList(candidates);
+			if (this.candidates.size() == 0) this.candidates.add(Lists.newArrayList((Dob)null));
+			this.ongoing.push(this.candidates.get(0).iterator());
+		}
+		
+		boolean nextAssignment() {
+			while (current.size() < candidates.size()) {
+				int position = current.size();
+				
+				while (ongoing.size() > 0 && !ongoing.peek().hasNext()) {
+					ongoing.pop();
+				}
+				
+				if (ongoing.size() == 0) return false;
+				
+				while (ongoing.size() <= position) {
+					ongoing.push(candidates.get(position).iterator());
+				}
+
+				Dob dob = ongoing.peek().next();
+				current.set(position, dob);
+			}
+			
+			return true;
+		}
+	}
+
+	/**
+	 * Returns a list that contains the assignment domain of each body 
+	 * term in the given rule assuming that we want to expand the given
+	 * dob at the given position.
+	 * @param rule
+	 * @param position
+	 * @param dob
+	 * @return
+	 */
+	private List<Iterable<Dob>> getAssignmentSpace(Rule rule, int position,
+			Dob dob) {
+		List<Iterable<Dob>> candidates = Lists.newArrayList(); 
+		for (int i = 0; i < rule.body.size(); i++) {
+			Atom atom = rule.body.get(i);
+			
+			Iterable<Dob> next;
+			if (!atom.truth) next = Lists.newArrayList((Dob)null);
+			else if (i == position) next = Lists.newArrayList(dob);
+			else next = getGroundCandidates(atom.dob);
+			
+			candidates.add(next);
+		}
+		return candidates;
+	}
+	
+	/**
+	 * This method returns an iterable over all exhausted ground dobs 
+	 * that potentially unify with the given body term.
+	 * @param dob
+	 * @return
+	 */
+	protected Iterable<Dob> getGroundCandidates(Dob dob) {
+		Iterable<Dob> subtree = this.fortre.getUnifySubtree(dob);
+		return new NestedIterable<Dob, Dob>(subtree) {
+			@Override protected Iterator<Dob> prepareNext(Dob u) {
+				return StratifiedForward.this.unisuccess.get(u).iterator();
+			}
+		};
 	}
 	
 	/**
