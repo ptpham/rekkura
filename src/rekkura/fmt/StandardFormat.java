@@ -109,7 +109,7 @@ public class StandardFormat extends LogicFormat {
 	}
 	
 	private Set<Dob> dobSetFromString(String s) {
-		return Sets.newHashSet(dobFromString("(" + s + ")"));
+		return Sets.newHashSet(dobFromString("(" + s + ")").childIterable());
 	}
 
 	@Override
