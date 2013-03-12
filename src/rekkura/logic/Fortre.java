@@ -7,9 +7,7 @@ import java.util.Set;
 import rekkura.model.Dob;
 import rekkura.util.Colut;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -29,17 +27,22 @@ public class Fortre {
 	
 	public final Dob root;
 	
+	private static final String DUMMY_VAR_NAME = "[DUMMY]";
+	
 	/**
 	 * This constructor requires the full set of variables that
 	 * will potentially be seen during the lifetime of this form tree.
 	 * @param allVars
 	 */
 	public Fortre(Set<Dob> allVars) {
-		Preconditions.checkArgument(Colut.nonEmpty(allVars), "No variables provided!");
-		this.allVars = allVars;
+		this.allVars = Sets.newHashSet(allVars);
+		if (this.allVars.size() == 0) {
+			Dob dummy = new Dob(DUMMY_VAR_NAME);
+			this.allVars.add(dummy);
+		}
 		
 		// Pick an arbitrary variable as the root
-		this.root = Colut.any(allVars);
+		this.root = Colut.any(this.allVars);
 	}
 	
 	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }
@@ -88,15 +91,15 @@ public class Fortre {
 	}
 	
 	/**
-	 * Returns an iterable that covers the truck down to the given
-	 * dob as well as the subtree from the end of the trunk.
+	 * Returns an iterable that covers the subtree from
+	 * the end of the trunk down to the given dob.
 	 * @param dob
 	 * @return
 	 */
 	public Iterable<Dob> getUnifySubtree(Dob dob) {
 		List<Dob> trunk = this.getUnifyTrunk(dob);
-		Iterable<Dob> subtree = this.getSubtreeIterable(Colut.end(trunk));
-		return Iterables.concat(trunk, subtree);
+		if (trunk.size() <= 1) return Lists.newArrayList();
+		return this.getSubtreeIterable(Colut.end(trunk));
 	}
 	
 	/**
@@ -112,7 +115,7 @@ public class Fortre {
 		Dob end = Colut.end(trunk);
 		Set<Dob> endChildren = this.allChildren.get(end);
 
-		if (trunk.size() == 1 && Colut.nonEmpty(endChildren)) {
+		if (Colut.nonEmpty(endChildren)) {
 			Set<Dob> up = upwardUnify(dob, endChildren);
 			endChildren.removeAll(up);
 			this.allChildren.putAll(dob, up);

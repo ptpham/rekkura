@@ -15,6 +15,12 @@ import com.google.common.collect.Multiset;
  */
 public class Colut {
 	
+	public static <T> void addAt(List<T> target, int i, T t) {
+		if (target == null) return;
+		while (target.size() <= i) target.add(null);
+		target.set(i, t);
+	}
+	
 	public static <T> void addAll(Collection<T> target, Collection<T> other) {
 		if (other == null) return;
 		target.addAll(other);
@@ -56,6 +62,11 @@ public class Colut {
 	public static <T> boolean remove(Collection<T> s, T t){
 		if (s == null) return false;
 		return s.remove(t);
+	}
+	
+	public static <T> T removeEnd(List<T> list) {
+		if (list == null || list.size() == 0) return null;
+		return list.remove(list.size() - 1);
 	}
 	
 	public static <T> T end(List<T> list) {

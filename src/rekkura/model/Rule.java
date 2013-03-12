@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import rekkura.util.Colut;
 import rekkura.util.NestedIterator;
 
 import com.google.common.collect.Iterators;
@@ -29,6 +30,11 @@ public class Rule {
 		this.head = head;
 		this.body = Lists.newArrayList(body);
 		this.vars = Sets.newHashSet(variables);
+	}
+	
+	public boolean isGroundedAt(int i) {
+		Dob dob = body.get(i).dob;
+		return Colut.containsNone(dob.fullIterable(), vars);
 	}
 	
 	public static class Assignment {

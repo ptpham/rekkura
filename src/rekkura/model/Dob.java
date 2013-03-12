@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /**
@@ -43,7 +42,7 @@ public class Dob {
 			@Override
 			public Dob next() {
 				Dob result = unused.pop();
-				Iterables.addAll(unused, result.childIterable());
+				for (Dob dob : result.childIterable()) unused.push(dob);
 				return result;
 			}
 

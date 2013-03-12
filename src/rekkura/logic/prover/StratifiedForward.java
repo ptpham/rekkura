@@ -37,6 +37,8 @@ import com.google.common.collect.Sets;
  * - Stratified negation: From a rule R and its descendants, it must 
  * not be possible to generate a grounded dob that unifies with a 
  * negative term in the body of R.
+ * - Safety: Every variable that appears in a negative term must appear
+ * in a positive body term.
  * @author ptpham
  *
  */
@@ -85,6 +87,12 @@ public class StratifiedForward {
 	private Set<Dob> pendingTruths, exhaustedTruths;
 	
 	/**
+	 * This dob is used as a trigger for fully grounded rules
+	 * that are entirely negative.
+	 */
+	private Dob vacuous = new Dob("[VAC_TRUE]");
+	
+	/**
 	 * When this counter gets to 0, a pending truth becomes exhausted.
 	 */
 	private Multiset<Dob> dobAssignmentCounter;
@@ -95,9 +103,8 @@ public class StratifiedForward {
 		this.rta = new Ruletta();
 		this.topper = new Topper();
 		
-		// TODO: Reorder rules so that negative terms come last.
-		
 		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
+		submerged = preprocess(submerged);
 		
 		rta.construct(submerged);
 
@@ -131,8 +138,37 @@ public class StratifiedForward {
 		clear();
 	}
 	
+	/**
+	 * This method adds a vacuous positive term to rules that 
+	 * have bodies that are entirely negative and grounded.
+	 * TODO: reorder rules so that negative terms come last.
+	 * 
+	 * This method will not ruin a submersion.
+	 * @param rules
+	 * @return
+	 */
+	private Set<Rule> preprocess(Collection<Rule> rules) {
+		Set<Rule> result = Sets.newHashSet();
+		
+		for (Rule rule : rules) {
+			boolean groundedAndNegative = true;
+			for (int i = 0; i < rule.body.size() && groundedAndNegative; i++) {
+				if (rule.body.get(i).truth || !rule.isGroundedAt(i)){
+					groundedAndNegative = false;
+					break;
+				}
+			}
+			
+			if (groundedAndNegative) rule.body.add(0, new Atom(this.vacuous, true));
+			result.add(rule);
+		}
+		
+		return result;
+	}
+
 	public void reset(Collection<Dob> truths) {
 		clear();
+		this.queueTruth(vacuous);
 		for (Dob truth : truths) queueTruth(truth);
 	}
 	
@@ -162,6 +198,8 @@ public class StratifiedForward {
 	 */
 	protected void queueTruth(Dob dob) {
 		dob = this.pool.submerge(dob);
+		if (pendingTruths.contains(dob) || exhaustedTruths.contains(dob)) return;
+		
 		Multimap<Rule, Assignment> generated = this.generateAssignments(dob);
 		
 		for (Rule rule : generated.keySet()) {
@@ -231,8 +269,8 @@ public class StratifiedForward {
 		// Submerge all of the newly generated dobs
 		Set<Dob> result = Sets.newHashSetWithExpectedSize(generated.size());
 		result.addAll(this.pool.submergeDobs(generated));
-		result.removeAll(exhaustedTruths);
 		for (Dob dob : result) queueTruth(dob);
+		result.remove(vacuous);
 		
 		return result;
 	}
@@ -293,7 +331,7 @@ public class StratifiedForward {
 		// Initialize the unify with the unification we are applying 
 		// at the given position.
 		Map<Dob, Dob> reference = unifier.unify(rule.body.get(position).dob, dob);
-		Map<Dob, Dob> unify = Maps.newHashMap();
+		Map<Dob, Dob> unify = Maps.newHashMap(reference);
 		Set<Dob> vars = rule.vars;
 		
 		while (assignments.nextAssignment()) {
@@ -344,29 +382,38 @@ public class StratifiedForward {
 		List<Iterable<Dob>> candidates;
 		
 		public AssignmentIterator(List<Iterable<Dob>> candidates) {
-			this.current = Lists.newArrayListWithCapacity(candidates.size());
+			for (Iterable<Dob> iterable : candidates) {
+				Preconditions.checkArgument(iterable.iterator().hasNext(), 
+						"Each candidate iterable must have at least one dob.");
+			}
+
 			this.candidates = Lists.newArrayList(candidates);
 			if (this.candidates.size() == 0) this.candidates.add(Lists.newArrayList((Dob)null));
-			this.ongoing.push(this.candidates.get(0).iterator());
+			this.current = Lists.newArrayListWithCapacity(candidates.size());
+			replenish();
+		}
+
+		private void replenish() {
+			while (this.ongoing.size() < this.candidates.size()) {
+				int curSize = this.ongoing.size();
+				this.ongoing.push(this.candidates.get(curSize).iterator());
+			}
 		}
 		
-		boolean nextAssignment() {
-			if (current.size() > 0) current.remove(current.size() - 1);
-			while (current.size() < candidates.size()) {
-				int position = current.size();
+		public boolean nextAssignment() {
+			// Remove expended iterators
+			while (ongoing.size() > 0 && !ongoing.peek().hasNext()) {
+				this.ongoing.pop();
+				while (current.size() > ongoing.size()) Colut.removeEnd(current);
+			}	
+			int depletedSize = ongoing.size();
+			if (ongoing.size() == 0) return false;
+			replenish();
 				
-				while (ongoing.size() > 0 && !ongoing.peek().hasNext()) {
-					ongoing.pop();
-				}
-				
-				if (ongoing.size() == 0) return false;
-				
-				while (ongoing.size() <= position) {
-					ongoing.push(candidates.get(position).iterator());
-				}
-
-				Dob dob = ongoing.peek().next();
-				current.add(dob);
+			int begin = Math.min(current.size(), depletedSize - 1);
+			for (int i = begin; i < this.candidates.size(); i++) {
+				Dob dob = ongoing.get(i).next();
+				Colut.addAt(this.current, i, dob);
 			}
 			
 			return true;
@@ -419,21 +466,14 @@ public class StratifiedForward {
 	 * @param dob
 	 * @return
 	 */
-	public Multimap<Rule, Assignment> generateAssignments(Dob dob) {
-		List<Dob> trunk = fortre.getUnifyTrunk(dob);
-		return generateAssignments(dob, trunk);
-	}
-
-	private Multimap<Rule, Assignment> generateAssignments(Dob dob,
-			List<Dob> trunk) {
+	private Multimap<Rule, Assignment> generateAssignments(Dob dob) {
 		Multimap<Rule, Assignment> result = HashMultimap.create();
-		Dob end = Colut.end(trunk);
-		
+
 		// Iterate over all of the bodies we are potentially affecting.
 		// This set must be a subset of the rules whose bodies are touched by the 
 		// subtree of the fortre rooted at the end of the trunk.
 		Set<Dob> subtree = Sets.newHashSet();
-		Iterables.addAll(subtree, fortre.getSubtreeIterable(end));
+		Iterables.addAll(subtree, fortre.getUnifySubtree(dob));
 		Iterable<Rule> rules = rta.ruleIterableFromBodyDobs(subtree);
 		for (Rule rule : rules) {
 			Set<Assignment> assignments = generateAssignments(rule, subtree, dob);
