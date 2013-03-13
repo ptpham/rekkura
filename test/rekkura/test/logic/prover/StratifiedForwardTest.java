@@ -27,31 +27,11 @@ public class StratifiedForwardTest {
 		};
 		
 		String[] rawDobs = {
-			"(P)",
-			"(Q)",
-			"(R)"
+			"(P)", "(Q)", "(R)"
 		};
 		
-		LogicFormat fmt = new StandardFormat();
-		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
-		List<Dob> dobs = fmt.dobsFromStrings(Arrays.asList(rawDobs));
-		
-		StratifiedForward prover = new StratifiedForward(rules);
-		prover.reset(Lists.newArrayList(dobs.get(0)));
-		Assert.assertTrue(prover.hasMore());
-		
-		Set<Dob> proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[1], fmt.toString(Colut.any(proven)));
-		
-		Assert.assertTrue(prover.hasMore());
-		proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[2], fmt.toString(Colut.any(proven)));
-		
-		Assert.assertFalse(prover.hasMore());
+		syllogismTest(rawRules, rawDobs);
 	}
-	
 
 	@Test
 	public void noVariablesNegation() {
@@ -61,30 +41,13 @@ public class StratifiedForwardTest {
 		};
 		
 		String[] rawDobs = {
-			"(P)",
-			"(Q)",
-			"(R)"
+			"(Z)", "(Q)", "(R)"
 		};
 		
-		LogicFormat fmt = new StandardFormat();
-		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
-		
-		StratifiedForward prover = new StratifiedForward(rules);
-		prover.reset(Lists.<Dob>newArrayList());
-		Assert.assertTrue(prover.hasMore());
-		
-		Set<Dob> proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[1], fmt.toString(Colut.any(proven)));
-		
-		Assert.assertTrue(prover.hasMore());
-		proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[2], fmt.toString(Colut.any(proven)));
-		
-		Assert.assertFalse(prover.hasMore());
+		syllogismTest(rawRules, rawDobs);
 	}
-	
+
+
 	@Test
 	public void variablesRequired() {
 		String[] rawRules = { 
@@ -93,9 +56,7 @@ public class StratifiedForwardTest {
 		};
 		
 		String[] rawDobs = {
-			"((P)(X))",
-			"((Q)(X))",
-			"((R)(X))"
+			"((P)(X))", "((Q)(X))", "((R)(X))"
 		};
 		
 		LogicFormat fmt = new StandardFormat();
@@ -119,64 +80,33 @@ public class StratifiedForwardTest {
 		};
 		
 		String[] rawDobs = {
-			"((P)(a))",
-			"((Q)(a))",
-			"((R)(a))"
+			"((P)(a))", "((Q)(a))", "((R)(a))"
 		};
 		
+		syllogismTest(rawRules, rawDobs);
+	}
+	
+	/**
+	 * Tests for a set of rules and a set of dobs such that you get
+	 * exactly one dob after another in the sequence.
+	 * @param rawRules
+	 * @param rawDobs
+	 */
+	private void syllogismTest(String[] rawRules, String[] rawDobs) {
 		LogicFormat fmt = new StandardFormat();
 		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
 		List<Dob> dobs = fmt.dobsFromStrings(Arrays.asList(rawDobs));
-		
+
 		StratifiedForward prover = new StratifiedForward(rules);
 		prover.reset(Lists.newArrayList(dobs.get(0)));
-		Assert.assertTrue(prover.hasMore());
 		
-		Set<Dob> proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[1], fmt.toString(Colut.any(proven)));
-		
-		Assert.assertTrue(prover.hasMore());
-		proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[2], fmt.toString(Colut.any(proven)));
+		for (int i = 1; i < dobs.size(); i++) {
+			Assert.assertTrue(prover.hasMore());
+			Set<Dob> proven = prover.proveNext();
+			Assert.assertEquals(1, proven.size());
+			Assert.assertEquals(rawDobs[i], fmt.toString(Colut.any(proven)));
+		}
 		
 		Assert.assertFalse(prover.hasMore());
 	}
-	
-	@Test
-	public void positiveNegativeMix() {
-		String[] rawRules = { 
-			"{(X) | <((Z)(X)),true> :- <((M)(X)),true> }",
-			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
-			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> <((Z)(X)),false> }"
-		};
-		
-		String[] rawDobs = {
-			"((P)(a))",
-			"((Q)(a))",
-			"((R)(a))"
-		};
-		
-		LogicFormat fmt = new StandardFormat();
-		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
-		List<Dob> dobs = fmt.dobsFromStrings(Arrays.asList(rawDobs));
-		
-		StratifiedForward prover = new StratifiedForward(rules);
-		prover.reset(Lists.newArrayList(dobs.get(0)));
-		Assert.assertTrue(prover.hasMore());
-		
-		Set<Dob> proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[1], fmt.toString(Colut.any(proven)));
-		
-		Assert.assertTrue(prover.hasMore());
-		proven = prover.proveNext();
-		Assert.assertEquals(1, proven.size());
-		Assert.assertEquals(rawDobs[2], fmt.toString(Colut.any(proven)));
-		
-		Assert.assertFalse(prover.hasMore());
-	}
-	
-	
 }
