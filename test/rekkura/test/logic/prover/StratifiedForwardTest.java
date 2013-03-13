@@ -144,5 +144,39 @@ public class StratifiedForwardTest {
 		Assert.assertFalse(prover.hasMore());
 	}
 	
+	@Test
+	public void positiveNegativeMix() {
+		String[] rawRules = { 
+			"{(X) | <((Z)(X)),true> :- <((M)(X)),true> }",
+			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> <((Z)(X)),false> }"
+		};
+		
+		String[] rawDobs = {
+			"((P)(a))",
+			"((Q)(a))",
+			"((R)(a))"
+		};
+		
+		LogicFormat fmt = new StandardFormat();
+		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
+		List<Dob> dobs = fmt.dobsFromStrings(Arrays.asList(rawDobs));
+		
+		StratifiedForward prover = new StratifiedForward(rules);
+		prover.reset(Lists.newArrayList(dobs.get(0)));
+		Assert.assertTrue(prover.hasMore());
+		
+		Set<Dob> proven = prover.proveNext();
+		Assert.assertEquals(1, proven.size());
+		Assert.assertEquals(rawDobs[1], fmt.toString(Colut.any(proven)));
+		
+		Assert.assertTrue(prover.hasMore());
+		proven = prover.proveNext();
+		Assert.assertEquals(1, proven.size());
+		Assert.assertEquals(rawDobs[2], fmt.toString(Colut.any(proven)));
+		
+		Assert.assertFalse(prover.hasMore());
+	}
+	
 	
 }
