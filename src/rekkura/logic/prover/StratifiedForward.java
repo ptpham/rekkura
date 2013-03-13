@@ -319,8 +319,6 @@ public class StratifiedForward {
 	public Set<Dob> expand(Rule rule, int position, Dob dob) {
 		Set<Dob> result = Sets.newHashSet();
 		Unifier unifier = this.topper.unifier;
-		
-		// Nothing can be entailed if the body is empty
 		int bodySize = rule.body.size();
 		
 		// Prepare the domains of each positive body in the rule

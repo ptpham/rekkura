@@ -26,10 +26,17 @@ public class StratifiedForwardTest {
 			"{| <(R),true> :- <(Q),true> }"
 		};
 		
-		String[] rawDobs = {
-			"(P)", "(Q)", "(R)"
+		String[] rawDobs = { "(P)", "(Q)", "(R)" };
+		syllogismTest(rawRules, rawDobs);
+	}
+	
+	@Test
+	public void vacuouslyTrue() {
+		String[] rawRules = { 
+				"{| <(Q),true> :-  }",
 		};
 		
+		String[] rawDobs = { "(P)", "(Q)" };
 		syllogismTest(rawRules, rawDobs);
 	}
 
@@ -40,10 +47,7 @@ public class StratifiedForwardTest {
 			"{| <(R),true> :- <(Q),true> }"
 		};
 		
-		String[] rawDobs = {
-			"(Z)", "(Q)", "(R)"
-		};
-		
+		String[] rawDobs = { "(Z)", "(Q)", "(R)" };
 		syllogismTest(rawRules, rawDobs);
 	}
 
