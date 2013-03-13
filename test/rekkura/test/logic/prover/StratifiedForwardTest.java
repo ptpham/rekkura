@@ -9,13 +9,13 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
 import rekkura.logic.prover.StratifiedForward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.Colut;
 
 public class StratifiedForwardTest {
 
@@ -59,21 +59,8 @@ public class StratifiedForwardTest {
 			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> }"
 		};
 		
-		String[] rawDobs = {
-			"((P)(X))", "((Q)(X))", "((R)(X))"
-		};
-		
-		LogicFormat fmt = new StandardFormat();
-		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
-		List<Dob> dobs = fmt.dobsFromStrings(Arrays.asList(rawDobs));
-		
-		StratifiedForward prover = new StratifiedForward(rules);
-		prover.reset(Lists.newArrayList(dobs.get(0)));
-		Assert.assertTrue(prover.hasMore());
-		
-		Set<Dob> proven = prover.proveNext();
-		Assert.assertEquals(0, proven.size());
-		Assert.assertFalse(prover.hasMore());
+		String[][] rawDobs = { {"((P)(X))"}, {} };
+		syllogismTest(rawRules, rawDobs);
 	}
 	
 	@Test
@@ -97,18 +84,27 @@ public class StratifiedForwardTest {
 	 * @param rawDobs
 	 */
 	private void syllogismTest(String[] rawRules, String[] rawDobs) {
+		String[][] dobSets = new String[rawDobs.length][1];
+		for (int i = 0; i < rawDobs.length; i++) { dobSets[i][0] = rawDobs[i]; }
+		syllogismTest(rawRules, dobSets);
+	}
+	
+	private void syllogismTest(String[] rawRules, String[][] rawDobs) {
 		LogicFormat fmt = new StandardFormat();
 		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
-		List<Dob> dobs = fmt.dobsFromStrings(Arrays.asList(rawDobs));
+		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawDobs[0]));
 
 		StratifiedForward prover = new StratifiedForward(rules);
-		prover.reset(Lists.newArrayList(dobs.get(0)));
+		prover.reset(initial);
 		
-		for (int i = 1; i < dobs.size(); i++) {
+		for (int i = 1; i < rawDobs.length; i++) {
+			Set<String> next = Sets.newHashSet(rawDobs[i]);
+			
 			Assert.assertTrue(prover.hasMore());
+			
 			Set<Dob> proven = prover.proveNext();
-			Assert.assertEquals(1, proven.size());
-			Assert.assertEquals(rawDobs[i], fmt.toString(Colut.any(proven)));
+			Assert.assertEquals(next.size(), proven.size());
+			Assert.assertTrue(next.containsAll(fmt.dobsToStrings(proven)));
 		}
 		
 		Assert.assertFalse(prover.hasMore());

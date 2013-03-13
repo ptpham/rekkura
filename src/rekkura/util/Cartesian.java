@@ -8,6 +8,11 @@ import java.util.Stack;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
+/**
+ * This holds utilities for iterating over the cartesian product of sets of items.
+ * @author ptpham
+ *
+ */
 public class Cartesian {
 	
 	public static <U> CartesianIterator<U> asIterator(List<Iterable<U>> candidates) {
@@ -23,9 +28,9 @@ public class Cartesian {
 	}
 	
 	public static class CartesianIterator<U> implements Iterator<List<U>> {
-		List<U> state, next;
-		Stack<Iterator<U>> ongoing = new Stack<Iterator<U>>();
-		List<Iterable<U>> candidates;
+		private List<U> state, next;
+		private Stack<Iterator<U>> ongoing = new Stack<Iterator<U>>();
+		private List<Iterable<U>> candidates;
 		
 		@SuppressWarnings("unchecked")
 		private CartesianIterator(List<Iterable<U>> candidates) {

@@ -37,4 +37,22 @@ public abstract class LogicFormat {
 		for (String s : strings) { result.add(dobFromString(s)); }
 		return result;
 	}
+	
+	public List<String> rulesToStrings(Collection<Rule> rules) {
+		List<String> result = Lists.newArrayList();
+		for (Rule rule : rules) { result.add(toString(rule)); }
+		return result;
+	}
+	
+	public List<String> atomsToStrings(Collection<Atom> atoms) {
+		List<String> result = Lists.newArrayList();
+		for (Atom atom : atoms) { result.add(toString(atom)); }
+		return result;
+	}
+	
+	public List<String> dobsToStrings(Collection<Dob> dobs) {
+		List<String> result = Lists.newArrayList();
+		for (Dob dob : dobs) { result.add(toString(dob)); }
+		return result;
+	}
 }
