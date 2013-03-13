@@ -17,7 +17,7 @@ import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.model.Rule.Assignment;
-import rekkura.util.CartesianWalker;
+import rekkura.util.Cartesian;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
 import rekkura.util.OTMUtil;
@@ -326,17 +326,14 @@ public class StratifiedForward {
 		// Prepare the domains of each positive body in the rule
 		List<Iterable<Dob>> candidates = getAssignmentSpace(rule, position, dob);
 		
-		// Iterate through the Cartesian product of possibilities
-		CartesianWalker<Dob> assignments = new CartesianWalker<Dob>(candidates);
-		
 		// Initialize the unify with the unification we are applying 
 		// at the given position.
 		Map<Dob, Dob> reference = unifier.unify(rule.body.get(position).dob, dob);
 		Map<Dob, Dob> unify = Maps.newHashMap(reference);
 		Set<Dob> vars = rule.vars;
 		
-		while (assignments.nextAssignment()) {
-			List<Dob> assignment = assignments.current;
+		// Iterate through the Cartesian product of possibilities
+		for (List<Dob> assignment : Cartesian.asIterable(candidates)) {
 			boolean success = true;
 			for (int i = 0; i < bodySize && success; i++) {
 				if (i == position) continue;
@@ -349,7 +346,7 @@ public class StratifiedForward {
 					Dob target = assignment.get(i);
 					Map<Dob, Dob> unifyResult = unifier.unifyAssignment(base, target, unify);
 					if (unifyResult == null || !vars.containsAll(unify.keySet())) success = false;
-				// If the atom must be false, check that the current 
+				// If the atom must be false, check that the state 
 				// substitution applied to the dob does not yield 
 				// something that is true.
 				} else if (!vars.containsAll(unify.keySet())) { 

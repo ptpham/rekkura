@@ -37,7 +37,7 @@ public class Unifier {
 	 * nodes in the target.
 	 * @param base
 	 * @param target
-	 * @param current
+	 * @param state
 	 * @return
 	 */
 	private boolean unify(Dob base, Dob target, Map<Dob, Dob> current) {
