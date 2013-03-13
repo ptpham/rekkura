@@ -17,6 +17,7 @@ import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.model.Rule.Assignment;
+import rekkura.util.CartesianWalker;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
 import rekkura.util.OTMUtil;
@@ -326,7 +327,7 @@ public class StratifiedForward {
 		List<Iterable<Dob>> candidates = getAssignmentSpace(rule, position, dob);
 		
 		// Iterate through the Cartesian product of possibilities
-		AssignmentIterator assignments = new AssignmentIterator(candidates);
+		CartesianWalker<Dob> assignments = new CartesianWalker<Dob>(candidates);
 		
 		// Initialize the unify with the unification we are applying 
 		// at the given position.
@@ -376,50 +377,6 @@ public class StratifiedForward {
 		return result;
 	}
 	
-	private class AssignmentIterator {
-		List<Dob> current;
-		Stack<Iterator<Dob>> ongoing = new Stack<Iterator<Dob>>();
-		List<Iterable<Dob>> candidates;
-		
-		public AssignmentIterator(List<Iterable<Dob>> candidates) {
-			for (Iterable<Dob> iterable : candidates) {
-				Preconditions.checkArgument(iterable.iterator().hasNext(), 
-						"Each candidate iterable must have at least one dob.");
-			}
-
-			this.candidates = Lists.newArrayList(candidates);
-			if (this.candidates.size() == 0) this.candidates.add(Lists.newArrayList((Dob)null));
-			this.current = Lists.newArrayListWithCapacity(candidates.size());
-			replenish();
-		}
-
-		private void replenish() {
-			while (this.ongoing.size() < this.candidates.size()) {
-				int curSize = this.ongoing.size();
-				this.ongoing.push(this.candidates.get(curSize).iterator());
-			}
-		}
-		
-		public boolean nextAssignment() {
-			// Remove expended iterators
-			while (ongoing.size() > 0 && !ongoing.peek().hasNext()) {
-				this.ongoing.pop();
-				while (current.size() > ongoing.size()) Colut.removeEnd(current);
-			}	
-			int depletedSize = ongoing.size();
-			if (ongoing.size() == 0) return false;
-			replenish();
-				
-			int begin = Math.min(current.size(), depletedSize - 1);
-			for (int i = begin; i < this.candidates.size(); i++) {
-				Dob dob = ongoing.get(i).next();
-				Colut.addAt(this.current, i, dob);
-			}
-			
-			return true;
-		}
-	}
-
 	/**
 	 * Returns a list that contains the assignment domain of each body 
 	 * term in the given rule assuming that we want to expand the given
