@@ -8,14 +8,13 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
 import rekkura.logic.prover.StratifiedForward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+
+import com.google.common.collect.Sets;
 
 public class StratifiedForwardTest {
 
