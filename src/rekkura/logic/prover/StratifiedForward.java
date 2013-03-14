@@ -142,7 +142,7 @@ public class StratifiedForward {
 	/**
 	 * This method adds a vacuous positive term to rules that 
 	 * have bodies that are entirely negative and grounded.
-	 * TODO: reorder rules so that negative terms come last.
+	 * It will also reorder rules so that negative terms come last.
 	 * 
 	 * This method will not ruin a submersion.
 	 * @param rules
@@ -152,15 +152,22 @@ public class StratifiedForward {
 		Set<Rule> result = Sets.newHashSet();
 		
 		for (Rule rule : rules) {
-			boolean groundedAndNegative = true;
-			for (int i = 0; i < rule.body.size() && groundedAndNegative; i++) {
-				if (rule.body.get(i).truth || !rule.isGroundedAt(i)){
-					groundedAndNegative = false;
-					break;
-				}
+			List<Atom> positives = rule.getPositives();
+			List<Atom> negatives = rule.getNegatives();
+			
+			boolean grounded = true;
+			for (Atom atom : negatives) {
+				if (!rule.isGrounded(atom.dob)) grounded = false;
 			}
 			
-			if (groundedAndNegative) rule.body.add(0, new Atom(this.vacuous, true));
+			if (grounded && positives.size() == 0) {
+				positives.add(new Atom(this.vacuous, true));
+			}
+			
+			rule.body.clear();
+			rule.body.addAll(positives);
+			rule.body.addAll(negatives);
+			
 			result.add(rule);
 		}
 		

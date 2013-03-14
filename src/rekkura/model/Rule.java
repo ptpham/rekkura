@@ -32,9 +32,20 @@ public class Rule {
 		this.vars = Sets.newHashSet(variables);
 	}
 	
-	public boolean isGroundedAt(int i) {
-		Dob dob = body.get(i).dob;
+	public boolean isGrounded(Dob dob) {
 		return Colut.containsNone(dob.fullIterable(), vars);
+	}
+	
+	public List<Atom> getPositives() {
+		List<Atom> positives = Lists.newArrayList();
+		for (Atom atom : this.body) { if (atom.truth) positives.add(atom); }
+		return positives;
+	}
+	
+	public List<Atom> getNegatives() {
+		List<Atom> negatives = Lists.newArrayList();
+		for (Atom atom : this.body) { if (!atom.truth) negatives.add(atom); }
+		return negatives;
 	}
 	
 	public static class Assignment {
