@@ -86,6 +86,7 @@ public class StratifiedForward {
 	private List<Assignment> waitingAssignments;
 	private Multiset<Rule> negDepCounter;
 	private Set<Dob> pendingTruths, exhaustedTruths;
+	private Assignment next;
 	
 	/**
 	 * This dob is used as a trigger for fully grounded rules
@@ -251,22 +252,30 @@ public class StratifiedForward {
 		return trunk;
 	}
 	
-	public boolean hasMore() { return this.pendingAssignments.size() > 0; }
+	public boolean hasMore() { 
+		prepareNext();
+		return this.next != null;
+	}
+	
+	private void prepareNext() {
+		if (next != null) return;
+		
+		next = nextPending();
+
+		// If the assignment is null here, it means we need to 
+		// look in the waiting assignments
+		if (next == null) {
+			reconsiderWaiting();
+			next = nextPending();
+		}
+	}
 	
 	public Set<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
+	
+		Assignment assignment = this.next;
+		this.next = null;
 		
-		Assignment assignment = nextPending();
-		
-		// If the assignment is null here, it means we need to 
-		// look in the waiting assignments
-		if (assignment == null) {
-			reconsiderWaiting();
-			assignment = nextPending();
-		}
-		
-		// If we still don't have an assignment, it is sad times.
-		if (assignment == null) throw new IllegalStateException("No pending assignments!");
 		Set<Dob> generated = expand(assignment.rule, assignment.position, assignment.ground);
 		
 		// Exhaust the dob for this assignment if appropriate
