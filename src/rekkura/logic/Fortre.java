@@ -1,5 +1,6 @@
 package rekkura.logic;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -20,12 +21,12 @@ import com.google.common.collect.Sets;
  *
  */
 public class Fortre {
+	public final Dob root;
 
 	private final Unifier unifier = new Unifier();
-	private final SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private final Set<Dob> allVars;
 	
-	public final Dob root;
+	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	
 	private static final String DUMMY_VAR_NAME = "[DUMMY]";
 	
@@ -34,7 +35,7 @@ public class Fortre {
 	 * will potentially be seen during the lifetime of this form tree.
 	 * @param allVars
 	 */
-	public Fortre(Set<Dob> allVars) {
+	public Fortre(Collection<Dob> allVars, Collection<Dob> allForms) {
 		this.allVars = Sets.newHashSet(allVars);
 		if (this.allVars.size() == 0) {
 			Dob dummy = new Dob(DUMMY_VAR_NAME);
@@ -43,6 +44,9 @@ public class Fortre {
 		
 		// Pick an arbitrary variable as the root
 		this.root = Colut.any(this.allVars);
+		
+		for (Dob form : allForms) addForm(form);
+		compress();
 	}
 	
 	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }
@@ -110,7 +114,7 @@ public class Fortre {
 	 * of the new dob. 
 	 * @param dob
 	 */
-	public void addDob(Dob dob) {
+	protected void addForm(Dob dob) {
 		List<Dob> trunk = getUnifyTrunk(dob);
 		Dob end = Colut.end(trunk);
 		Set<Dob> endChildren = this.allChildren.get(end);
@@ -124,7 +128,28 @@ public class Fortre {
 		// Add the dob as a child of insertion location
 		this.allChildren.put(end, dob);
 	}
-
+	
+	/**
+	 * This method will remove all nodes X such that X unifies
+	 * with the parent of X and the parent of X has exactly 
+	 * one child.
+	 */
+	protected void compress() {
+		SetMultimap<Dob, Dob> replacement = HashMultimap.create();
+		for (Dob parent : allChildren.keySet()) {
+			Set<Dob> children = allChildren.get(parent);
+			Dob child = Colut.any(children);
+			
+			if (children.size() == 1 &&
+				unifier.unifyVars(child, parent, allVars) != null) {
+				children = allChildren.get(child);
+			}
+			replacement.putAll(parent, children);
+		}
+		
+		this.allChildren = replacement;
+	}
+	
 	/**
 	 * Tries to unify the children with the dob. 
 	 * If there is exactly one unification, the child is returned, 

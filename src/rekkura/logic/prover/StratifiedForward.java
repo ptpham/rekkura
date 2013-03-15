@@ -82,10 +82,17 @@ public class StratifiedForward {
 	 */
 	protected Multimap<Dob, Dob> unisuccess;
 	
-	private Stack<Assignment> pendingAssignments;
-	private List<Assignment> waitingAssignments;
-	private Multiset<Rule> negDepCounter;
-	private Set<Dob> pendingTruths, exhaustedTruths;
+	private Stack<Assignment> pendingAssignments = new Stack<Assignment>();
+	private List<Assignment> waitingAssignments = new Stack<Assignment>();
+	private Multiset<Rule> negDepCounter = HashMultiset.create();
+	private Set<Dob> pendingTruths = Sets.newHashSet();
+	private Set<Dob> exhaustedTruths = Sets.newHashSet();
+
+	/**
+	 * When this counter gets to 0, a pending truth becomes exhausted.
+	 */
+	private Multiset<Dob> dobAssignmentCounter = HashMultiset.create();
+	
 	private Assignment next;
 	
 	/**
@@ -93,11 +100,6 @@ public class StratifiedForward {
 	 * that are entirely negative.
 	 */
 	private Dob vacuous = new Dob("[VAC_TRUE]");
-	
-	/**
-	 * When this counter gets to 0, a pending truth becomes exhausted.
-	 */
-	private Multiset<Dob> dobAssignmentCounter;
 	
 	public StratifiedForward(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
@@ -132,10 +134,8 @@ public class StratifiedForward {
 			for (Rule rule : seen) this.ruleNegDesc.putAll(rule, negRules);
 		}
 		
-		this.fortre = new Fortre(rta.allVars);
-		
-		for (Dob dob : rta.bodyToRule.keySet()) { this.fortre.addDob(dob); }
-		
+		this.fortre = new Fortre(rta.allVars, rta.bodyToRule.keySet());
+				
 		this.unisuccess = HashMultimap.create();
 		clear();
 	}
@@ -185,14 +185,16 @@ public class StratifiedForward {
 	 * Initialize private variables that track the state of the prover
 	 */
 	public void clear() {
-		this.exhaustedTruths = Sets.newHashSet();
-		this.pendingTruths = Sets.newHashSet();
+		this.exhaustedTruths.clear();
+		this.pendingTruths.clear();
 
-		this.pendingAssignments = new Stack<Assignment>();
-		this.waitingAssignments = new Stack<Assignment>();
+		this.pendingAssignments.clear();
+		this.waitingAssignments.clear();
 		
-		this.negDepCounter = HashMultiset.create();
-		this.dobAssignmentCounter = HashMultiset.create();
+		this.negDepCounter.clear();
+		this.dobAssignmentCounter.clear();
+		
+		this.next = null;
 	}
 
 	/**
