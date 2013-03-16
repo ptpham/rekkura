@@ -2,7 +2,6 @@ package rekkura.test.logic.prover;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -14,7 +13,7 @@ import rekkura.logic.prover.StratifiedForward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
 
 public class StratifiedForwardTest {
 
@@ -112,10 +111,10 @@ public class StratifiedForwardTest {
 		prover.reset(initial);
 		
 		for (int i = 1; i < rawDobs.length; i++) {
-			Set<String> next = Sets.newHashSet(rawDobs[i]);
+			List<String> next = Lists.newArrayList(rawDobs[i]);
 			
 			Assert.assertTrue(prover.hasMore());
-			Set<Dob> proven = prover.proveNext();
+			List<Dob> proven = prover.proveNext();
 
 			Assert.assertEquals(next.size(), proven.size());
 			Assert.assertTrue(next.containsAll(fmt.dobsToStrings(proven)));
@@ -133,7 +132,7 @@ public class StratifiedForwardTest {
 		prover.reset(initial);
 		
 		while (prover.hasMore()) {
-			Set<Dob> proven = prover.proveNext();
+			List<Dob> proven = prover.proveNext();
 			System.out.println(proven.size());
 			for (Dob dob : proven) {
 				System.out.println(fmt.toString(dob));

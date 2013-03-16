@@ -232,9 +232,9 @@ public class StratifiedForward {
 	 * body terms.
 	 * @param dob
 	 */
-	protected void queueTruth(Dob dob) {
+	protected Dob queueTruth(Dob dob) {
 		dob = this.pool.submerge(dob);
-		if (pendingTruths.contains(dob) || exhaustedTruths.contains(dob)) return;
+		if (isTrue(dob)) return null;
 		
 		Multimap<Rule, BodyAssignment> generated = this.generateAssignments(dob);
 		
@@ -262,6 +262,8 @@ public class StratifiedForward {
 		}
 		
 		this.pendingTruths.add(dob);
+		
+		return dob;
 	}
 
 	/**
@@ -303,7 +305,7 @@ public class StratifiedForward {
 		}
 	}
 	
-	public Set<Dob> proveNext() {
+	public List<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
 	
 		BodyAssignment assignment = this.next;
@@ -321,10 +323,11 @@ public class StratifiedForward {
 		Colut.shiftAll(negDepCounter, negDescs, -1);
 		
 		// Submerge all of the newly generated dobs
-		Set<Dob> result = Sets.newHashSetWithExpectedSize(generated.size());
-		result.addAll(this.pool.submergeDobs(generated));
-		for (Dob dob : result) queueTruth(dob);
-		result.remove(vacuous);
+		List<Dob> result = Lists.newArrayListWithCapacity(generated.size());
+		for (Dob dob : generated) {
+			Dob submerged =queueTruth(dob);
+			if (submerged != vacuous) result.add(submerged);
+		}
 		
 		return result;
 	}
@@ -572,10 +575,10 @@ public class StratifiedForward {
 		return result;
 	}
 	
-	public static Iterator<Set<Dob>> asIterator(final StratifiedForward prover) {
-		return new Iterator<Set<Dob>>() {
+	public static Iterator<List<Dob>> asIterator(final StratifiedForward prover) {
+		return new Iterator<List<Dob>>() {
 			@Override public boolean hasNext() { return prover.hasMore(); }
-			@Override public Set<Dob> next() { return prover.proveNext(); }
+			@Override public List<Dob> next() { return prover.proveNext(); }
 			@Override public void remove() { throw new IllegalAccessError("Remove not allowed!"); }
 		};
 	}
