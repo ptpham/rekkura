@@ -1,7 +1,6 @@
 package rekkura.fmt;
 
 import java.util.List;
-import java.util.Set;
 import java.util.Stack;
 
 import rekkura.model.Atom;
@@ -9,7 +8,6 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public class StandardFormat extends LogicFormat {
 	
@@ -108,8 +106,8 @@ public class StandardFormat extends LogicFormat {
 		return result;
 	}
 	
-	private Set<Dob> dobSetFromString(String s) {
-		return Sets.newHashSet(dobFromString("(" + s + ")").childIterable());
+	private List<Dob> dobListFromString(String s) {
+		return dobFromString("(" + s + ")").childCopy();
 	}
 
 	@Override
@@ -125,7 +123,7 @@ public class StandardFormat extends LogicFormat {
 		Rule rule = new Rule();
 		rule.head = atomFromString(parts[1]);
 		rule.body = atomListFromString(parts[2].replace("}", ""));
-		rule.vars = dobSetFromString(parts[0].replace("{", ""));	
+		rule.vars = dobListFromString(parts[0].replace("{", ""));	
 		return rule;
 	}
 }

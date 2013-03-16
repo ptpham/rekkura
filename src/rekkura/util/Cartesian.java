@@ -1,11 +1,13 @@
 package rekkura.util;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 /**
@@ -20,11 +22,22 @@ public class Cartesian {
 	}
 	
 	public static <U> Iterable<List<U>> asIterable(final List<Iterable<U>> candidates) {
+		if (candidates.size() == 0) return Lists.newArrayList();
 		return new Iterable<List<U>>() {
 			@Override public Iterator<List<U>> iterator() {
 				return asIterator(candidates);
 			}
 		};
+	}
+	
+	public static <U> int size(List<Iterable<U>> candidates) {
+		if (Colut.empty(candidates)) return 0;
+		
+		int product = 1;
+		for (Iterable<U> iterable : candidates) {
+			product *= Iterables.size(iterable);
+		}
+		return product;
 	}
 	
 	public static class CartesianIterator<U> implements Iterator<List<U>> {

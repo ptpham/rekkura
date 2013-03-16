@@ -76,6 +76,21 @@ public class StratifiedForwardTest {
 		syllogismTest(rawRules, rawDobs);
 	}
 	
+	@Test
+	public void pendingAssignments() {
+		String[] rawRules = { 
+			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> <((N)(X)),true> }",
+			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> <((M)(X)),false> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))"}, {"((Q)(a))"}, {}, {"((R)(a))"}
+		};
+		
+		syllogismTest(rawRules, rawDobs);
+	}
+	
 	/**
 	 * Tests for a set of rules and a set of dobs such that you get
 	 * exactly one dob after another in the sequence.
@@ -100,12 +115,29 @@ public class StratifiedForwardTest {
 			Set<String> next = Sets.newHashSet(rawDobs[i]);
 			
 			Assert.assertTrue(prover.hasMore());
-			
 			Set<Dob> proven = prover.proveNext();
+
 			Assert.assertEquals(next.size(), proven.size());
 			Assert.assertTrue(next.containsAll(fmt.dobsToStrings(proven)));
 		}
 		
 		Assert.assertFalse(prover.hasMore());
+	}
+	
+	protected void syllogismPrint(String[] rawRules, String[][] rawDobs) {
+		LogicFormat fmt = new StandardFormat();
+		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
+		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawDobs[0]));
+
+		StratifiedForward prover = new StratifiedForward(rules);
+		prover.reset(initial);
+		
+		while (prover.hasMore()) {
+			Set<Dob> proven = prover.proveNext();
+			System.out.println(proven.size());
+			for (Dob dob : proven) {
+				System.out.println(fmt.toString(dob));
+			}
+		}
 	}
 }

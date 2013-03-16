@@ -3,14 +3,12 @@ package rekkura.model;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import rekkura.util.Colut;
 import rekkura.util.NestedIterator;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  * Unlike the other logical objects, rules are mutable.
@@ -23,13 +21,13 @@ import com.google.common.collect.Sets;
 public class Rule {
 	public Atom head;
 	public List<Atom> body = Lists.newArrayList();
-	public Set<Dob> vars = Sets.newHashSet();
+	public List<Dob> vars = Lists.newArrayList();
 	
 	public Rule() { }
 	public Rule(Atom head, Collection<Atom> body, Collection<Dob> variables) {
 		this.head = head;
 		this.body = Lists.newArrayList(body);
-		this.vars = Sets.newHashSet(variables);
+		this.vars = Lists.newArrayList(variables);
 	}
 	
 	public boolean isGrounded(Dob dob) {

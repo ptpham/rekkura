@@ -28,7 +28,7 @@ public class Fortre {
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	
-	private static final String DUMMY_VAR_NAME = "[DUMMY]";
+	private static final String ROOT_VAR_NAME = "[ROOT]";
 	
 	/**
 	 * This constructor requires the full set of variables that
@@ -37,13 +37,8 @@ public class Fortre {
 	 */
 	public Fortre(Collection<Dob> allVars, Collection<Dob> allForms) {
 		this.allVars = Sets.newHashSet(allVars);
-		if (this.allVars.size() == 0) {
-			Dob dummy = new Dob(DUMMY_VAR_NAME);
-			this.allVars.add(dummy);
-		}
-		
-		// Pick an arbitrary variable as the root
-		this.root = Colut.any(this.allVars);
+		this.root = new Dob(ROOT_VAR_NAME);
+		this.allVars.add(root);
 		
 		for (Dob form : allForms) addForm(form);
 		compress();
@@ -102,6 +97,10 @@ public class Fortre {
 	 */
 	public Iterable<Dob> getUnifySubtree(Dob dob) {
 		List<Dob> trunk = this.getUnifyTrunk(dob);
+		return getUnifySubtree(trunk);
+	}
+	
+	public Iterable<Dob> getUnifySubtree(List<Dob> trunk) {
 		if (trunk.size() <= 1) return Lists.newArrayList();
 		return this.getSubtreeIterable(Colut.end(trunk));
 	}
