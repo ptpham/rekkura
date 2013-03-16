@@ -22,8 +22,8 @@ import com.google.common.collect.Sets;
  */
 public class Fortre {
 	public final Dob root;
+	public final Unifier unifier = new Unifier();
 
-	private final Unifier unifier = new Unifier();
 	private final Set<Dob> allVars;
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();

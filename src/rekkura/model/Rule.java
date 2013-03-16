@@ -48,18 +48,6 @@ public class Rule {
 		return negatives;
 	}
 	
-	public static class Assignment {
-		public final Dob ground;
-		public final int position;
-		public final Rule rule;
-		
-		public Assignment(Dob ground, int position, Rule rule) {
-			this.position = position;
-			this.ground = ground;
-			this.rule = rule;
-		}
-	}
-	
 	public static Iterator<Atom> atomIteratorFromRule(final Rule rule) {
 		return Iterators.concat(rule.body.iterator(), Iterators.forArray(rule.head));
 	}

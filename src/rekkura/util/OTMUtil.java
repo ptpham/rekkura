@@ -122,4 +122,10 @@ public class OTMUtil {
 		
 		return expandLeft(map, joiner);
 	}
+	
+	public static <U, V> Multimap<U, V> getAll(Multimap<U, V> map, Collection<U> keys) {
+		Multimap<U, V> result = HashMultimap.create();
+		for (U key : keys) result.putAll(key, map.get(key));
+		return result;
+	}
 }
