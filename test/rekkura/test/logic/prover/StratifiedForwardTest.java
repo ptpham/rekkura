@@ -2,6 +2,7 @@ package rekkura.test.logic.prover;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import junit.framework.Assert;
 
@@ -14,6 +15,7 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class StratifiedForwardTest {
 
@@ -24,7 +26,7 @@ public class StratifiedForwardTest {
 			"{| <(R),true> :- <(Q),true> }"
 		};
 		
-		String[] rawDobs = { "(P)", "(Q)", "(R)" };
+		String[][] rawDobs = { {"(P)"}, {"(Q)"}, {"(R)"} };
 		syllogismTest(rawRules, rawDobs);
 	}
 	
@@ -34,7 +36,7 @@ public class StratifiedForwardTest {
 				"{| <(Q),true> :-  }",
 		};
 		
-		String[] rawDobs = { "(P)", "(Q)" };
+		String[][] rawDobs = { {"(P)"}, {"(Q)"} };
 		syllogismTest(rawRules, rawDobs);
 	}
 
@@ -45,7 +47,7 @@ public class StratifiedForwardTest {
 			"{| <(R),true> :- <(Q),true> }"
 		};
 		
-		String[] rawDobs = { "(Z)", "(Q)", "(R)" };
+		String[][] rawDobs = { {"(Z)"}, {"(Q)"}, {"(R)"} };
 		syllogismTest(rawRules, rawDobs);
 	}
 
@@ -99,58 +101,66 @@ public class StratifiedForwardTest {
 		};
 		
 		String[][] rawDobs = {
-			{"((P)(a))"}, {"((Q)(a))"}, {"((M)(a))"}, {}, {"((R)(a)(a))"}
+			{"((P)(a))"}, {"((P)(a))", "((Q)(a))", "((M)(a))", "((R)(a)(a))"}
 		};
 		
-		syllogismTest(rawRules, rawDobs);
-	}
-	
-	/**
-	 * Tests for a set of rules and a set of dobs such that you get
-	 * exactly one dob after another in the sequence.
-	 * @param rawRules
-	 * @param rawDobs
-	 */
-	private void syllogismTest(String[] rawRules, String[] rawDobs) {
-		String[][] dobSets = new String[rawDobs.length][1];
-		for (int i = 0; i < rawDobs.length; i++) { dobSets[i][0] = rawDobs[i]; }
-		syllogismTest(rawRules, dobSets);
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
 	
 	private void syllogismTest(String[] rawRules, String[][] rawDobs) {
 		LogicFormat fmt = new StandardFormat();
-		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
-		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawDobs[0]));
-
-		StratifiedForward prover = new StratifiedForward(rules);
-		prover.reset(initial);
+		List<List<Dob>> allProven = runProver(rawRules, rawDobs[0]);
 		
 		for (int i = 1; i < rawDobs.length; i++) {
 			List<String> next = Lists.newArrayList(rawDobs[i]);
 			
-			Assert.assertTrue(prover.hasMore());
-			List<Dob> proven = prover.proveNext();
+			Assert.assertTrue(allProven.size() > i);
+			List<Dob> proven = allProven.get(i);
 
 			Assert.assertEquals(next.size(), proven.size());
 			Assert.assertTrue(next.containsAll(fmt.dobsToStrings(proven)));
 		}
 		
-		Assert.assertFalse(prover.hasMore());
+		Assert.assertEquals(rawDobs.length, allProven.size());
+	}
+	
+	private void overallMatchTest(String[] rawRules, String[] initial, String[] expected) {
+		LogicFormat fmt = new StandardFormat();
+		List<List<Dob>> allProven = runProver(rawRules, initial);
+
+		Set<String> provenSet = Sets.newHashSet();
+		for (List<Dob> stage : allProven) {
+			provenSet.addAll(fmt.dobsToStrings(stage));
+		}
+		
+		Set<String> expectedSet = Sets.newHashSet(expected);
+		
+		Assert.assertEquals(expectedSet, provenSet);
+	}
+	
+	private List<List<Dob>> runProver(String[] rawRules, String[] rawInitial) {
+		LogicFormat fmt = new StandardFormat();
+		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
+		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawInitial));
+		StratifiedForward prover = new StratifiedForward(rules);
+
+		List<List<Dob>> result = Lists.newArrayList();
+		result.add(initial);
+		
+		prover.reset(initial);
+		while (prover.hasMore()) { result.add(prover.proveNext()); }
+		return result;
 	}
 	
 	protected void syllogismPrint(String[] rawRules, String[][] rawDobs) {
 		LogicFormat fmt = new StandardFormat();
-		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
-		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawDobs[0]));
-
-		StratifiedForward prover = new StratifiedForward(rules);
-		prover.reset(initial);
+		List<List<Dob>> allProven = runProver(rawRules, rawDobs[0]);
 		
 		for (int i = 1; i < rawDobs.length; i++) {
-			if (!prover.hasMore()) {
+			if (allProven.size() >= i) {
 				System.out.println("Prover should have more to prove!");
 			} else {
-				List<Dob> proven = prover.proveNext();
+				List<Dob> proven = allProven.get(i);
 				System.out.println("Seen: " + proven.size() + ", Expected: " + rawDobs[i].length);
 				System.out.println("Proven: ");
 				for (Dob dob : proven) {
@@ -161,6 +171,7 @@ public class StratifiedForwardTest {
 					System.out.println(rawDobs[i][j]);
 				}
 			}
+			System.out.println();
 		}
 	}
 }

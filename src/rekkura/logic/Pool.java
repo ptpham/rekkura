@@ -25,7 +25,7 @@ import com.google.common.collect.Sets;
  */
 public class Pool {
 
-	LogicFormat fmt = new StandardFormat();
+	public final LogicFormat fmt = new StandardFormat();
 	Map<String, Dob> dobMap = Maps.newHashMap();
 	
 	public Dob submerge(Dob dob) {
