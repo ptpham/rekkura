@@ -68,8 +68,8 @@ public class StratifiedForwardTest {
 			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> }"
 		};
 		
-		String[] rawDobs = {
-			"((P)(a))", "((Q)(a))", "((R)(a))"
+		String[][] rawDobs = {
+			{"((P)(a))"}, {"((Q)(a))"}, {"((R)(a))"}
 		};
 		
 		syllogismTest(rawRules, rawDobs);
@@ -85,6 +85,21 @@ public class StratifiedForwardTest {
 		
 		String[][] rawDobs = {
 			{"((P)(a))"}, {"((Q)(a))"}, {}, {"((R)(a))"}
+		};
+		
+		syllogismTest(rawRules, rawDobs);
+	}
+	
+	@Test
+	public void multipleVariables() {
+		String[] rawRules = { 
+			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
+			"{(X)(Y) | <((R)(X)(Y)),true> :- <((Q)(X)),true> <((M)(Y)),true> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))"}, {"((Q)(a))"}, {"((M)(a))"}, {}, {"((R)(a)(a))"}
 		};
 		
 		syllogismTest(rawRules, rawDobs);
@@ -131,11 +146,20 @@ public class StratifiedForwardTest {
 		StratifiedForward prover = new StratifiedForward(rules);
 		prover.reset(initial);
 		
-		while (prover.hasMore()) {
-			List<Dob> proven = prover.proveNext();
-			System.out.println(proven.size());
-			for (Dob dob : proven) {
-				System.out.println(fmt.toString(dob));
+		for (int i = 1; i < rawDobs.length; i++) {
+			if (!prover.hasMore()) {
+				System.out.println("Prover should have more to prove!");
+			} else {
+				List<Dob> proven = prover.proveNext();
+				System.out.println("Seen: " + proven.size() + ", Expected: " + rawDobs[i].length);
+				System.out.println("Proven: ");
+				for (Dob dob : proven) {
+					System.out.println(fmt.toString(dob));
+				}
+				System.out.println("Expected: ");
+				for (int j = 0; j < rawDobs[i].length; j++) {
+					System.out.println(rawDobs[i][j]);
+				}
 			}
 		}
 	}

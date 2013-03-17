@@ -2,6 +2,7 @@ package rekkura.util;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 
@@ -104,6 +106,10 @@ public class OTMUtil {
 		return result;
 	}
 	
+	public static <T, U, V> Multimap<U, T> joinRight(Map<U, V> map, Map<V, T> other) {
+		return joinRight(Multimaps.forMap(map), Multimaps.forMap(other));
+	}
+	
 	public static <T, U, V> Multimap<U, T> joinRight(Multimap<U, V> map, final Multimap<V, T> other) {
 		if (map == null) return null;
 		Function<V, Collection<T>> joiner = new Function<V, Collection<T>>() {
@@ -111,6 +117,10 @@ public class OTMUtil {
 		};
 		
 		return expandRight(map, joiner);
+	}
+	
+	public static <T, U, V> Multimap<T, V> joinLeft(Map<U, V> map, Map<U, T> other) {
+		return joinLeft(Multimaps.forMap(map), Multimaps.forMap(other));
 	}
 	
 	public static <T, U, V> Multimap<T, V> joinLeft(Multimap<U, V> map, final Multimap<U, T> other) {
@@ -127,5 +137,9 @@ public class OTMUtil {
 		Multimap<U, V> result = HashMultimap.create();
 		for (U key : keys) result.putAll(key, map.get(key));
 		return result;
+	}
+	
+	public static <U, V> void putAll(Multimap<U, V> target, Map<U, V> map) {
+		for (U u : map.keySet()) target.put(u, map.get(u));
 	}
 }

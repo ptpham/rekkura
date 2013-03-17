@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -46,11 +45,6 @@ public class Cartesian {
 		
 		@SuppressWarnings("unchecked")
 		private CartesianIterator(List<Iterable<U>> candidates) {
-			for (Iterable<U> iterable : candidates) {
-				Preconditions.checkArgument(iterable.iterator().hasNext(), 
-						"Each candidate iterable must have at least one candidate.");
-			}
-	
 			this.candidates = Lists.newArrayList(candidates);
 			if (this.candidates.size() == 0) this.candidates.add(Lists.<U>newArrayList((U)null));
 			this.state = Lists.newArrayListWithCapacity(candidates.size());
@@ -78,7 +72,9 @@ public class Cartesian {
 				
 			int begin = Math.min(state.size(), depletedSize - 1);
 			for (int i = begin; i < this.candidates.size(); i++) {
-				U u = ongoing.get(i).next();
+				Iterator<U> slice = ongoing.get(i);
+				if (!slice.hasNext()) return;
+				U u = slice.next();
 				Colut.addAt(this.state, i, u);
 			}
 			

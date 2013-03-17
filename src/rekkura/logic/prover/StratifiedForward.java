@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
@@ -32,7 +33,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
@@ -49,6 +49,8 @@ import com.google.common.collect.Sets;
  */
 public class StratifiedForward {
 	
+	private static final int VARIABLE_SPACE_MIN = 32;
+
 	public Ruletta rta;
 	
 	public Topper topper;
@@ -278,13 +280,15 @@ public class StratifiedForward {
 		if (!unisuccess.containsEntry(end, dob)) {
 			unisuccess.put(end, dob);
 		}
-		
-		Unifier unifier = this.fortre.unifier;
-		Map<Dob, Dob> unify = unifier.unify(end, dob);
-		DobSpace space = this.unispaces.get(end);
-		space.replacements.putAll(Multimaps.forMap(unify));
-		
+		storeVariableReplacements(dob, end);
 		return trunk;
+	}
+
+	private void storeVariableReplacements(Dob ground, Dob body) {
+		Unifier unifier = this.fortre.unifier;
+		Map<Dob, Dob> unify = unifier.unify(body, ground);
+		DobSpace space = this.unispaces.get(body);
+		OTMUtil.putAll(space.replacements, unify);
 	}
 
 	public boolean hasMore() { 
@@ -380,14 +384,19 @@ public class StratifiedForward {
 		Set<Dob> result = Sets.newHashSet();
 		Unifier unifier = getUnifier();
 
-		// TODO: Decide whether to expand by terms or by variables based on the relative
-		// sizes of the replacements.
-		
 		// Prepare the domains of each positive body in the rule
-		List<Iterable<Dob>> terms = getBodySpace(rule, position, dob);
-		List<Iterable<Dob>> variables = getVariableSpace(rule, position, dob);
+		List<Iterable<Dob>> assignments = getBodySpace(rule, position, dob);
+		int bodySpaceSize = Cartesian.size(assignments);
 		
-		boolean useVariables = Cartesian.size(terms) > Cartesian.size(variables);
+		// Decide whether to expand by terms or by variables based on the relative
+		// sizes of the replacements. This test is only triggered for a sufficiently 
+		// large body size because it costs more time to generate the variable space.
+		boolean useVariables = false;
+		if (bodySpaceSize > VARIABLE_SPACE_MIN) {
+			List<Iterable<Dob>> variables = getVariableSpace(rule, position, dob);
+			useVariables = bodySpaceSize > Cartesian.size(variables);
+			if (useVariables) assignments = variables;
+		}
 		
 		// Initialize the unify with the unification we are applying 
 		// at the given position.
@@ -396,14 +405,16 @@ public class StratifiedForward {
 		List<Dob> vars = rule.vars;
 		
 		// Iterate through the Cartesian product of possibilities
-		for (List<Dob> assignment : Cartesian.asIterable(terms)) {
-			boolean success = expandAsBodies(grounding, unify, assignment);
+		for (List<Dob> assignment : Cartesian.asIterable(assignments)) {
+			Map<Dob, Dob> success = null;
+			if (!useVariables) success = expandAsBodies(grounding, unify, assignment);
+			else success = expandAsVariables(grounding, unify, assignment);
 			
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
 			// in it, then do not add it to the result.
-			if (success) {
-				Dob generated = this.pool.submerge(unifier.replace(rule.head.dob, unify));
+			if (success != null) {
+				Dob generated = this.pool.submerge(unifier.replace(rule.head.dob, success));
 				if (Colut.containsNone(generated.fullIterable(), vars)) {
 					result.add(generated);
 				}
@@ -416,7 +427,8 @@ public class StratifiedForward {
 		return result;
 	}
 	
-	protected boolean expandAsVariables(BodyAssignment grounding, Map<Dob, Dob> unify, List<Dob> candidates) {
+	protected Map<Dob, Dob> expandAsVariables(BodyAssignment grounding, 
+			Map<Dob, Dob> unify, List<Dob> candidates) {
 		Rule rule = grounding.rule;
 		List<Dob> vars = rule.vars; 
 		List<Atom> body = rule.body;
@@ -438,10 +450,12 @@ public class StratifiedForward {
 			if (truth != atom.truth) success = false;
 		}
 		
-		return success;
+		if (!success) return null;
+		return unify;
 	}
 
-	private boolean expandAsBodies(BodyAssignment grounding, Map<Dob, Dob> unify, List<Dob> candidates) {
+	private Map<Dob, Dob> expandAsBodies(BodyAssignment grounding, 
+			Map<Dob, Dob> unify, List<Dob> candidates) {
 		Rule rule = grounding.rule;
 		List<Dob> vars = rule.vars;
 		List<Atom> body = rule.body;
@@ -469,7 +483,9 @@ public class StratifiedForward {
 				if (isTrue(generated)) success = false;
 			}
 		}
-		return success;
+		
+		if (!success) return null;
+		return unify;
 	}
 
 	public boolean isTrue(Dob dob) {
@@ -507,17 +523,57 @@ public class StratifiedForward {
 	 * the given position.
 	 * @param rule
 	 * @param position
-	 * @param dob
+	 * @param ground
 	 * @return
 	 */
-	private List<Iterable<Dob>> getVariableSpace(Rule rule, int position, Dob dob) {
+	protected List<Iterable<Dob>> getVariableSpace(Rule rule, int position, Dob ground) {
+		// Add a single null for rules with no variables
 		List<Iterable<Dob>> candidates = Lists.newArrayList();
+		if (rule.vars.size() == 0) {
+			candidates.add(Lists.newArrayList((Dob)null));
+			return candidates;
+		}
 		
-		for (Atom atom : rule.body) {
+		Unifier unifier = getUnifier();
+
+		Multimap<Dob, Dob> variables = HashMultimap.create();
+		Map<Dob, Dob> forced = unifier.unify(rule.body.get(position).dob, ground);
+		OTMUtil.putAll(variables, forced);
+		
+		for (int i = 0; i < rule.body.size(); i++) {
+			if (i == position) continue;
+
+			Atom atom = rule.body.get(i);
 			List<Dob> trunk = this.trunks.get(atom.dob);
+			
+			// For each node in the subtree, find the set of replacements
+			// in terms of the root of the subtree. Then join right
+			// to rephrase in terms of variables in the rule.
 			Iterable<Dob> subtree = this.fortre.getUnifySubtree(trunk);
-			
-			
+			for (Dob node : subtree) {
+				Map<Dob, Collection<Dob>> raw = this.unispaces.get(node).replacements.asMap();
+				Map<Dob, Dob> left = unifier.unify(atom.dob, node);
+				
+				Map<Dob, Collection<Dob>> replacements = raw;
+				if (Colut.nonEmpty(left.keySet())) {
+					for (Entry<Dob, Collection<Dob>> entry : OTMUtil.joinRight(left, raw).entries()) {
+						replacements.put(entry.getKey(), entry.getValue());
+					}
+				}
+				
+				for (Dob variable : replacements.keySet()) {
+					Collection<Dob> current = replacements.get(variable);
+					if (variables.containsKey(variable)) {
+						variables.get(variable).retainAll(current);
+					} else {
+						variables.putAll(variable, current);
+					}
+				}
+			}
+		}
+		
+		for (Dob variable : rule.vars) {
+			candidates.add(variables.get(variable));
 		}
 		
 		return candidates;
