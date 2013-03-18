@@ -142,6 +142,10 @@ public class Fortre {
 		return getCognateIterable(getSplay(trunk));
 	}
 	
+	public boolean isVacuousTrunk(List<Dob> trunk) {
+		return trunk == null || trunk.size() < 1;
+	}
+	
 	public Iterable<Dob> getCognateIterable(final Iterable<Dob> dobs) {
 		return new Iterable<Dob>() {
 			@Override public Iterator<Dob> iterator() {

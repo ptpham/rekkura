@@ -154,13 +154,16 @@ public class StratifiedForward {
 			for (Rule rule : seen) this.ruleNegDesc.putAll(rule, negRules);
 		}
 		
-		this.fortre = new Fortre(rta.allVars, rta.bodyToRule.keySet());
-				
+		this.fortre = new Fortre(rta.allVars, rta.allDobs);
+		
 		this.unisuccess = HashMultimap.create();
 		this.unispaces = Maps.newHashMap();
-		for (Dob body : this.rta.bodyToRule.keySet()) { 
+		for (Dob body : this.rta.allDobs) { 
 			this.unispaces.put(body, new DobSpace(body)); 
 		}
+
+		// TODO: This is kind of gross. Make sure it is reasonable before fully committing.
+		this.unispaces.put(this.fortre.root, new DobSpace(this.fortre.root));
 		
 		clear();
 	}
@@ -263,7 +266,8 @@ public class StratifiedForward {
 			this.dobAssignmentCounter.add(assignment.ground);
 		}
 		
-		this.pendingTruths.add(dob);
+		if (generated.size() > 0) this.pendingTruths.add(dob);
+		else exhaustGround(dob);
 		
 		return dob;
 	}

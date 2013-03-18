@@ -169,6 +169,39 @@ public class StratifiedForwardTest {
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
 	
+	@Test
+	public void doubleNegation() {
+		String[] rawRules = { 
+			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((Q)(X)),true> :- <((J)(X)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
+			"{(X) | <((K)(X)),true> :- <((M)(X)),false> }",
+			"{(X) | <((R)(X)),true> :- <((N)(X)),true> <((K)(Y)),false> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))", "((Q)(b))"}, {"((M)(b))", "((N)(a))", "((R)(a))"}
+		};
+
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
+	@Test
+	public void complex() {
+		String[] rawRules = { 
+			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
+			"{(X) | <((K)(X)),true> :- <((M)(X)),true> }",
+			"{(X)(Y) | <((R)(X)(Y)),true> :- <((N)(X)),true> <((K)(Y)),true> <((N)(Y)),false> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))", "((Q)(b))"}, {"((M)(b))", "((K)(b))", "((N)(a))", "((R)(a)(b))"}
+		};
+
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
 	private void syllogismTest(String[] rawRules, String[][] rawDobs) {
 		LogicFormat fmt = new StandardFormat();
 		List<List<Dob>> allProven = runProver(rawRules, rawDobs[0]);
