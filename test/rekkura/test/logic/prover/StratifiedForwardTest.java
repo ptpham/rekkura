@@ -107,6 +107,24 @@ public class StratifiedForwardTest {
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
 	
+	@Test
+	public void multipleGroundings() {
+		String[] rawRules = { 
+			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
+			"{(X)(Y) | <((R)(X)(Y)),true> :- <((Q)(X)),true> <((M)(Y)),true> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))", "((P)(b))"}, 
+			{"((P)(a))", "((P)(b))", "((Q)(a))", "((Q)(b))", 
+			 "((M)(a))", "((M)(b))", "((R)(a)(a))", "((R)(a)(b))",
+			 "((R)(b)(a))", "((R)(b)(b))" }
+		};
+		
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
 	private void syllogismTest(String[] rawRules, String[][] rawDobs) {
 		LogicFormat fmt = new StandardFormat();
 		List<List<Dob>> allProven = runProver(rawRules, rawDobs[0]);
