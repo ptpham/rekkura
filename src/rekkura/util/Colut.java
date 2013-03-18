@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
@@ -89,6 +90,12 @@ public class Colut {
 	public static <U, V> Multimap<U, V> indexBy(Collection<V> collection, Function<V, U> fn) {
 		Multimap<U, V> result = HashMultimap.create();
 		for (V v : collection) result.put(fn.apply(v), v);
+		return result;
+	}
+	
+	public static <U> List<U> collapseAsList(Collection<? extends Collection<U>> all) {
+		List<U> result = Lists.newArrayList();
+		for (Collection<U> collection : all) { result.addAll(collection); }
 		return result;
 	}
 }

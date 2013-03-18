@@ -500,13 +500,22 @@ public class StratifiedForward {
 	 */
 	private List<Iterable<Dob>> getBodySpace(Rule rule, int position, Dob dob) {
 		List<Iterable<Dob>> candidates = Lists.newArrayList(); 
+		List<Dob> targetTrunk = this.trunks.get(dob);
+		List<Dob> targetList = Lists.newArrayList(dob);
+		
 		for (int i = 0; i < rule.body.size(); i++) {
 			Atom atom = rule.body.get(i);
 			
 			Iterable<Dob> next;
 			if (!atom.truth) next = Lists.newArrayList((Dob)null);
 			else if (i == position) next = Lists.newArrayList(dob);
-			else next = getGroundCandidates(atom.dob);
+			else {
+				List<Dob> currentTrunk = this.trunks.get(atom.dob);
+				next = getGroundCandidates(currentTrunk);
+				if (targetTrunk.contains(Colut.end(currentTrunk))) {
+					next = Iterables.concat(next, targetList);
+				}
+			}
 			
 			if (Iterables.isEmpty(next)) return Lists.newArrayList();
 			candidates.add(next);
@@ -582,8 +591,7 @@ public class StratifiedForward {
 	 * @param dob
 	 * @return
 	 */
-	protected Iterable<Dob> getGroundCandidates(Dob dob) {
-		List<Dob> trunk = this.trunks.get(dob);
+	protected Iterable<Dob> getGroundCandidates(List<Dob> trunk) {
 		Iterable<Dob> subtree = this.fortre.getCognateSubtree(trunk);
 		return new NestedIterable<Dob, Dob>(subtree) {
 			@Override protected Iterator<Dob> prepareNext(Dob u) {

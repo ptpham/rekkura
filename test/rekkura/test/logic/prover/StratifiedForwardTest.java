@@ -13,6 +13,7 @@ import rekkura.fmt.StandardFormat;
 import rekkura.logic.prover.StratifiedForward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.util.Colut;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -187,6 +188,24 @@ public class StratifiedForwardTest {
 	}
 	
 	@Test
+	public void cartesianProduct() {
+		String[] rawRules = { 
+				"{| <((index)(1)),true> :- }",
+				"{| <((index)(2)),true> :- }",
+				"{| <((index)(3)),true> :- }",
+				"{(X)(Y) | <((cell)(X)(Y)(empty)),true> :- <((index)(X)),true> <((index)(Y)),true> }",
+			};
+		String[][] rawDobs = {
+				{}, 
+				{"((index)(1))", "((index)(2))", "((index)(3))", 
+				 "((cell)(1)(1)(empty))", "((cell)(1)(2)(empty))", "((cell)(1)(3)(empty))",
+				 "((cell)(2)(1)(empty))", "((cell)(2)(2)(empty))", "((cell)(2)(3)(empty))",
+				 "((cell)(3)(1)(empty))", "((cell)(3)(2)(empty))", "((cell)(3)(3)(empty))"}
+			};
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
+	@Test
 	public void complex() {
 		String[] rawRules = { 
 			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
@@ -225,13 +244,11 @@ public class StratifiedForwardTest {
 	}
 	
 	private void overallMatchTest(String[] rawRules, String[] initial, String[] expected) {
-		LogicFormat fmt = new StandardFormat();
 		List<List<Dob>> allProven = runProver(rawRules, initial);
-
-		Set<String> provenSet = Sets.newHashSet();
-		for (List<Dob> stage : allProven) {
-			provenSet.addAll(fmt.dobsToStrings(stage));
-		}
+		
+		LogicFormat fmt = new StandardFormat();
+		List<Dob> provenList = Colut.collapseAsList(allProven);
+		Set<String> provenSet = Sets.newHashSet(fmt.dobsToStrings(provenList));
 		
 		Set<String> expectedSet = Sets.newHashSet(expected);
 		expectedSet.addAll(Arrays.asList(initial));
@@ -239,7 +256,7 @@ public class StratifiedForwardTest {
 		Assert.assertEquals(expectedSet, provenSet);
 	}
 	
-	private List<List<Dob>> runProver(String[] rawRules, String[] rawInitial) {
+	public static List<List<Dob>> runProver(String[] rawRules, String[] rawInitial) {
 		LogicFormat fmt = new StandardFormat();
 		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
 		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawInitial));

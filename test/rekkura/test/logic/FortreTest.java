@@ -64,4 +64,5 @@ public class FortreTest {
 		Assert.assertEquals(2, fortre.getUnifyTrunk(second).size());
 	}
 	
+	// TODO: Write tests for cognates
 }
