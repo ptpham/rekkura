@@ -190,13 +190,18 @@ public class StratifiedForwardTest {
 	public void complex() {
 		String[] rawRules = { 
 			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
+			"{(Z) | <((N)(Z)),true> :- <((T)(Z)),true> }",
 			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
 			"{(X) | <((K)(X)),true> :- <((M)(X)),true> }",
+			"{(X) | <((N)(X)),true> :- }",
+			"{(Z) | <((N)(Z)),true> :- <((D)((M)(Z))),false>}",
 			"{(X)(Y) | <((R)(X)(Y)),true> :- <((N)(X)),true> <((K)(Y)),true> <((N)(Y)),false> }"
 		};
 		
 		String[][] rawDobs = {
-			{"((P)(a))", "((Q)(b))"}, {"((M)(b))", "((K)(b))", "((N)(a))", "((R)(a)(b))"}
+			{"((P)(a))", "((Q)(b))", "((T)(c))"}, 
+			{"((N)(c))", "((M)(b))", "((K)(b))", 
+			 "((N)(a))", "((R)(a)(b))", "((R)(c)(b))"}
 		};
 
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);

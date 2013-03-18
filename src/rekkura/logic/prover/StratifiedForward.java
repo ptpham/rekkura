@@ -27,14 +27,7 @@ import rekkura.util.OTMUtil;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * The set of rules provided to this prover must satisfy the following:
@@ -239,7 +232,7 @@ public class StratifiedForward {
 	 */
 	protected Dob queueTruth(Dob dob) {
 		dob = this.pool.submerge(dob);
-		if (isTrue(dob)) return null;
+		if (isTrue(dob)) return this.vacuous;
 		
 		Multimap<Rule, BodyAssignment> generated = this.generateAssignments(dob);
 		
@@ -606,7 +599,7 @@ public class StratifiedForward {
 	 * @return
 	 */
 	private Multimap<Rule, BodyAssignment> generateAssignments(Dob dob) {
-		Multimap<Rule, BodyAssignment> result = HashMultimap.create();
+		Multimap<Rule, BodyAssignment> result = ArrayListMultimap.create();
 
 		// Iterate over all of the bodies we are potentially affecting.
 		// This set must be a subset of the rules whose bodies are touched by the 
@@ -616,15 +609,15 @@ public class StratifiedForward {
 		Iterables.addAll(subtree, fortre.getCognateSplay(trunk));
 		Iterable<Rule> rules = rta.ruleIterableFromBodyDobs(subtree);
 		for (Rule rule : rules) {
-			Set<BodyAssignment> assignments = generateAssignments(rule, subtree, dob);
+			List<BodyAssignment> assignments = generateAssignments(rule, subtree, dob);
 			result.putAll(rule, assignments);
 		}
 		
 		return result;
 	}
 	
-	public static Set<BodyAssignment> generateAssignments(Rule rule, Set<Dob> forces, Dob ground) {
-		Set<BodyAssignment> result = Sets.newHashSet();
+	public static List<BodyAssignment> generateAssignments(Rule rule, Set<Dob> forces, Dob ground) {
+		List<BodyAssignment> result = Lists.newArrayList();
 		for (int i = 0; i < rule.body.size(); i++) {
 			Atom atom = rule.body.get(i);
 			if (!atom.truth) continue;
