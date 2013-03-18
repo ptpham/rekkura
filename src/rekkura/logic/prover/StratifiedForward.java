@@ -42,7 +42,7 @@ import com.google.common.collect.*;
  */
 public class StratifiedForward {
 	
-	private static final int VARIABLE_SPACE_MIN = 32;
+	private static final int VARIABLE_SPACE_MIN = 4;
 
 	public Ruletta rta;
 	
@@ -94,18 +94,11 @@ public class StratifiedForward {
 			}
 		});
 	
-	private Stack<BodyAssignment> pendingAssignments = new Stack<BodyAssignment>();
-	private List<BodyAssignment> waitingAssignments = new Stack<BodyAssignment>();
+	private Stack<Rule> pendingRules = new Stack<Rule>();
+	private List<Rule> waitingRules = new Stack<Rule>();
 	private Multiset<Rule> negDepCounter = HashMultiset.create();
-	private Set<Dob> pendingTruths = Sets.newHashSet();
-	private Set<Dob> exhaustedTruths = Sets.newHashSet();
-
-	/**
-	 * When this counter gets to 0, a pending truth becomes exhausted.
-	 */
-	private Multiset<Dob> dobAssignmentCounter = HashMultiset.create();
-	
-	private BodyAssignment next;
+	private Set<Dob> truths = Sets.newHashSet();
+	private Rule next;
 	
 	/**
 	 * This dob is used as a trigger for fully grounded rules
@@ -208,14 +201,12 @@ public class StratifiedForward {
 	 * Initialize private variables that track the state of the prover
 	 */
 	public void clear() {
-		this.exhaustedTruths.clear();
-		this.pendingTruths.clear();
+		this.truths.clear();
 
-		this.pendingAssignments.clear();
-		this.waitingAssignments.clear();
+		this.pendingRules.clear();
+		this.waitingRules.clear();
 		
 		this.negDepCounter.clear();
-		this.dobAssignmentCounter.clear();
 		
 		this.next = null;
 	}
@@ -234,33 +225,26 @@ public class StratifiedForward {
 		dob = this.pool.submerge(dob);
 		if (isTrue(dob)) return this.vacuous;
 		
-		Multimap<Rule, BodyAssignment> generated = this.generateAssignments(dob);
+		Iterable<Rule> generated = this.generateAssignments(dob);
 		
-		for (Rule rule : generated.keySet()) {
-			int increase = generated.get(rule).size();
+		for (Rule rule : generated) {
 			Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
-			Colut.shiftAll(negDepCounter, negDescs, increase);
+			Colut.shiftAll(negDepCounter, negDescs, 1);
 		}
 
-		// Split the rules into pendingAssignments vs waitingAssignments.
-		// An assignment is pendingAssignments if it is ready to be expanded.
-		// An assignment is waitingAssignments if it's rule is being blocked by a non-zero 
-		// number of pendingAssignments/waitingAssignments ancestors.
-		for (Rule rule : generated.keySet()) {
-			Collection<BodyAssignment> assignments = generated.get(rule);
+		// Split the rules into pendingRules vs waitingRules.
+		// An assignment is pendingRules if it is ready to be expanded.
+		// An assignment is waitingRules if it's rule is being blocked by a non-zero 
+		// number of pendingRules/waitingRules ancestors.
+		for (Rule rule : generated) {
 			if (this.negDepCounter.count(rule) > 0) {
-				this.waitingAssignments.addAll(assignments);
+				this.waitingRules.add(rule);
 			} else {
-				this.pendingAssignments.addAll(assignments);
+				this.pendingRules.add(rule);
 			}
 		}
 		
-		for (BodyAssignment assignment : generated.values()) {
-			this.dobAssignmentCounter.add(assignment.ground);
-		}
-		
-		if (generated.size() > 0) this.pendingTruths.add(dob);
-		else exhaustGround(dob);
+		storeGround(dob);
 		
 		return dob;
 	}
@@ -272,11 +256,14 @@ public class StratifiedForward {
 	 * @return
 	 */
 	private List<Dob> storeGround(Dob dob) {
+		truths.add(dob);
+
 		List<Dob> trunk = this.trunks.get(dob);
 		Dob end = Colut.end(trunk);
 		if (!unisuccess.containsEntry(end, dob)) {
 			unisuccess.put(end, dob);
 		}
+		
 		storeVariableReplacements(dob, end);
 		return trunk;
 	}
@@ -309,18 +296,13 @@ public class StratifiedForward {
 	public List<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
 	
-		BodyAssignment assignment = this.next;
+		Rule rule = this.next;
 		this.next = null;
 		
-		Set<Dob> generated = expand(assignment);
+		Set<Dob> generated = expand(rule);
 		
-		// Exhaust the dob for this assignment if appropriate
-		Dob ground = assignment.ground;
-		this.dobAssignmentCounter.remove(ground);
-		if (this.dobAssignmentCounter.count(ground) == 0) exhaustGround(ground);
-
 		// Inform rules with negative terms that they can proceed
-		Collection<Rule> negDescs = this.ruleNegDesc.get(assignment.rule);
+		Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
 		Colut.shiftAll(negDepCounter, negDescs, -1);
 		
 		// Submerge all of the newly generated dobs
@@ -333,56 +315,47 @@ public class StratifiedForward {
 		return result;
 	}
 
-	private void exhaustGround(Dob ground) {
-		exhaustedTruths.add(ground);
-		storeGround(ground);
-	}
-
 	/**
-	 * Find a pendingAssignments assignment on which we can actually operate.
+	 * Find a pendingRules assignment on which we can actually operate.
 	 * We can only operate on a rule R that doesn't have any ancestors
 	 * that still might generate grounds that potentially
 	 * unify with a negative body term in R.
 	 * @return
 	 */
-	private BodyAssignment nextPending() {
-		BodyAssignment assignment = null;
-		while (assignment == null && !this.pendingAssignments.empty()) {
-			assignment = this.pendingAssignments.pop();
+	private Rule nextPending() {
+		Rule assignment = null;
+		while (assignment == null && !this.pendingRules.empty()) {
+			assignment = this.pendingRules.pop();
 
-			if (!assignmentReady(assignment)) {
-				this.waitingAssignments.add(assignment);
+			if (!ruleReady(assignment)) {
+				this.waitingRules.add(assignment);
 				assignment = null;
 			}
 		}
 		return assignment;
 	}
 
-	private boolean assignmentReady(BodyAssignment assignment) {
-		return this.negDepCounter.count(assignment.rule) == 0;
+	private boolean ruleReady(Rule rule) {
+		return this.negDepCounter.count(rule) == 0;
 	}
 	
 	private void reconsiderWaiting() {
-		List<BodyAssignment> stillWaiting = Lists.newArrayList();
+		List<Rule> stillWaiting = Lists.newArrayList();
 		
-		for (BodyAssignment assignment : this.waitingAssignments) {
-			if (assignmentReady(assignment)) pendingAssignments.add(assignment);
-			else stillWaiting.add(assignment);
+		for (Rule rule : this.waitingRules) {
+			if (ruleReady(rule)) pendingRules.add(rule);
+			else stillWaiting.add(rule);
 		}
 		
-		this.waitingAssignments = stillWaiting;
+		this.waitingRules = stillWaiting;
 	}
 
-	public Set<Dob> expand(BodyAssignment grounding) {
-		Dob dob = grounding.ground;
-		Rule rule = grounding.rule;
-		int position = grounding.position;
-		
+	public Set<Dob> expand(Rule rule) {		
 		Set<Dob> result = Sets.newHashSet();
 		Unifier unifier = getUnifier();
 
 		// Prepare the domains of each positive body in the rule
-		List<Iterable<Dob>> assignments = getBodySpace(rule, position, dob);
+		List<Iterable<Dob>> assignments = getBodySpace(rule);
 		int bodySpaceSize = Cartesian.size(assignments);
 		
 		// Decide whether to expand by terms or by variables based on the relative
@@ -390,22 +363,20 @@ public class StratifiedForward {
 		// large body size because it costs more time to generate the variable space.
 		boolean useVariables = false;
 		if (bodySpaceSize > VARIABLE_SPACE_MIN) {
-			List<Iterable<Dob>> variables = getVariableSpace(rule, position, dob);
+			List<Iterable<Dob>> variables = getVariableSpace(rule);
 			useVariables = bodySpaceSize > Cartesian.size(variables);
 			if (useVariables) assignments = variables;
 		}
 		
-		// Initialize the unify with the unification we are applying 
-		// at the given position.
-		Map<Dob, Dob> reference = unifier.unify(rule.body.get(position).dob, dob);
-		Map<Dob, Dob> unify = Maps.newHashMap(reference);
+
+		// Iterate through the Cartesian product of possibilities
+		Map<Dob, Dob> unify = Maps.newHashMap();
 		List<Dob> vars = rule.vars;
 		
-		// Iterate through the Cartesian product of possibilities
 		for (List<Dob> assignment : Cartesian.asIterable(assignments)) {
 			Map<Dob, Dob> success = null;
-			if (!useVariables) success = expandAsBodies(grounding, unify, assignment);
-			else success = expandAsVariables(grounding, unify, assignment);
+			if (!useVariables) success = expandAsBodies(rule, assignment);
+			else success = expandAsVariables(rule, assignment);
 			
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
@@ -418,15 +389,13 @@ public class StratifiedForward {
 			}
 			
 			unify.clear();
-			unify.putAll(reference);
 		}
 		
 		return result;
 	}
 	
-	protected Map<Dob, Dob> expandAsVariables(BodyAssignment grounding, 
-			Map<Dob, Dob> unify, List<Dob> candidates) {
-		Rule rule = grounding.rule;
+	protected Map<Dob, Dob> expandAsVariables(Rule rule, List<Dob> candidates) {
+		Map<Dob, Dob> unify = Maps.newHashMap();
 		List<Dob> vars = rule.vars; 
 		List<Atom> body = rule.body;
 		Unifier unifier = getUnifier();
@@ -438,7 +407,6 @@ public class StratifiedForward {
 		
 		boolean success = true;
 		for (int i = 0; i < body.size() && success; i++) {
-			if (i == grounding.position) continue;
 			Atom atom = body.get(i);
 		
 			// Generate the ground body
@@ -451,16 +419,14 @@ public class StratifiedForward {
 		return unify;
 	}
 
-	private Map<Dob, Dob> expandAsBodies(BodyAssignment grounding, 
-			Map<Dob, Dob> unify, List<Dob> candidates) {
-		Rule rule = grounding.rule;
+	private Map<Dob, Dob> expandAsBodies(Rule rule, List<Dob> candidates) {
+		Map<Dob, Dob> unify = Maps.newHashMap();
 		List<Dob> vars = rule.vars;
 		List<Atom> body = rule.body;
 		Unifier unifier = getUnifier();
 		
 		boolean success = true;
 		for (int i = 0; i < body.size() && success; i++) {
-			if (i == grounding.position) continue;
 			Atom atom = body.get(i);
 			
 			// If the atom must be true, use the possibility provided
@@ -485,9 +451,7 @@ public class StratifiedForward {
 		return unify;
 	}
 
-	public boolean isTrue(Dob dob) {
-		return this.exhaustedTruths.contains(dob) || this.pendingTruths.contains(dob);
-	}
+	public boolean isTrue(Dob dob) { return this.truths.contains(dob); }
 	
 	/**
 	 * Returns a list that contains the assignment domain of each body 
@@ -498,24 +462,15 @@ public class StratifiedForward {
 	 * @param dob
 	 * @return
 	 */
-	private List<Iterable<Dob>> getBodySpace(Rule rule, int position, Dob dob) {
+	private List<Iterable<Dob>> getBodySpace(Rule rule) {
 		List<Iterable<Dob>> candidates = Lists.newArrayList(); 
-		List<Dob> targetTrunk = this.trunks.get(dob);
-		List<Dob> targetList = Lists.newArrayList(dob);
 		
 		for (int i = 0; i < rule.body.size(); i++) {
 			Atom atom = rule.body.get(i);
 			
 			Iterable<Dob> next;
 			if (!atom.truth) next = Lists.newArrayList((Dob)null);
-			else if (i == position) next = Lists.newArrayList(dob);
-			else {
-				List<Dob> currentTrunk = this.trunks.get(atom.dob);
-				next = getGroundCandidates(currentTrunk);
-				if (targetTrunk.contains(Colut.end(currentTrunk))) {
-					next = Iterables.concat(next, targetList);
-				}
-			}
+			else next = getGroundCandidates(this.trunks.get(atom.dob));
 			
 			if (Iterables.isEmpty(next)) return Lists.newArrayList();
 			candidates.add(next);
@@ -532,7 +487,7 @@ public class StratifiedForward {
 	 * @param ground
 	 * @return
 	 */
-	protected List<Iterable<Dob>> getVariableSpace(Rule rule, int position, Dob ground) {
+	protected List<Iterable<Dob>> getVariableSpace(Rule rule) {
 		// Add a single null for rules with no variables
 		List<Iterable<Dob>> candidates = Lists.newArrayList();
 		if (rule.vars.size() == 0) {
@@ -541,14 +496,9 @@ public class StratifiedForward {
 		}
 		
 		Unifier unifier = getUnifier();
-
 		Multimap<Dob, Dob> variables = HashMultimap.create();
-		Map<Dob, Dob> forced = unifier.unify(rule.body.get(position).dob, ground);
-		OTMUtil.putAll(variables, forced);
 		
 		for (int i = 0; i < rule.body.size(); i++) {
-			if (i == position) continue;
-
 			Atom atom = rule.body.get(i);
 			List<Dob> trunk = this.trunks.get(atom.dob);
 			
@@ -562,6 +512,7 @@ public class StratifiedForward {
 				
 				Map<Dob, Collection<Dob>> replacements = raw;
 				if (Colut.nonEmpty(left.keySet())) {
+					replacements = Maps.newHashMap();
 					for (Entry<Dob, Collection<Dob>> entry : OTMUtil.joinRight(left, raw).entries()) {
 						replacements.put(entry.getKey(), entry.getValue());
 					}
@@ -606,22 +557,14 @@ public class StratifiedForward {
 	 * @param dob
 	 * @return
 	 */
-	private Multimap<Rule, BodyAssignment> generateAssignments(Dob dob) {
-		Multimap<Rule, BodyAssignment> result = ArrayListMultimap.create();
-
+	private Iterable<Rule> generateAssignments(Dob dob) {
 		// Iterate over all of the bodies we are potentially affecting.
 		// This set must be a subset of the rules whose bodies are touched by the 
 		// subtree of the fortre rooted at the end of the trunk.
 		Set<Dob> subtree = Sets.newHashSet();
 		List<Dob> trunk = this.trunks.get(dob);
 		Iterables.addAll(subtree, fortre.getCognateSplay(trunk));
-		Iterable<Rule> rules = rta.ruleIterableFromBodyDobs(subtree);
-		for (Rule rule : rules) {
-			List<BodyAssignment> assignments = generateAssignments(rule, subtree, dob);
-			result.putAll(rule, assignments);
-		}
-		
-		return result;
+		return rta.ruleIterableFromBodyDobs(subtree);
 	}
 	
 	public static List<BodyAssignment> generateAssignments(Rule rule, Set<Dob> forces, Dob ground) {
