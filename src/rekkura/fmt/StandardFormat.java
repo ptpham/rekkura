@@ -13,14 +13,26 @@ public class StandardFormat extends LogicFormat {
 	
 	@Override
 	public String toString(Dob dob) {
-		if (dob.isTerminal()) return "(" + dob.name + ")";
-		return "(" + dobsToString(dob.childIterable()) + ")";
+		StringBuilder builder = new StringBuilder();
+		appendDobToString(dob, builder);
+		return builder.toString();
 	}
-
+	
 	private String dobsToString(Iterable<Dob> iterator) {
 		StringBuilder builder = new StringBuilder();
-		for (Dob dob : iterator) { builder.append(toString(dob)); }
+		for (Dob dob : iterator) { appendDobToString(dob, builder); }
 		return builder.toString();
+	}
+	
+	protected void appendDobToString(Dob dob, StringBuilder builder) {
+		builder.append("(");
+		if (dob.isTerminal()) builder.append(dob.name);
+		else appendDobsToString(dob.childIterable(), builder);
+		builder.append(")");
+	}
+	
+	protected void appendDobsToString(Iterable<Dob> iterator, StringBuilder builder) {
+		for (Dob dob : iterator) { appendDobToString(dob, builder); }
 	}
 	
 	@Override

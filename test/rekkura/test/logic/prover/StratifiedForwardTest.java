@@ -267,6 +267,7 @@ public class StratifiedForwardTest {
 		
 		prover.reset(initial);
 		while (prover.hasMore()) { result.add(prover.proveNext()); }
+
 		return result;
 	}
 	
