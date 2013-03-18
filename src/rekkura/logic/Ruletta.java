@@ -10,6 +10,7 @@ import rekkura.model.Rule;
 import rekkura.util.OTMUtil;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -53,6 +54,10 @@ public class Ruletta {
 		}
 	}
 
+	public Iterable<Dob> getAllTerms() {
+		return Iterables.concat(this.headToRule.keySet(), this.bodyToRule.keySet()); 
+	}
+	
 	public Iterator<Rule> ruleIteratorFromBodyDobs(Iterator<Dob> dobs) {
 		return OTMUtil.valueIterator(bodyToRule, dobs);
 	}

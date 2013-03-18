@@ -111,7 +111,7 @@ public class StratifiedForward {
 	 * This dob is used as a trigger for fully grounded rules
 	 * that are entirely negative.
 	 */
-	private Dob vacuous = new Dob("[VAC_TRUE]");
+	private Dob vacuous = new Dob("[VACUOUS]");
 	
 	public StratifiedForward(Collection<Rule> rules) {
 		
@@ -147,11 +147,11 @@ public class StratifiedForward {
 			for (Rule rule : seen) this.ruleNegDesc.putAll(rule, negRules);
 		}
 		
-		this.fortre = new Fortre(rta.allVars, rta.allDobs);
+		this.fortre = new Fortre(rta.allVars, rta.bodyToRule.keySet());
 		
 		this.unisuccess = HashMultimap.create();
 		this.unispaces = Maps.newHashMap();
-		for (Dob body : this.rta.allDobs) { 
+		for (Dob body : this.rta.getAllTerms()) { 
 			this.unispaces.put(body, new DobSpace(body)); 
 		}
 

@@ -39,12 +39,13 @@ public class Fortre {
 	 * will potentially be seen during the lifetime of this form tree.
 	 * @param allVars
 	 */
-	public Fortre(Collection<Dob> allVars, Collection<Dob> allForms) {
+	public Fortre(Collection<Dob> allVars, Iterable<Dob> allForms) {
 		this.allVars = Sets.newHashSet(allVars);
 		this.root = new Dob(ROOT_VAR_NAME);
 		this.allVars.add(root);
 		
-		for (Dob form : allForms) addForm(form);
+		Set<Dob> deduped = Sets.newHashSet(allForms);
+		for (Dob form : deduped) addForm(form);
 		compress();
 	}
 	
