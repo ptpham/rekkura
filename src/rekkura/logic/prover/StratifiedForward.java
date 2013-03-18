@@ -245,7 +245,7 @@ public class StratifiedForward {
 			Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
 			Colut.shiftAll(negDepCounter, negDescs, increase);
 		}
-		
+
 		// Split the rules into pendingAssignments vs waitingAssignments.
 		// An assignment is pendingAssignments if it is ready to be expanded.
 		// An assignment is waitingAssignments if it's rule is being blocked by a non-zero 
@@ -549,7 +549,7 @@ public class StratifiedForward {
 			// For each node in the subtree, find the set of replacements
 			// in terms of the root of the subtree. Then join right
 			// to rephrase in terms of variables in the rule.
-			Iterable<Dob> subtree = this.fortre.getUnifySubtree(trunk);
+			Iterable<Dob> subtree = this.fortre.getCognateSubtree(trunk);
 			for (Dob node : subtree) {
 				Map<Dob, Collection<Dob>> raw = this.unispaces.get(node).replacements.asMap();
 				Map<Dob, Dob> left = unifier.unify(atom.dob, node);
@@ -587,7 +587,7 @@ public class StratifiedForward {
 	 */
 	protected Iterable<Dob> getGroundCandidates(Dob dob) {
 		List<Dob> trunk = this.trunks.get(dob);
-		Iterable<Dob> subtree = this.fortre.getUnifySubtree(trunk);
+		Iterable<Dob> subtree = this.fortre.getCognateSubtree(trunk);
 		return new NestedIterable<Dob, Dob>(subtree) {
 			@Override protected Iterator<Dob> prepareNext(Dob u) {
 				return StratifiedForward.this.unisuccess.get(u).iterator();
@@ -609,7 +609,7 @@ public class StratifiedForward {
 		// subtree of the fortre rooted at the end of the trunk.
 		Set<Dob> subtree = Sets.newHashSet();
 		List<Dob> trunk = this.trunks.get(dob);
-		Iterables.addAll(subtree, fortre.getUnifySubtree(trunk));
+		Iterables.addAll(subtree, fortre.getCognateSplay(trunk));
 		Iterable<Rule> rules = rta.ruleIterableFromBodyDobs(subtree);
 		for (Rule rule : rules) {
 			Set<BodyAssignment> assignments = generateAssignments(rule, subtree, dob);

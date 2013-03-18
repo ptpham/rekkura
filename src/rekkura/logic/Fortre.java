@@ -3,12 +3,15 @@ package rekkura.logic;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.Stack;
 
 import rekkura.model.Dob;
 import rekkura.util.Colut;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -27,6 +30,7 @@ public class Fortre {
 	private final Set<Dob> allVars;
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
+	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
 	
 	private static final String ROOT_VAR_NAME = "[ROOT]";
 	
@@ -47,18 +51,39 @@ public class Fortre {
 	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }
 	
 	private class SubtreeIterator implements Iterator<Dob> {
-		Set<Dob> unexplored = Sets.newHashSet();
+		Stack<Dob> unexplored = new Stack<Dob>();
 		public SubtreeIterator(Dob root) { unexplored.add(root); }
-		@Override public boolean hasNext() { return Colut.nonEmpty(unexplored); }
+		@Override public boolean hasNext() { return unexplored.size() > 0; }
 		@Override public void remove() { throw new IllegalAccessError("Remove not allowed!"); }
 
 		@Override
 		public Dob next() {
-			Dob next = Colut.popAny(unexplored);
-			Colut.addAll(unexplored, Fortre.this.allChildren.get(next));
+			if (!hasNext()) throw new NoSuchElementException();
+			Dob next = unexplored.pop();
+			unexplored.addAll(Fortre.this.allChildren.get(next));
 			return next;
 		}
 	};
+	
+	private class CognateIterator implements Iterator<Dob> {
+		Stack<Dob> unexplored = new Stack<Dob>();
+		
+		public CognateIterator(Iterator<Dob> existing) { 
+			while (existing.hasNext()) {
+				Dob next = existing.next();
+				unexplored.add(next);
+				unexplored.addAll(Fortre.this.cognates.get(next));
+			}
+		}
+		
+		@Override public boolean hasNext() { return unexplored.size() > 0; }
+		@Override public void remove() { throw new IllegalAccessError("Remove not allowed!"); }
+
+		@Override public Dob next() {
+			if (!hasNext()) throw new NoSuchElementException();
+			return unexplored.pop();
+		}
+	};	
 	
 	public Iterable<Dob> getSubtreeIterable(final Dob dob) {
 		return new Iterable<Dob>() {
@@ -105,6 +130,26 @@ public class Fortre {
 		return this.getSubtreeIterable(Colut.end(trunk));
 	}
 	
+	public Iterable<Dob> getCognateSubtree(List<Dob> trunk) {
+		return getCognateIterable(getUnifySubtree(trunk));
+	}
+	
+	public Iterable<Dob> getSplay(List<Dob> trunk) {
+		return Iterables.concat(trunk, getUnifySubtree(trunk));
+	}
+	
+	public Iterable<Dob> getCognateSplay(List<Dob> trunk) {
+		return getCognateIterable(getSplay(trunk));
+	}
+	
+	public Iterable<Dob> getCognateIterable(final Iterable<Dob> dobs) {
+		return new Iterable<Dob>() {
+			@Override public Iterator<Dob> iterator() {
+				return new CognateIterator(dobs.iterator());
+			}
+		};
+	}
+	
 	/**
 	 * The dob is added at the lowest level such that all of its 
 	 * ancestors unify with it. If there is a non-trivial subset of
@@ -134,19 +179,28 @@ public class Fortre {
 	 * one child.
 	 */
 	protected void compress() {
+		Set<Dob> candidates = Sets.newHashSet(this.allChildren.keySet());
+		while (candidates.size() > 0) { candidates = compressOnce(candidates); }
+	}
+
+	private Set<Dob> compressOnce(Set<Dob> candidates) {
+		Set<Dob> remaining = Sets.newHashSet();
 		SetMultimap<Dob, Dob> replacement = HashMultimap.create();
-		for (Dob parent : allChildren.keySet()) {
+		for (Dob parent : candidates) {
 			Set<Dob> children = allChildren.get(parent);
 			Dob child = Colut.any(children);
 			
 			if (children.size() == 1 &&
 				unifier.unifyVars(child, parent, allVars) != null) {
 				children = allChildren.get(child);
+				if (children.size() == 1) remaining.add(parent);
+				this.cognates.put(parent, child);
 			}
 			replacement.putAll(parent, children);
 		}
 		
 		this.allChildren = replacement;
+		return remaining;
 	}
 	
 	/**

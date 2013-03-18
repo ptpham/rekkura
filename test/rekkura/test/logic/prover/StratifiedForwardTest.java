@@ -117,9 +117,53 @@ public class StratifiedForwardTest {
 		
 		String[][] rawDobs = {
 			{"((P)(a))", "((P)(b))"}, 
-			{"((P)(a))", "((P)(b))", "((Q)(a))", "((Q)(b))", 
-			 "((M)(a))", "((M)(b))", "((R)(a)(a))", "((R)(a)(b))",
-			 "((R)(b)(a))", "((R)(b)(b))" }
+			{"((Q)(a))", "((Q)(b))",  "((M)(a))", "((M)(b))", 
+			 "((R)(a)(a))", "((R)(a)(b))", "((R)(b)(a))", "((R)(b)(b))" }
+		};
+		
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
+	@Test
+	public void deepFormTree() {
+		String[] rawRules = { 
+			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> <((P)(a)),false> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))", "((P)(b))"}, {"((Q)(b))", "((Q)(a))"}
+		};
+		
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
+	@Test
+	public void interleavedNegation() {
+		String[] rawRules = { 
+			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
+			"{(X) | <((R)(X)),true> :- <((N)(X)),true> <((M)(X)),false> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))", "((Q)(b))"}, {"((M)(b))", "((N)(a))", "((R)(a))"}
+		};
+		
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
+	@Test
+	public void formCognates() {
+		String[] rawRules = { 
+			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
+			"{(X) | <((K)(X)),true> :- <((M)(X)),true> }",
+			"{(Y) | <((R)(Y)),true> :- <((N)(Y)),true> <((M)(Y)),false> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))", "((Q)(b))"}, {"((M)(b))", "((K)(b))", "((N)(a))", "((R)(a))"}
 		};
 		
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
@@ -152,6 +196,7 @@ public class StratifiedForwardTest {
 		}
 		
 		Set<String> expectedSet = Sets.newHashSet(expected);
+		expectedSet.addAll(Arrays.asList(initial));
 		
 		Assert.assertEquals(expectedSet, provenSet);
 	}
@@ -175,19 +220,16 @@ public class StratifiedForwardTest {
 		List<List<Dob>> allProven = runProver(rawRules, rawDobs[0]);
 		
 		for (int i = 1; i < rawDobs.length; i++) {
-			if (allProven.size() >= i) {
-				System.out.println("Prover should have more to prove!");
-			} else {
-				List<Dob> proven = allProven.get(i);
-				System.out.println("Seen: " + proven.size() + ", Expected: " + rawDobs[i].length);
-				System.out.println("Proven: ");
-				for (Dob dob : proven) {
-					System.out.println(fmt.toString(dob));
-				}
-				System.out.println("Expected: ");
-				for (int j = 0; j < rawDobs[i].length; j++) {
-					System.out.println(rawDobs[i][j]);
-				}
+			List<Dob> proven = Lists.newArrayList();
+			if (i < allProven.size()) proven = allProven.get(i);
+			System.out.println("Seen: " + proven.size() + ", Expected: " + rawDobs[i].length);
+			System.out.println("Proven: ");
+			for (Dob dob : proven) {
+				System.out.println(fmt.toString(dob));
+			}
+			System.out.println("Expected: ");
+			for (int j = 0; j < rawDobs[i].length; j++) {
+				System.out.println(rawDobs[i][j]);
 			}
 			System.out.println();
 		}
