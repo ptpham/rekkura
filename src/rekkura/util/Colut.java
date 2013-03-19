@@ -3,6 +3,8 @@ package rekkura.util;
 import java.util.Collection;
 import java.util.List;
 
+import rekkura.model.Dob;
+
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -97,5 +99,10 @@ public class Colut {
 		List<U> result = Lists.newArrayList();
 		for (Collection<U> collection : all) { result.addAll(collection); }
 		return result;
+	}
+
+	public static Dob get(List<Dob> list, int i) {
+		if (list == null || i < 0 || i >= list.size()) return null;
+		return list.get(i);
 	}
 }

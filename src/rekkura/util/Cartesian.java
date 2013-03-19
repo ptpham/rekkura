@@ -3,7 +3,6 @@ package rekkura.util;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Stack;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -15,11 +14,11 @@ import com.google.common.collect.Lists;
  */
 public class Cartesian {
 	
-	public static <U> CartesianIterator<U> asIterator(List<Iterable<U>> candidates) {
+	public static <U> CartesianIterator<U> asIterator(List<List<U>> candidates) {
 		return new CartesianIterator<U>(candidates);
 	}
 	
-	public static <U> Iterable<List<U>> asIterable(final List<Iterable<U>> candidates) {
+	public static <U> Iterable<List<U>> asIterable(final List<List<U>> candidates) {
 		if (candidates.size() == 0) return Lists.newArrayList();
 		return new Iterable<List<U>>() {
 			@Override public Iterator<List<U>> iterator() {
@@ -39,59 +38,37 @@ public class Cartesian {
 	}
 	
 	public static class CartesianIterator<U> implements Iterator<List<U>> {
-		private List<U> state, next;
-		private Stack<Iterator<U>> ongoing = new Stack<Iterator<U>>();
-		private List<Iterable<U>> candidates;
+		private int current;
 		
+		private final int spaceSize, candidateSize;
+		private final List<List<U>> candidates;
+
 		@SuppressWarnings("unchecked")
-		private CartesianIterator(List<Iterable<U>> candidates) {
-			this.candidates = Lists.newArrayList(candidates);
+		private CartesianIterator(List<List<U>> candidates) {
+			this.candidates = candidates;
 			if (this.candidates.size() == 0) this.candidates.add(Lists.<U>newArrayList((U)null));
-			this.state = Lists.newArrayListWithCapacity(candidates.size());
-			replenish();
+			
+			int size = 1;
+			for (List<U> slice : candidates) { size *= slice.size(); }
+			
+			this.spaceSize = size;
+			this.candidateSize = this.candidates.size();
 		}
 	
-		private void replenish() {
-			while (this.ongoing.size() < this.candidates.size()) {
-				int curSize = this.ongoing.size();
-				this.ongoing.push(this.candidates.get(curSize).iterator());
-			}
-		}
-		
-		public void prepareNext() {
-			if (next != null) return;
-			
-			// Remove expended iterators
-			while (ongoing.size() > 0 && !ongoing.peek().hasNext()) {
-				this.ongoing.pop();
-				while (state.size() > ongoing.size()) Colut.removeEnd(state);
-			}	
-			int depletedSize = ongoing.size();
-			if (ongoing.size() == 0) return;
-			replenish();
-				
-			int begin = Math.min(state.size(), depletedSize - 1);
-			for (int i = begin; i < this.candidates.size(); i++) {
-				Iterator<U> slice = ongoing.get(i);
-				if (!slice.hasNext()) return;
-				U u = slice.next();
-				Colut.addAt(this.state, i, u);
-			}
-			
-			this.next = Lists.newArrayList(this.state);
-		}
-	
-		@Override 
-		public boolean hasNext() {
-			prepareNext();
-			return this.next != null; 
-		}
+		@Override public boolean hasNext() { return this.current < this.spaceSize; }
 	
 		@Override
 		public List<U> next() {
 			if (!hasNext()) throw new NoSuchElementException();
-			List<U> result = next;
-			next = null;
+			List<U> result = Lists.newArrayListWithCapacity(candidateSize);
+			int descender = this.current;
+			for (int i = 0; i < candidateSize; i++) {
+				int sliceSize = this.candidates.get(i).size();
+				int index = descender % sliceSize;
+				result.add(this.candidates.get(i).get(index));
+				descender /= sliceSize;
+			}
+			this.current++;
 			return result;
 		}
 	

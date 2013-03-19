@@ -139,6 +139,11 @@ public class Fortre {
 		return Iterables.concat(trunk, getUnifySubtree(trunk));
 	}
 	
+
+	public Iterable<? extends Dob> getCognateSplay(Dob dob) {
+		return getCognateSplay(getUnifyTrunk(dob));
+	}
+	
 	public Iterable<Dob> getCognateSplay(List<Dob> trunk) {
 		return getCognateIterable(getSplay(trunk));
 	}

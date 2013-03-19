@@ -42,7 +42,7 @@ import com.google.common.collect.*;
  */
 public class StratifiedForward {
 	
-	private static final int VARIABLE_SPACE_MIN = 4;
+	private static final int VARIABLE_SPACE_MIN = 512;
 
 	public Ruletta rta;
 	
@@ -50,17 +50,20 @@ public class StratifiedForward {
 	
 	/**
 	 * This holds the set of head dobs that may generate a body dob.
+	 * Memory is O(R^2).
 	 */
 	public Multimap<Dob, Dob> headBodyDeps;
 	
 	/**
 	 * This holds the set of rules that may generate a body dob.
+	 * Memory is O(R^2).
 	 */
 	public Multimap<Dob, Rule> dobRuleDeps;
 
 	/**
 	 * This holds the set of rules that may generate dobs for the body
 	 * of the given rule.
+	 * Memory is O(R^2).
 	 */
 	public Multimap<Rule, Rule> ruleRuleDeps;
 	
@@ -68,6 +71,7 @@ public class StratifiedForward {
 	 * This holds the set of rules that are descendants of the given
 	 * rule such that the given rule may generate a negative body 
 	 * in the descendant.
+	 * Memory is O(R^2).
 	 */
 	public Multimap<Rule, Rule> ruleNegDesc;
 
@@ -76,25 +80,39 @@ public class StratifiedForward {
 	public final Fortre fortre;
 	
 	/**
-	 * These hold the mappings from a body term B in a rule to grounds 
+	 * These hold the mappings from a body form B to grounds 
 	 * that are known to successfully unify with B.
+	 * Memory is O(FG) but it will only store the things that
+	 * are true in any given proving cycle.
 	 */
 	protected Multimap<Dob, Dob> unisuccess;
 	
 	/**
-	 * This holds the mapping from a body term to the sets of replacements
+	 * This holds the mapping from a body form to the sets of replacements
 	 * for its various children.
+	 * Memory is O(FV).
 	 */
 	protected Map<Dob, DobSpace> unispaces;
 	
-	protected Cache<Dob, List<Dob>> trunks = 
+	/**
+	 * This caches form subtrees for given ground dobs.
+	 */
+	protected Cache<Dob, List<Dob>> subtrees = 
 		Cache.create(new Function<Dob, List<Dob>>() {
 			@Override public List<Dob> apply(Dob dob) { 
-				return StratifiedForward.this.fortre.getUnifyTrunk(dob);
+				return Lists.newArrayList(StratifiedForward.this.fortre.getUnifySubtree(dob));
 			}
 		});
 	
-	private Stack<Rule> pendingRules = new Stack<Rule>();
+	protected Cache<Dob, List<Rule>> affectedRules = 
+		Cache.create(new Function<Dob, List<Rule>>() {
+			@Override public List<Rule> apply(Dob dob) { 
+				List<Rule> result = Lists.newArrayList(StratifiedForward.this.generateAssignments(dob));
+				return result;
+			}
+		});
+	
+	private Set<Rule> pendingRules = Sets.newHashSet();
 	private List<Rule> waitingRules = new Stack<Rule>();
 	private Multiset<Rule> negDepCounter = HashMultiset.create();
 	private Set<Dob> truths = Sets.newHashSet();
@@ -144,12 +162,9 @@ public class StratifiedForward {
 		
 		this.unisuccess = HashMultimap.create();
 		this.unispaces = Maps.newHashMap();
-		for (Dob body : this.rta.getAllTerms()) { 
+		for (Dob body : Iterables.concat(Lists.newArrayList(this.fortre.root), this.rta.getAllTerms())) { 
 			this.unispaces.put(body, new DobSpace(body)); 
 		}
-
-		// TODO: This is kind of gross. Make sure it is reasonable before fully committing.
-		this.unispaces.put(this.fortre.root, new DobSpace(this.fortre.root));
 		
 		clear();
 	}
@@ -205,8 +220,9 @@ public class StratifiedForward {
 
 		this.pendingRules.clear();
 		this.waitingRules.clear();
-		
 		this.negDepCounter.clear();
+		
+		this.unisuccess.clear();
 		
 		this.next = null;
 	}
@@ -225,7 +241,7 @@ public class StratifiedForward {
 		dob = this.pool.submerge(dob);
 		if (isTrue(dob)) return this.vacuous;
 		
-		Iterable<Rule> generated = this.generateAssignments(dob);
+		Iterable<Rule> generated = this.affectedRules.get(dob);
 		
 		for (Rule rule : generated) {
 			Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
@@ -255,17 +271,15 @@ public class StratifiedForward {
 	 * @param dob
 	 * @return
 	 */
-	private List<Dob> storeGround(Dob dob) {
+	private void storeGround(Dob dob) {
 		truths.add(dob);
 
-		List<Dob> trunk = this.trunks.get(dob);
-		Dob end = Colut.end(trunk);
-		if (!unisuccess.containsEntry(end, dob)) {
+		// The root of the subtree is the end of the trunk.
+		Dob end = Colut.get(this.subtrees.get(dob), 0);
+		if (end != null) {
 			unisuccess.put(end, dob);
+			storeVariableReplacements(dob, end);
 		}
-		
-		storeVariableReplacements(dob, end);
-		return trunk;
 	}
 
 	private void storeVariableReplacements(Dob ground, Dob body) {
@@ -324,8 +338,8 @@ public class StratifiedForward {
 	 */
 	private Rule nextPending() {
 		Rule assignment = null;
-		while (assignment == null && !this.pendingRules.empty()) {
-			assignment = this.pendingRules.pop();
+		while (assignment == null && this.pendingRules.size() > 0) {
+			assignment = Colut.popAny(this.pendingRules);
 
 			if (!ruleReady(assignment)) {
 				this.waitingRules.add(assignment);
@@ -371,9 +385,11 @@ public class StratifiedForward {
 
 		// Iterate through the Cartesian product of possibilities
 		Map<Dob, Dob> unify = Maps.newHashMap();
-		List<Dob> vars = rule.vars;
 		
-		for (List<Dob> assignment : Cartesian.asIterable(assignments)) {
+		List<List<Dob>> space = Lists.newArrayListWithCapacity(assignments.size());
+		for (Iterable<Dob> iterable : assignments) { space.add(Lists.newArrayList(iterable)); }
+		
+		for (List<Dob> assignment : Cartesian.asIterable(space)) {
 			Map<Dob, Dob> success = null;
 			if (!useVariables) success = expandAsBodies(rule, assignment);
 			else success = expandAsVariables(rule, assignment);
@@ -381,11 +397,9 @@ public class StratifiedForward {
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
 			// in it, then do not add it to the result.
-			if (success != null) {
+			if (success != null && rule.vars.size() == success.size()) {
 				Dob generated = this.pool.submerge(unifier.replace(rule.head.dob, success));
-				if (Colut.containsNone(generated.fullIterable(), vars)) {
-					result.add(generated);
-				}
+				result.add(generated);
 			}
 			
 			unify.clear();
@@ -470,7 +484,7 @@ public class StratifiedForward {
 			
 			Iterable<Dob> next;
 			if (!atom.truth) next = Lists.newArrayList((Dob)null);
-			else next = getGroundCandidates(this.trunks.get(atom.dob));
+			else next = getGroundCandidates(atom.dob);
 			
 			if (Iterables.isEmpty(next)) return Lists.newArrayList();
 			candidates.add(next);
@@ -500,12 +514,11 @@ public class StratifiedForward {
 		
 		for (int i = 0; i < rule.body.size(); i++) {
 			Atom atom = rule.body.get(i);
-			List<Dob> trunk = this.trunks.get(atom.dob);
 			
 			// For each node in the subtree, find the set of replacements
 			// in terms of the root of the subtree. Then join right
 			// to rephrase in terms of variables in the rule.
-			Iterable<Dob> subtree = this.fortre.getCognateSubtree(trunk);
+			Iterable<Dob> subtree = this.subtrees.get(atom.dob);
 			for (Dob node : subtree) {
 				Map<Dob, Collection<Dob>> raw = this.unispaces.get(node).replacements.asMap();
 				Map<Dob, Dob> left = unifier.unify(atom.dob, node);
@@ -542,8 +555,8 @@ public class StratifiedForward {
 	 * @param dob
 	 * @return
 	 */
-	protected Iterable<Dob> getGroundCandidates(List<Dob> trunk) {
-		Iterable<Dob> subtree = this.fortre.getCognateSubtree(trunk);
+	protected Iterable<Dob> getGroundCandidates(Dob dob) {
+		Iterable<Dob> subtree = this.subtrees.get(dob);
 		return new NestedIterable<Dob, Dob>(subtree) {
 			@Override protected Iterator<Dob> prepareNext(Dob u) {
 				return StratifiedForward.this.unisuccess.get(u).iterator();
@@ -557,14 +570,13 @@ public class StratifiedForward {
 	 * @param dob
 	 * @return
 	 */
-	private Iterable<Rule> generateAssignments(Dob dob) {
+	private Set<Rule> generateAssignments(Dob dob) {
 		// Iterate over all of the bodies we are potentially affecting.
 		// This set must be a subset of the rules whose bodies are touched by the 
 		// subtree of the fortre rooted at the end of the trunk.
 		Set<Dob> subtree = Sets.newHashSet();
-		List<Dob> trunk = this.trunks.get(dob);
-		Iterables.addAll(subtree, fortre.getCognateSplay(trunk));
-		return rta.ruleIterableFromBodyDobs(subtree);
+		Iterables.addAll(subtree, fortre.getCognateSplay(dob));
+		return Sets.newHashSet(rta.ruleIterableFromBodyDobs(subtree));
 	}
 	
 	public static List<BodyAssignment> generateAssignments(Rule rule, Set<Dob> forces, Dob ground) {
