@@ -95,21 +95,47 @@ public class StratifiedForward {
 	protected Map<Dob, DobSpace> unispaces;
 	
 	/**
-	 * This caches form subtrees for given ground dobs.
+	 * This maps ground dobs to their canonical dobs (the dob at 
+	 * the end of the unify trunk).
 	 */
-	protected Cache<Dob, List<Dob>> subtrees = 
+	protected Cache<Dob, Dob> canonicalForms = 
+		Cache.create(new Function<Dob, Dob>() {
+			@Override public Dob apply(Dob dob) { 
+				return Colut.end(StratifiedForward.this.fortre.getUnifyTrunk(dob));
+			}
+		});
+	
+	protected Cache<Dob, List<Dob>> canonicalSubtrees = 
 		Cache.create(new Function<Dob, List<Dob>>() {
 			@Override public List<Dob> apply(Dob dob) { 
 				return Lists.newArrayList(StratifiedForward.this.fortre.getUnifySubtree(dob));
 			}
 		});
 	
-	protected Cache<Dob, List<Rule>> affectedRules = 
+	/**
+	 * This caches form subtrees for given canonical dobs.
+	 */
+	protected Cache<Dob, List<Dob>> subtrees = 
+		Cache.create(new Function<Dob, List<Dob>>() {
+			@Override public List<Dob> apply(Dob dob) 
+			{ return canonicalSubtrees.get(canonicalForms.get(dob)); }
+		});
+	
+	/**
+	 * This caches the list of rules affected by each canonical form.
+	 */
+	protected Cache<Dob, List<Rule>> canonicalRules = 
 		Cache.create(new Function<Dob, List<Rule>>() {
 			@Override public List<Rule> apply(Dob dob) { 
 				List<Rule> result = Lists.newArrayList(StratifiedForward.this.generateAssignments(dob));
 				return result;
 			}
+		});
+	
+	protected Cache<Dob, List<Rule>> affectedRules = 
+		Cache.create(new Function<Dob, List<Rule>>() {
+			@Override public List<Rule> apply(Dob dob) 
+			{ return canonicalRules.get(canonicalForms.get(dob)); }
 		});
 	
 	private Set<Rule> pendingRules = Sets.newHashSet();
@@ -275,7 +301,7 @@ public class StratifiedForward {
 		truths.add(dob);
 
 		// The root of the subtree is the end of the trunk.
-		Dob end = Colut.get(this.subtrees.get(dob), 0);
+		Dob end = this.canonicalForms.get(dob);
 		if (end != null) {
 			unisuccess.put(end, dob);
 			storeVariableReplacements(dob, end);
