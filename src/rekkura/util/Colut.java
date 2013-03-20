@@ -3,8 +3,6 @@ package rekkura.util;
 import java.util.Collection;
 import java.util.List;
 
-import rekkura.model.Dob;
-
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -77,6 +75,11 @@ public class Colut {
 		return null;
 	}
 	
+	public static <T> T fromEnd(List<T> list, int i) {
+		if (list == null) return null;
+		return get(list, list.size() - i - 1);
+	}
+	
 	public static Character end(String s) {
 		if (s == null || s.length() == 0) return null;
 		return s.charAt(s.length() - 1);
@@ -101,7 +104,7 @@ public class Colut {
 		return result;
 	}
 
-	public static Dob get(List<Dob> list, int i) {
+	public static <U> U get(List<U> list, int i) {
 		if (list == null || i < 0 || i >= list.size()) return null;
 		return list.get(i);
 	}

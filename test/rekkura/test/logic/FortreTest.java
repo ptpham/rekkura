@@ -38,10 +38,10 @@ public class FortreTest {
 		Dob general = dobs.get(3);
 		Dob specific = dobs.get(2);
 		
-		Fortre fortre = new Fortre(vars, Lists.newArrayList(specific, general));
+		Fortre fortre = new Fortre(vars, Lists.newArrayList(specific, general), pool);
 		
-		Assert.assertEquals(3, fortre.getUnifyTrunk(specific).size());
-		Assert.assertEquals(2, fortre.getUnifyTrunk(general).size());
+		Assert.assertEquals(3, fortre.getTrunk(specific).size());
+		Assert.assertEquals(2, fortre.getTrunk(general).size());
 	}
 	
 	@Test
@@ -58,11 +58,35 @@ public class FortreTest {
 		Dob first = dobs.get(3);
 		Dob second = dobs.get(2);
 		
-		Fortre fortre = new Fortre(vars, Lists.newArrayList(first, second));
+		Fortre fortre = new Fortre(vars, Lists.newArrayList(first, second), pool);
 		
-		Assert.assertEquals(2, fortre.getUnifyTrunk(first).size());
-		Assert.assertEquals(2, fortre.getUnifyTrunk(second).size());
+		Assert.assertEquals(2, fortre.getTrunk(first).size());
+		Assert.assertEquals(2, fortre.getTrunk(second).size());
 	}
 	
-	// TODO: Write tests for cognates
+	@Test
+	public void symmetricGeneralization() {
+		String[] rawDobs = {
+			"(X)", "(Y)", "((P)(X)(a))", "((P)(b)(Y))", "((P)(X)(Y))"
+		};
+
+		LogicFormat fmt = new StandardFormat();
+		Pool pool = new Pool();
+		List<Dob> dobs = pool.submergeDobs(fmt.dobsFromStrings(Arrays.asList(rawDobs)));
+		Set<Dob> vars = Sets.newHashSet(dobs.get(0), dobs.get(1));
+		
+		Dob first = dobs.get(3);
+		Dob second = dobs.get(2);
+		
+		Fortre fortre = new Fortre(vars, Lists.newArrayList(first, second), pool);
+		
+		Assert.assertEquals(3, fortre.getTrunk(first).size());
+		Assert.assertEquals(3, fortre.getTrunk(second).size());
+		Assert.assertEquals(2, fortre.getTrunk(dobs.get(4)).size());
+	}
+	
+	
+	// TODO: Write tests for cognates 
+	// - make sure that only children that have children are compressed
+	// - make sure that all cognates are stored
 }

@@ -15,8 +15,6 @@ import com.google.common.collect.Multimap;
  */
 public class Topper {
 
-	public Unifier unifier = new Unifier();
-	
 	/**
 	 * Computes for each target dob the set of source dobs that unify with it.
 	 * @param dobs
@@ -29,7 +27,7 @@ public class Topper {
 		
 		for (Dob target : targetDobs) {
 			for (Dob source : sourceDobs) {
-				Map<Dob, Dob> unify = unifier.unifyVars(source, target, vars);
+				Map<Dob, Dob> unify = Unifier.unifyVars(source, target, vars);
 				if (unify == null) continue;
 				result.put(target, source);
 			}
