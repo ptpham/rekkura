@@ -361,10 +361,10 @@ public class StratifiedForward {
 		// Decide whether to expand by terms or by variables based on the relative
 		// sizes of the replacements. This test is only triggered for a sufficiently 
 		// large body size because it costs more time to generate the variable space.
-		boolean useVariables = false;
-		if (bodySpaceSize > VARIABLE_SPACE_MIN) {
+		boolean useVariables = true;
+		if (useVariables || bodySpaceSize > VARIABLE_SPACE_MIN) {
 			List<Iterable<Dob>> variables = getVariableSpace(rule);
-			useVariables = bodySpaceSize > Cartesian.size(variables);
+			useVariables |= bodySpaceSize > Cartesian.size(variables);
 			if (useVariables) assignments = variables;
 		}
 		
@@ -497,6 +497,7 @@ public class StratifiedForward {
 		
 		for (int i = 0; i < rule.body.size(); i++) {
 			Atom atom = rule.body.get(i);
+			if (!atom.truth) continue;
 			
 			// For each node in the subtree, find the set of replacements
 			// in terms of the root of the subtree. Then join right
@@ -505,7 +506,6 @@ public class StratifiedForward {
 			for (Dob node : subtree) {
 				Map<Dob, Collection<Dob>> raw = this.unispaces.get(node).replacements.asMap();
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
-				
 				Map<Dob, Collection<Dob>> replacements = raw;
 				if (Colut.nonEmpty(left.keySet())) {
 					replacements = Maps.newHashMap();
@@ -521,6 +521,13 @@ public class StratifiedForward {
 					} else {
 						variables.putAll(variable, current);
 					}
+				}
+				
+				// Add stuff that was not included in the join but is 
+				// still necessary for a valid unification.
+				for (Map.Entry<Dob, Dob> entry: left.entrySet()) {
+					if (!this.fortre.allVars.contains(entry.getValue()))
+						variables.put(entry.getKey(), entry.getValue());
 				}
 			}
 		}

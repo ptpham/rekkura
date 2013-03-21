@@ -89,7 +89,6 @@ public class OTMUtil {
 		
 		return result;
 	}
-	
 
 	public static <T, U, V> Multimap<T, V> expandLeft(Multimap<U, V> map, Function<U, Collection<T>> fn) {
 		if (map == null) return null;
@@ -118,7 +117,7 @@ public class OTMUtil {
 		
 		return expandRight(map, joiner);
 	}
-	
+
 	public static <T, U, V> Multimap<T, V> joinLeft(Map<U, V> map, Map<U, T> other) {
 		return joinLeft(Multimaps.forMap(map), Multimaps.forMap(other));
 	}
@@ -131,6 +130,22 @@ public class OTMUtil {
 		};
 		
 		return expandLeft(map, joiner);
+	}
+	
+	public static <U, V> Multimap<U, V> squashRight(Map<U, V> map, Map<V, V> other) {
+		Multimap<U, V> result = joinRight(Multimaps.forMap(map), Multimaps.forMap(other));
+		for (U u : map.keySet()) {
+			if (!result.containsKey(u)) result.put(u, map.get(u));
+		}
+		return result;
+	}
+	
+	public static <U, V> Multimap<U, V> squashLeft(Map<U, V> map, Map<U, U> other) {
+		Multimap<U, V> result = joinLeft(Multimaps.forMap(map), Multimaps.forMap(other));
+		for (U u : map.keySet()) {
+			if (!other.containsKey(u)) result.put(u, map.get(u));
+		}
+		return result;
 	}
 	
 	public static <U, V> Multimap<U, V> getAll(Multimap<U, V> map, Collection<U> keys) {

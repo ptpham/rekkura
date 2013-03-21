@@ -23,8 +23,8 @@ public class Fortre {
 	public final Dob root;
 	public final Pool pool;
 	
-	private final Set<Dob> allVars;
-	private final Set<Dob> generated;
+	public final Set<Dob> allVars;
+	public final Set<Dob> generated;
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
