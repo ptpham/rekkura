@@ -25,6 +25,25 @@ public class Ruletta {
 	public Set<Rule> allRules;
 	public Set<Dob> allVars, allDobs, posDobs, negDobs;
 	public Multimap<Dob, Rule> bodyToRule, headToRule;
+
+	/**
+	 * This holds the set of head dobs that may generate a body dob.
+	 * Memory is O(R^2).
+	 */
+	public Multimap<Dob, Dob> headToBody;
+	
+	/**
+	 * This holds the set of rules that may generate a body dob.
+	 * Memory is O(R^2).
+	 */
+	public Multimap<Dob, Rule> bodyToGenerating;
+
+	/**
+	 * This holds the set of rules that may generate dobs for the body
+	 * of the given rule.
+	 * Memory is O(R^2).
+	 */
+	public Multimap<Rule, Rule> ruleToGenerating;
 	
 	public void construct(Collection<Rule> rules) {
 		this.allRules = Sets.newHashSet(rules);
@@ -52,6 +71,12 @@ public class Ruletta {
 				this.bodyToRule.put(body, rule);	
 			}
 		}
+		
+		this.headToBody = Topper.dependencies(this.bodyToRule.keySet(), 
+				this.headToRule.keySet(), this.allVars);
+		
+		this.bodyToGenerating = OTMUtil.joinRight(this.headToBody, this.headToRule);
+		this.ruleToGenerating = OTMUtil.joinLeft(this.bodyToGenerating, this.bodyToRule);
 	}
 
 	public Iterable<Dob> getAllTerms() {

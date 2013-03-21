@@ -3,6 +3,8 @@ package rekkura.model;
 import java.util.Collection;
 import java.util.Iterator;
 
+import rekkura.fmt.StandardFormat;
+
 public class Atom {
 	public final Dob dob;
 	public final boolean truth;
@@ -30,4 +32,6 @@ public class Atom {
 			@Override public Iterator<Dob> iterator() { return dobIteratorFromAtoms(atoms); }
 		};
 	}
+	
+	@Override public String toString() { return StandardFormat.inst.toString(this); }
 }

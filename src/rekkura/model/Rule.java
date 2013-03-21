@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import rekkura.fmt.StandardFormat;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterator;
 
@@ -88,5 +89,7 @@ public class Rule {
 			@Override public Iterator<Dob> iterator() { return dobIteratorFromRule(rule); }
 		};
 	}
+	
+	@Override public String toString() { return StandardFormat.inst.toString(this); }
 }
 

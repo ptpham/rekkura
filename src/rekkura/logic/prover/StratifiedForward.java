@@ -6,7 +6,6 @@ import java.util.Map.Entry;
 import rekkura.logic.Fortre;
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
-import rekkura.logic.Topper;
 import rekkura.logic.Unifier;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
@@ -40,27 +39,6 @@ public class StratifiedForward {
 
 	public Ruletta rta;
 	
-	public Topper topper;
-	
-	/**
-	 * This holds the set of head dobs that may generate a body dob.
-	 * Memory is O(R^2).
-	 */
-	public Multimap<Dob, Dob> headBodyDeps;
-	
-	/**
-	 * This holds the set of rules that may generate a body dob.
-	 * Memory is O(R^2).
-	 */
-	public Multimap<Dob, Rule> dobRuleDeps;
-
-	/**
-	 * This holds the set of rules that may generate dobs for the body
-	 * of the given rule.
-	 * Memory is O(R^2).
-	 */
-	public Multimap<Rule, Rule> ruleRuleDeps;
-	
 	/**
 	 * This holds the set of rules that are descendants of the given
 	 * rule such that the given rule may generate a negative body 
@@ -86,7 +64,10 @@ public class StratifiedForward {
 	 * for its various children.
 	 * Memory is O(FV).
 	 */
-	protected Map<Dob, DobSpace> unispaces;
+	protected Cache<Dob, DobSpace> unispaces = 
+		Cache.create(new Function<Dob, DobSpace>() {
+			@Override public DobSpace apply(Dob dob) { return new DobSpace(dob); }
+		});
 	
 	/**
 	 * This maps ground dobs to their canonical dobs (the dob at 
@@ -99,22 +80,22 @@ public class StratifiedForward {
 			}
 		});
 	
-	protected Cache<Dob, List<Dob>> canonicalSubtrees = 
+	protected Cache<Dob, List<Dob>> canonicalSpines = 
 		Cache.create(new Function<Dob, List<Dob>>() {
 			@Override public List<Dob> apply(Dob dob) {
-				List<Dob> splay = Lists.newArrayList(fortre.getSplay(dob));
+				List<Dob> splay = Lists.newArrayList(fortre.getSpine(dob));
 				Colut.remove(splay, fortre.root);
 				return splay;
 			}
 		});
 	
 	/**
-	 * This caches form splays for given canonical dobs.
+	 * This caches form spines for given canonical dobs.
 	 */
-	protected Cache<Dob, List<Dob>> splays = 
+	protected Cache<Dob, List<Dob>> spines = 
 		Cache.create(new Function<Dob, List<Dob>>() {
 			@Override public List<Dob> apply(Dob dob) 
-			{ return canonicalSubtrees.get(canonicalForms.get(dob)); }
+			{ return canonicalSpines.get(canonicalForms.get(dob)); }
 		});
 	
 	/**
@@ -123,8 +104,7 @@ public class StratifiedForward {
 	protected Cache<Dob, List<Rule>> canonicalRules = 
 		Cache.create(new Function<Dob, List<Rule>>() {
 			@Override public List<Rule> apply(Dob dob) { 
-				List<Rule> result = Lists.newArrayList(StratifiedForward.this.computeAffectedRules(dob));
-				return result;
+				return Lists.newArrayList(StratifiedForward.this.computeAffectedRules(dob));
 			}
 		});
 	
@@ -151,7 +131,6 @@ public class StratifiedForward {
 		Set<Rule> submerged = Sets.newHashSet();
 		this.pool = new Pool();
 		this.rta = new Ruletta();
-		this.topper = new Topper();
 		
 		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
 		submerged = preprocess(submerged);
@@ -162,19 +141,13 @@ public class StratifiedForward {
 			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
 		}
 		
-		this.headBodyDeps = topper.dependencies(rta.bodyToRule.keySet(), 
-				rta.headToRule.keySet(), rta.allVars);
-		
-		this.dobRuleDeps = OTMUtil.joinRight(this.headBodyDeps, this.rta.headToRule);
-		this.ruleRuleDeps = OTMUtil.joinLeft(this.dobRuleDeps, this.rta.bodyToRule);
-		
 		// For each negative dob, flood out from the rules that can generate it.
 		// Store a mapping from each of the rules that we saw to the rules that 
 		// contain the negative dob.
 		this.ruleNegDesc = HashMultimap.create();
 		for (Dob neg : this.rta.negDobs) {
 			Set<Rule> seen = Sets.newHashSet();
-			OTMUtil.flood(this.ruleRuleDeps, this.dobRuleDeps.get(neg), seen);
+			OTMUtil.flood(this.rta.ruleToGenerating, this.rta.bodyToGenerating.get(neg), seen);
 			
 			Collection<Rule> negRules = this.rta.bodyToRule.get(neg);
 			for (Rule rule : seen) this.ruleNegDesc.putAll(rule, negRules);
@@ -183,10 +156,6 @@ public class StratifiedForward {
 		this.fortre = new Fortre(rta.allVars, rta.bodyToRule.keySet(), this.pool);
 		
 		this.unisuccess = HashMultimap.create();
-		this.unispaces = Maps.newHashMap();
-		for (Dob body : Iterables.concat(Lists.newArrayList(this.fortre.root), this.rta.getAllTerms())) { 
-			this.unispaces.put(body, new DobSpace(body)); 
-		}
 		
 		clear();
 	}
@@ -258,7 +227,6 @@ public class StratifiedForward {
 	 * @param dob
 	 */
 	protected Dob queueTruth(Dob dob) {
-
 		dob = this.pool.submerge(dob);
 		if (isTrue(dob)) return this.vacuous;
 		
@@ -332,7 +300,7 @@ public class StratifiedForward {
 		Rule rule = this.next;
 		this.next = null;
 		
-		Set<Dob> generated = expand(rule);
+		Set<Dob> generated = expandRule(rule);
 		
 		// Inform rules with negative terms that they can proceed
 		Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
@@ -383,7 +351,7 @@ public class StratifiedForward {
 		}
 	}
 
-	public Set<Dob> expand(Rule rule) {		
+	public Set<Dob> expandRule(Rule rule) {		
 		Set<Dob> result = Sets.newHashSet();
 		
 		// Prepare the domains of each positive body in the rule
@@ -400,7 +368,6 @@ public class StratifiedForward {
 			if (useVariables) assignments = variables;
 		}
 		
-
 		// Iterate through the Cartesian product of possibilities
 		Map<Dob, Dob> unify = Maps.newHashMap();
 		
@@ -534,7 +501,7 @@ public class StratifiedForward {
 			// For each node in the subtree, find the set of replacements
 			// in terms of the root of the subtree. Then join right
 			// to rephrase in terms of variables in the rule.
-			Iterable<Dob> subtree = this.splays.get(atom.dob);
+			Iterable<Dob> subtree = this.spines.get(atom.dob);
 			for (Dob node : subtree) {
 				Map<Dob, Collection<Dob>> raw = this.unispaces.get(node).replacements.asMap();
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
@@ -572,7 +539,7 @@ public class StratifiedForward {
 	 * @return
 	 */
 	protected Iterable<Dob> getGroundCandidates(Dob dob) {
-		Iterable<Dob> subtree = this.splays.get(dob);
+		Iterable<Dob> subtree = this.spines.get(dob);
 		return new NestedIterable<Dob, Dob>(subtree) {
 			@Override protected Iterator<Dob> prepareNext(Dob u) {
 				return StratifiedForward.this.unisuccess.get(u).iterator();

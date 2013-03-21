@@ -102,6 +102,21 @@ public class Unifier {
 	}
 	
 	/**
+	 * Two dobs are equivalent under a set of variables if the variable unification 
+	 * in both directions exists and are of the same size.
+	 * @param base
+	 * @param target
+	 * @param vars
+	 * @return
+	 */
+	public static boolean equivalent(Dob first, Dob second, Set<Dob> vars) {
+		Map<Dob, Dob> forward = unifyVars(first, second, vars);
+		Map<Dob, Dob> backward = unifyVars(second, first, vars);
+		if (forward == null || backward == null) return false;
+		return forward.size() == backward.size();
+	}
+	
+	/**
 	 * Generates the unification that, when applied to the base dob that originally generated the 
 	 * unification, will yield a generalization of the base dob and the target dob. If we see
 	 * a variable as a value in the unify map twice, then this is not a valid symmetric unification.
@@ -110,7 +125,7 @@ public class Unifier {
 	 * @param vargen supplies new variables for the generalization
 	 * @return
 	 */
-	public static Map<Dob, Dob> getSymmetrizationUnify(Map<Dob, Dob> unify, Set<Dob> variables, Supplier<Dob> vargen) {
+	public static Map<Dob, Dob> symmetrizeUnification(Map<Dob, Dob> unify, Set<Dob> variables, Supplier<Dob> vargen) {
 		if (unify == null) return null;
 		Map<Dob, Dob> result = Maps.newHashMap();
 		
@@ -128,11 +143,17 @@ public class Unifier {
 		return result;
 	}
 	
-	public static Dob getSymmetricGeneralization(Dob base, Dob other, Set<Dob> vars, Supplier<Dob> vargen) {
-		Map<Dob, Dob> unify = Unifier.unify(base, other);
-		Map<Dob, Dob> symmetrizer = Unifier.getSymmetrizationUnify(unify, vars, vargen);
-		if (symmetrizer == null) return null;
-		return replace(base, symmetrizer);
+	public static Dob getSymmetricGeneralization(Dob first, Dob second, Set<Dob> vars, Supplier<Dob> vargen) {
+		Dob result = computeSymmetricGeneralization(first, second, vars, vargen);
+		if (result == null) return computeSymmetricGeneralization(second, first, vars, vargen);
+		else return result;
 	}
-	
+
+	private static Dob computeSymmetricGeneralization(Dob first, Dob second,
+			Set<Dob> vars, Supplier<Dob> vargen) {
+		Map<Dob, Dob> unify = Unifier.unify(first, second);
+		Map<Dob, Dob> symmetrizer = Unifier.symmetrizeUnification(unify, vars, vargen);
+		if (symmetrizer == null) return null;
+		return replace(first, symmetrizer);
+	}
 }

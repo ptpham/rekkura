@@ -21,7 +21,7 @@ public class Topper {
 	 * @param vars
 	 * @return
 	 */
-	public Multimap<Dob, Dob> dependencies(Collection<Dob> targetDobs, 
+	public static Multimap<Dob, Dob> dependencies(Collection<Dob> targetDobs, 
 			Collection<Dob> sourceDobs, Set<Dob> vars) {
 		Multimap<Dob, Dob> result = HashMultimap.create(targetDobs.size(), sourceDobs.size());
 		

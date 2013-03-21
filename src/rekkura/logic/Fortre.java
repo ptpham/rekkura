@@ -112,7 +112,7 @@ public class Fortre {
 			
 			Set<Dob> curChildren = this.allChildren.get(cur);
 			if (Colut.empty(curChildren)) break;
-			cur = downwardUnify(dob, curChildren);
+			cur = downwardUnify(dob, curChildren, allVars);
 		}
 		
 		return path;
@@ -138,21 +138,21 @@ public class Fortre {
 		return getCognateIterable(getSubtree(trunk));
 	}
 	
-	public Iterable<Dob> getSplay(Dob dob) {
+	public Iterable<Dob> getSpine(Dob dob) {
 		List<Dob> trunk = getTrunk(dob);
 		return Iterables.concat(trunk, getSubtree(trunk));
 	}
 	
-	public Iterable<Dob> getSplay(List<Dob> trunk) {
+	public Iterable<Dob> getSpine(List<Dob> trunk) {
 		return Iterables.concat(trunk, getSubtree(trunk));
 	}
 
 	public Iterable<? extends Dob> getCognateSplay(Dob dob) {
-		return getCognateSplay(getTrunk(dob));
+		return getCognateSpine(getTrunk(dob));
 	}
 	
-	public Iterable<Dob> getCognateSplay(List<Dob> trunk) {
-		return getCognateIterable(getSplay(trunk));
+	public Iterable<Dob> getCognateSpine(List<Dob> trunk) {
+		return getCognateIterable(getSpine(trunk));
 	}
 	
 	public boolean isVacuousTrunk(List<Dob> trunk) {
@@ -209,6 +209,8 @@ public class Fortre {
 			if (generalized != null) symmetrized = generalized;
 			else break;
 		}
+		
+		if (Unifier.equivalent(end, symmetrized, allVars)) symmetrized = null;
 				
 		// Apply the subsumption over children or just append to the end. This involves
 		// moving children of the subsumed as direct children of the generalization.
@@ -293,12 +295,12 @@ public class Fortre {
 	 * @param children
 	 * @return
 	 */
-	private Dob downwardUnify(Dob dob, Set<Dob> children) {
+	public static Dob downwardUnify(Dob dob, Collection<Dob> children, Set<Dob> vars) {
 		Dob result = null;
 		for (Dob child : children) {
-			if (Unifier.unifyVars(child, dob, allVars) != null) {
+			if (Unifier.unifyVars(child, dob, vars) != null) {
 				if (result == null) result = child;
-				else break;
+				else return null;
 			}
 		}
 		return result;

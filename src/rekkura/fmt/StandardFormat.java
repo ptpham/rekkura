@@ -138,4 +138,6 @@ public class StandardFormat extends LogicFormat {
 		rule.vars = dobListFromString(parts[0].replace("{", ""));	
 		return rule;
 	}
+	
+	public static final StandardFormat inst = new StandardFormat();
 }

@@ -262,12 +262,16 @@ public class StratifiedForwardTest {
 		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawInitial));
 		StratifiedForward prover = new StratifiedForward(rules);
 
-		List<List<Dob>> result = Lists.newArrayList();
+		List<List<Dob>> result = Lists.newArrayListWithCapacity(100);
 		result.add(initial);
 		
-		prover.reset(initial);
-		while (prover.hasMore()) { result.add(prover.proveNext()); }
-
+		long begin = System.currentTimeMillis();
+		//for (int i = 0; i < 30000; i++) {
+			prover.reset(initial);
+			while (prover.hasMore()) { result.add(prover.proveNext()); }
+		//	result.clear();
+		//}
+		//System.out.println((float)(System.currentTimeMillis() - begin)/30000);
 		return result;
 	}
 	

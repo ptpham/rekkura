@@ -4,6 +4,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
+import rekkura.fmt.StandardFormat;
+
 import com.google.common.collect.Lists;
 
 /**
@@ -61,8 +63,5 @@ public class Dob {
 
 	public Iterable<Dob> childIterable() { return this.children; }
 	
-	@Override public String toString() {
-		if (isTerminal()) return super.toString() + "(" + this.name + ")";
-		return super.toString() + "(" + this.children + ")";
-	}
+	@Override public String toString() { return StandardFormat.inst.toString(this); }
 }
