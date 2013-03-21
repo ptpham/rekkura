@@ -147,7 +147,7 @@ public class StratifiedForward {
 		this.ruleNegDesc = HashMultimap.create();
 		for (Dob neg : this.rta.negDobs) {
 			Set<Rule> seen = Sets.newHashSet();
-			OTMUtil.flood(this.rta.ruleToGenerating, this.rta.bodyToGenerating.get(neg), seen);
+			OTMUtil.flood(this.rta.ruleToGenRule, this.rta.bodyToGenRule.get(neg), seen);
 			
 			Collection<Rule> negRules = this.rta.bodyToRule.get(neg);
 			for (Rule rule : seen) this.ruleNegDesc.putAll(rule, negRules);
@@ -361,7 +361,7 @@ public class StratifiedForward {
 		// Decide whether to expand by terms or by variables based on the relative
 		// sizes of the replacements. This test is only triggered for a sufficiently 
 		// large body size because it costs more time to generate the variable space.
-		boolean useVariables = true;
+		boolean useVariables = false;
 		if (useVariables || bodySpaceSize > VARIABLE_SPACE_MIN) {
 			List<Iterable<Dob>> variables = getVariableSpace(rule);
 			useVariables |= bodySpaceSize > Cartesian.size(variables);

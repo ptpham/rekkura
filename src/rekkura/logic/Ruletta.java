@@ -9,10 +9,7 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.util.OTMUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This class maintains mappings and sets that are important for 
@@ -30,20 +27,30 @@ public class Ruletta {
 	 * This holds the set of head dobs that may generate a body dob.
 	 * Memory is O(R^2).
 	 */
-	public Multimap<Dob, Dob> headToBody;
+	public Multimap<Dob, Dob> bodyToGenHead;
 	
 	/**
 	 * This holds the set of rules that may generate a body dob.
 	 * Memory is O(R^2).
 	 */
-	public Multimap<Dob, Rule> bodyToGenerating;
+	public Multimap<Dob, Rule> bodyToGenRule;
 
 	/**
 	 * This holds the set of rules that may generate dobs for the body
 	 * of the given rule.
 	 * Memory is O(R^2).
 	 */
-	public Multimap<Rule, Rule> ruleToGenerating;
+	public Multimap<Rule, Rule> ruleToGenRule;
+	
+	/**
+	 * These are the rules that do not have any dependencies.
+	 */
+	public Set<Rule> ruleRoots;
+	
+	/**
+	 * This holds the index of rules in topological order
+	 */
+	public Multiset<Rule> ruleOrder;
 	
 	public void construct(Collection<Rule> rules) {
 		this.allRules = Sets.newHashSet(rules);
@@ -72,11 +79,22 @@ public class Ruletta {
 			}
 		}
 		
-		this.headToBody = Topper.dependencies(this.bodyToRule.keySet(), 
+		this.bodyToGenHead = Topper.dependencies(this.bodyToRule.keySet(), 
 				this.headToRule.keySet(), this.allVars);
 		
-		this.bodyToGenerating = OTMUtil.joinRight(this.headToBody, this.headToRule);
-		this.ruleToGenerating = OTMUtil.joinLeft(this.bodyToGenerating, this.bodyToRule);
+		this.bodyToGenRule = OTMUtil.joinRight(this.bodyToGenHead, this.headToRule);
+		this.ruleToGenRule = OTMUtil.joinLeft(this.bodyToGenRule, this.bodyToRule);
+		
+		this.ruleRoots = Sets.newHashSet();
+		for (Rule rule : this.allRules) {
+			if (this.ruleToGenRule.get(rule).size() == 0) {
+				this.ruleRoots.add(rule);
+			}
+		}
+		
+		Multimap<Rule, Rule> ruleToDescRule = HashMultimap.create();
+		Multimaps.invertFrom(this.ruleToGenRule, ruleToDescRule);
+		this.ruleOrder = Topper.generalTopSort(ruleToDescRule, this.ruleRoots);
 	}
 
 	public Iterable<Dob> getAllTerms() {

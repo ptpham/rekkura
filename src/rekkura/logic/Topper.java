@@ -8,11 +8,7 @@ import java.util.Stack;
 import rekkura.model.Dob;
 import rekkura.util.OTMUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * 
@@ -64,20 +60,18 @@ public class Topper {
 		Multiset<U> result = HashMultiset.create();
 		Set<U> touched = Sets.newHashSet();
 		
-		while (edges.size() > 0) {
+		while (edges.size() > 0 && roots.size() > 0) {
 			// Peel back a well-ordered layer and append to our ordering
-			int resultSize = result.size();
+			int resultSize = result.elementSet().size();
 			Multiset<U> peel = topSort(edges, roots);
-			for (U u : peel) { result.add(u, resultSize + peel.count(u)); }
+			for (U u : peel.elementSet()) { result.add(u, resultSize + peel.count(u)); }
 			
 			// Construct a new set of roots and edges for the next iteration
 			roots.clear();
 			touched.addAll(peel);
-			for (U node : OTMUtil.valueIterable(edges, peel)) {
-				roots.addAll(edges.get(node));
-			}
+			Iterables.addAll(roots, OTMUtil.valueIterable(edges, peel));
 			
-			for (U node : roots) edges.removeAll(node);
+			for (U node : peel.elementSet()) edges.removeAll(node);
 			roots.removeAll(touched);
 		}
 		
@@ -106,10 +100,12 @@ public class Topper {
 		for (U root : roots) { zeroEdges.push(root); }
 		while (zeroEdges.size() > 0) {
 			U next = zeroEdges.pop();
-			result.add(next, nextPriority);
+			result.add(next, nextPriority++);
 			
-			for (U u : edges.get(next)) { incoming.remove(u); }
-			if (incoming.count(next) == 0) zeroEdges.add(next);
+			for (U u : edges.get(next)) { 
+				incoming.remove(u); 
+				if (incoming.count(u) == 0) zeroEdges.push(u);
+			}
 		}
 		
 		return result;
