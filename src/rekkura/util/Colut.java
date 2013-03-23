@@ -1,6 +1,7 @@
 package rekkura.util;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.Function;
@@ -55,8 +56,11 @@ public class Colut {
 	}
 	
 	public static <T> T popAny(Collection<T> s) {
-		T result = any(s);
-		remove(s, result);
+		if (s == null) return null;
+		Iterator<T> iterator = s.iterator();
+		if (!iterator.hasNext()) return null;
+		T result = iterator.next();
+		iterator.remove();
 		return result;
 	}
 	

@@ -3,10 +3,10 @@ package rekkura.logic.prover;
 import java.util.*;
 import java.util.Map.Entry;
 
-import rekkura.logic.Fortre;
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
 import rekkura.logic.Unifier;
+import rekkura.logic.perf.Cachet;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Logimos.BodyAssignment;
@@ -34,23 +34,14 @@ import com.google.common.collect.*;
  *
  */
 public class StratifiedForward {
-	
-	private static final int VARIABLE_SPACE_MIN = 512;
 
-	public Ruletta rta;
+	public final Ruletta rta;
+	public final Cachet cachet;
 	
-	/**
-	 * This holds the set of rules that are descendants of the given
-	 * rule such that the given rule may generate a negative body 
-	 * in the descendant.
-	 * Memory is O(R^2).
-	 */
-	public Multimap<Rule, Rule> ruleNegDesc;
-
 	public final Pool pool;
 	
-	public final Fortre fortre;
-	
+	public int variableSpaceMin = DEFAULT_VARIABLE_SPACE_MIN;
+
 	/**
 	 * These hold the mappings from a body form B to grounds 
 	 * that are known to successfully unify with B.
@@ -68,57 +59,12 @@ public class StratifiedForward {
 		Cache.create(new Function<Dob, DobSpace>() {
 			@Override public DobSpace apply(Dob dob) { return new DobSpace(dob); }
 		});
+
 	
-	/**
-	 * This maps ground dobs to their canonical dobs (the dob at 
-	 * the end of the unify trunk).
-	 */
-	protected Cache<Dob, Dob> canonicalForms = 
-		Cache.create(new Function<Dob, Dob>() {
-			@Override public Dob apply(Dob dob) { 
-				return Colut.end(fortre.getTrunk(dob));
-			}
-		});
-	
-	protected Cache<Dob, List<Dob>> canonicalSpines = 
-		Cache.create(new Function<Dob, List<Dob>>() {
-			@Override public List<Dob> apply(Dob dob) {
-				List<Dob> splay = Lists.newArrayList(fortre.getSpine(dob));
-				Colut.remove(splay, fortre.root);
-				return splay;
-			}
-		});
-	
-	/**
-	 * This caches form spines for given canonical dobs.
-	 */
-	protected Cache<Dob, List<Dob>> spines = 
-		Cache.create(new Function<Dob, List<Dob>>() {
-			@Override public List<Dob> apply(Dob dob) 
-			{ return canonicalSpines.get(canonicalForms.get(dob)); }
-		});
-	
-	/**
-	 * This caches the list of rules affected by each canonical form.
-	 */
-	protected Cache<Dob, List<Rule>> canonicalRules = 
-		Cache.create(new Function<Dob, List<Rule>>() {
-			@Override public List<Rule> apply(Dob dob) { 
-				return Lists.newArrayList(StratifiedForward.this.computeAffectedRules(dob));
-			}
-		});
-	
-	protected Cache<Dob, List<Rule>> affectedRules = 
-		Cache.create(new Function<Dob, List<Rule>>() {
-			@Override public List<Rule> apply(Dob dob) 
-			{ return canonicalRules.get(canonicalForms.get(dob)); }
-		});
-	
-	private Set<Rule> pendingRules = Sets.newHashSet();
-	private Set<Rule> waitingRules = Sets.newHashSet();
-	private Multiset<Rule> negDepCounter = HashMultiset.create();
+	private Multimap<Integer, Rule> pendingRules = TreeMultimap.create(Ordering.natural(), Ordering.allEqual());
 	private Set<Dob> truths = Sets.newHashSet();
-	private Rule next;
+	
+	private static final int DEFAULT_VARIABLE_SPACE_MIN = 512;
 	
 	/**
 	 * This dob is used as a trigger for fully grounded rules
@@ -127,36 +73,19 @@ public class StratifiedForward {
 	private Dob vacuous = new Dob("[VACUOUS]");
 	
 	public StratifiedForward(Collection<Rule> rules) {
-		
 		Set<Rule> submerged = Sets.newHashSet();
 		this.pool = new Pool();
-		this.rta = new Ruletta();
 		
 		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
 		submerged = preprocess(submerged);
 		
-		rta.construct(submerged);
-
+		this.rta = Ruletta.create(submerged, pool);
 		for (Rule rule : rta.allRules) {
 			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
 		}
 		
-		// For each negative dob, flood out from the rules that can generate it.
-		// Store a mapping from each of the rules that we saw to the rules that 
-		// contain the negative dob.
-		this.ruleNegDesc = HashMultimap.create();
-		for (Dob neg : this.rta.negDobs) {
-			Set<Rule> seen = Sets.newHashSet();
-			OTMUtil.flood(this.rta.ruleToGenRule, this.rta.bodyToGenRule.get(neg), seen);
-			
-			Collection<Rule> negRules = this.rta.bodyToRule.get(neg);
-			for (Rule rule : seen) this.ruleNegDesc.putAll(rule, negRules);
-		}
-		
-		this.fortre = new Fortre(rta.allVars, rta.bodyToRule.keySet(), this.pool);
-		
+		this.cachet = new Cachet(rta);
 		this.unisuccess = HashMultimap.create();
-		
 		clear();
 	}
 	
@@ -206,14 +135,8 @@ public class StratifiedForward {
 	 */
 	public void clear() {
 		this.truths.clear();
-
 		this.pendingRules.clear();
-		this.waitingRules.clear();
-		this.negDepCounter.clear();
-		
 		this.unisuccess.clear();
-		
-		this.next = null;
 	}
 
 	/**
@@ -230,22 +153,15 @@ public class StratifiedForward {
 		dob = this.pool.submerge(dob);
 		if (isTrue(dob)) return this.vacuous;
 		
-		Iterable<Rule> generated = this.affectedRules.get(dob);
+		Iterable<Rule> generated = this.cachet.affectedRules.get(dob);
 		
 		// Split the rules into pendingRules vs waitingRules.
 		// An assignment is pendingRules if it is ready to be expanded.
 		// An assignment is waitingRules if it's rule is being blocked by a non-zero 
 		// number of pendingRules/waitingRules ancestors.
 		for (Rule rule : generated) {
-			if (this.pendingRules.contains(rule)) continue;
-			Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
-			
-			if (negDescs.size() > 0) {
-				Colut.shiftAll(negDepCounter, negDescs, 1);
-				this.waitingRules.add(rule);
-			} else {
-				this.pendingRules.add(rule);
-			}
+			int priority = this.rta.ruleOrder.count(rule);
+			this.pendingRules.put(priority, rule);
 		}
 		
 		storeGround(dob);
@@ -263,7 +179,7 @@ public class StratifiedForward {
 		truths.add(dob);
 
 		// The root of the subtree is the end of the trunk.
-		Dob end = this.canonicalForms.get(dob);
+		Dob end = this.cachet.canonicalForms.get(dob);
 		if (end != null) {
 			unisuccess.put(end, dob);
 			storeVariableReplacements(dob, end);
@@ -276,35 +192,12 @@ public class StratifiedForward {
 		OTMUtil.putAll(space.replacements, unify);
 	}
 
-	public boolean hasMore() { 
-		prepareNext();
-		return this.next != null;
-	}
-	
-	private void prepareNext() {
-		if (next != null) return;
-		
-		next = nextPending();
-
-		// If the assignment is null here, it means we need to 
-		// look in the waiting assignments
-		if (next == null) {
-			reconsiderWaiting();
-			next = nextPending();
-		}
-	}
+	public boolean hasMore() { return this.pendingRules.size() > 0; }
 	
 	public List<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
-	
-		Rule rule = this.next;
-		this.next = null;
-		
+		Rule rule = Colut.popAny(this.pendingRules.values());	
 		Set<Dob> generated = expandRule(rule);
-		
-		// Inform rules with negative terms that they can proceed
-		Collection<Rule> negDescs = this.ruleNegDesc.get(rule);
-		Colut.shiftAll(negDepCounter, negDescs, -1);
 		
 		// Submerge all of the newly generated dobs
 		List<Dob> result = Lists.newArrayListWithCapacity(generated.size());
@@ -314,41 +207,6 @@ public class StratifiedForward {
 		}
 		
 		return result;
-	}
-
-	/**
-	 * Find a pendingRules assignment on which we can actually operate.
-	 * We can only operate on a rule R that doesn't have any ancestors
-	 * that still might generate grounds that potentially
-	 * unify with a negative body term in R.
-	 * @return
-	 */
-	private Rule nextPending() {
-		Rule assignment = null;
-		while (assignment == null && this.pendingRules.size() > 0) {
-			assignment = Colut.popAny(this.pendingRules);
-
-			if (!ruleReady(assignment)) {
-				this.waitingRules.add(assignment);
-				assignment = null;
-			}
-		}
-		return assignment;
-	}
-
-	private boolean ruleReady(Rule rule) {
-		return this.negDepCounter.count(rule) == 0;
-	}
-	
-	private void reconsiderWaiting() {
-		Iterator<Rule> iterator = this.waitingRules.iterator();
-		while (iterator.hasNext()) {
-			Rule rule = iterator.next();
-			if (ruleReady(rule)) {
-				iterator.remove();
-				pendingRules.add(rule);
-			}
-		}
 	}
 
 	public Set<Dob> expandRule(Rule rule) {		
@@ -361,8 +219,8 @@ public class StratifiedForward {
 		// Decide whether to expand by terms or by variables based on the relative
 		// sizes of the replacements. This test is only triggered for a sufficiently 
 		// large body size because it costs more time to generate the variable space.
-		boolean useVariables = false;
-		if (useVariables || bodySpaceSize > VARIABLE_SPACE_MIN) {
+		boolean useVariables = (variableSpaceMin <= 0);
+		if (useVariables || bodySpaceSize > variableSpaceMin) {
 			List<Iterable<Dob>> variables = getVariableSpace(rule);
 			useVariables |= bodySpaceSize > Cartesian.size(variables);
 			if (useVariables) assignments = variables;
@@ -502,7 +360,7 @@ public class StratifiedForward {
 			// For each node in the subtree, find the set of replacements
 			// in terms of the root of the subtree. Then join right
 			// to rephrase in terms of variables in the rule.
-			Iterable<Dob> subtree = this.spines.get(atom.dob);
+			Iterable<Dob> subtree = this.cachet.spines.get(atom.dob);
 			for (Dob node : subtree) {
 				Map<Dob, Collection<Dob>> raw = this.unispaces.get(node).replacements.asMap();
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
@@ -526,7 +384,7 @@ public class StratifiedForward {
 				// Add stuff that was not included in the join but is 
 				// still necessary for a valid unification.
 				for (Map.Entry<Dob, Dob> entry: left.entrySet()) {
-					if (!this.fortre.allVars.contains(entry.getValue()))
+					if (!this.rta.fortre.allVars.contains(entry.getValue()))
 						variables.put(entry.getKey(), entry.getValue());
 				}
 			}
@@ -546,27 +404,12 @@ public class StratifiedForward {
 	 * @return
 	 */
 	protected Iterable<Dob> getGroundCandidates(Dob dob) {
-		Iterable<Dob> subtree = this.spines.get(dob);
+		Iterable<Dob> subtree = this.cachet.spines.get(dob);
 		return new NestedIterable<Dob, Dob>(subtree) {
 			@Override protected Iterator<Dob> prepareNext(Dob u) {
 				return StratifiedForward.this.unisuccess.get(u).iterator();
 			}
 		};
-	}
-	
-	/**
-	 * This method takes a dob and returns the rules where
-	 * it can be applied.
-	 * @param dob
-	 * @return
-	 */
-	private Set<Rule> computeAffectedRules(Dob dob) {
-		// Iterate over all of the bodies we are potentially affecting.
-		// This set must be a subset of the rules whose bodies are touched by the 
-		// subtree of the fortre rooted at the end of the trunk.
-		Set<Dob> subtree = Sets.newHashSet();
-		Iterables.addAll(subtree, fortre.getCognateSplay(dob));
-		return Sets.newHashSet(rta.ruleIterableFromBodyDobs(subtree));
 	}
 	
 	public static List<BodyAssignment> generateAssignments(Rule rule, Set<Dob> forces, Dob ground) {

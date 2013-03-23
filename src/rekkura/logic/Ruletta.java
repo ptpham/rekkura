@@ -2,6 +2,7 @@ package rekkura.logic;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Atom;
@@ -12,31 +13,32 @@ import rekkura.util.OTMUtil;
 import com.google.common.collect.*;
 
 /**
- * This class maintains mappings and sets that are important for 
+ * result class maintains mappings and sets that are important for 
  * working with a set of rules.
  * @author ptpham
  *
  */
 public class Ruletta {
-
+	
 	public Set<Rule> allRules;
 	public Set<Dob> allVars, allDobs, posDobs, negDobs;
 	public Multimap<Dob, Rule> bodyToRule, headToRule;
+	public Fortre fortre;
 
 	/**
-	 * This holds the set of head dobs that may generate a body dob.
+	 * result holds the set of head dobs that may generate a body dob.
 	 * Memory is O(R^2).
 	 */
 	public Multimap<Dob, Dob> bodyToGenHead;
 	
 	/**
-	 * This holds the set of rules that may generate a body dob.
+	 * result holds the set of rules that may generate a body dob.
 	 * Memory is O(R^2).
 	 */
 	public Multimap<Dob, Rule> bodyToGenRule;
 
 	/**
-	 * This holds the set of rules that may generate dobs for the body
+	 * result holds the set of rules that may generate dobs for the body
 	 * of the given rule.
 	 * Memory is O(R^2).
 	 */
@@ -48,53 +50,100 @@ public class Ruletta {
 	public Set<Rule> ruleRoots;
 	
 	/**
-	 * This holds the index of rules in topological order
+	 * result holds the index of rules in topological order
 	 */
 	public Multiset<Rule> ruleOrder;
 	
-	public void construct(Collection<Rule> rules) {
-		this.allRules = Sets.newHashSet(rules);
+	public static Ruletta create(Collection<Rule> rules, Pool pool) {
+		Ruletta result = new Ruletta();
+		result.allRules = Sets.newHashSet(rules);
 		
-		this.allVars = Sets.newHashSet();
-		this.allDobs = Sets.newHashSet();
-		this.posDobs = Sets.newHashSet();
-		this.negDobs = Sets.newHashSet();
+		result.allVars = Sets.newHashSet();
+		result.allDobs = Sets.newHashSet();
+		result.posDobs = Sets.newHashSet();
+		result.negDobs = Sets.newHashSet();
 
-		this.bodyToRule = HashMultimap.create();
-		this.headToRule = HashMultimap.create();
+		result.bodyToRule = HashMultimap.create();
+		result.headToRule = HashMultimap.create();
 		
-		for (Dob dob : Rule.dobIterableFromRules(this.allRules)) { allDobs.add(dob); }
-		for (Atom atom : Rule.atomIterableFromRules(this.allRules)) {
-			if (atom.truth) posDobs.add(atom.dob);
-			else negDobs.add(atom.dob);
+		for (Dob dob : Rule.dobIterableFromRules(result.allRules)) { result.allDobs.add(dob); }
+		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) {
+			if (atom.truth) result.posDobs.add(atom.dob);
+			else result.negDobs.add(atom.dob);
 		}
 		
+		// Extract all variables
+		for (Rule rule : result.allRules) {  result.allVars.addAll(rule.vars); }
+		
+		// Extract all terms
+		Set<Dob> allTerms = Sets.newHashSet();
+		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) { allTerms.add(atom.dob); }
+		result.fortre = new Fortre(result.allVars, allTerms, pool);
+
 		// Prepare data structures to compute dependencies
-		for (Rule rule : this.allRules) { 
-			this.allVars.addAll(rule.vars);
-			
-			this.headToRule.put(rule.head.dob, rule);
+		for (Rule rule : result.allRules) { 
+			result.headToRule.put(rule.head.dob, rule);
 			for (Dob body : Atom.dobIterableFromAtoms(rule.body)) {
-				this.bodyToRule.put(body, rule);	
+				result.bodyToRule.put(body, rule);	
 			}
 		}
 		
-		this.bodyToGenHead = Topper.dependencies(this.bodyToRule.keySet(), 
-				this.headToRule.keySet(), this.allVars);
+		result.bodyToGenHead = dependencies(result.bodyToRule.keySet(), 
+				result.headToRule.keySet(), result.allVars);
 		
-		this.bodyToGenRule = OTMUtil.joinRight(this.bodyToGenHead, this.headToRule);
-		this.ruleToGenRule = OTMUtil.joinLeft(this.bodyToGenRule, this.bodyToRule);
+		result.bodyToGenRule = OTMUtil.joinRight(result.bodyToGenHead, result.headToRule);
+		result.ruleToGenRule = OTMUtil.joinLeft(result.bodyToGenRule, result.bodyToRule);
 		
-		this.ruleRoots = Sets.newHashSet();
-		for (Rule rule : this.allRules) {
-			if (this.ruleToGenRule.get(rule).size() == 0) {
-				this.ruleRoots.add(rule);
+		result.ruleRoots = Sets.newHashSet();
+		for (Rule rule : result.allRules) {
+			if (result.ruleToGenRule.get(rule).size() == 0) {
+				result.ruleRoots.add(rule);
 			}
 		}
 		
 		Multimap<Rule, Rule> ruleToDescRule = HashMultimap.create();
-		Multimaps.invertFrom(this.ruleToGenRule, ruleToDescRule);
-		this.ruleOrder = Topper.generalTopSort(ruleToDescRule, this.ruleRoots);
+		Multimaps.invertFrom(result.ruleToGenRule, ruleToDescRule);
+		
+		result.ruleOrder = Topper.generalTopSort(ruleToDescRule, result.ruleRoots);
+
+		return result;
+	}
+	
+
+	/**
+	 * Computes for each target dob the set of source dobs that unify with it.
+	 * @param dobs
+	 * @param vars
+	 * @param fortre 
+	 * @return
+	 */
+	public static Multimap<Dob, Dob> dependencies(Collection<Dob> targetDobs, 
+			Collection<Dob> sourceDobs, Set<Dob> vars) {
+		Multimap<Dob, Dob> result = HashMultimap.create(targetDobs.size(), sourceDobs.size());
+		
+		for (Dob target : targetDobs) {
+			for (Dob source : sourceDobs) {
+				Map<Dob, Dob> unify = Unifier.unifyVars(target, source, vars);
+				if (unify == null) continue;
+				result.put(target, source);
+			}
+		}
+		
+		return result;
+	}
+	
+
+	/**
+	 * result method takes a dob and returns the rules where
+	 * it can be applied. result set must be a subset of the rules whose bodies are 
+	 * touched by the subtree of the fortre rooted at the end of the trunk.
+	 * @param dob
+	 * @return
+	 */
+	public Set<Rule> getAffectedRules(Dob dob) {
+		Set<Dob> subtree = Sets.newHashSet();
+		Iterables.addAll(subtree, fortre.getCognateSplay(dob));
+		return Sets.newHashSet(ruleIterableFromBodyDobs(subtree));
 	}
 
 	public Iterable<Dob> getAllTerms() {

@@ -15,27 +15,6 @@ import com.google.common.collect.*;
 public class Topper {
 
 	/**
-	 * Computes for each target dob the set of source dobs that unify with it.
-	 * @param dobs
-	 * @param vars
-	 * @return
-	 */
-	public static Multimap<Dob, Dob> dependencies(Collection<Dob> targetDobs, 
-			Collection<Dob> sourceDobs, Set<Dob> vars) {
-		Multimap<Dob, Dob> result = HashMultimap.create(targetDobs.size(), sourceDobs.size());
-		
-		for (Dob target : targetDobs) {
-			for (Dob source : sourceDobs) {
-				Map<Dob, Dob> unify = Unifier.unifyVars(source, target, vars);
-				if (unify == null) continue;
-				result.put(target, source);
-			}
-		}
-		
-		return result;
-	}
-	
-	/**
 	 * This topological sort is capable of dealing with cycles. The map
 	 * passed in represents directed edges.
 	 * @param edges

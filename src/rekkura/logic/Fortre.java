@@ -6,11 +6,7 @@ import rekkura.model.Dob;
 import rekkura.util.CachingSupplier;
 import rekkura.util.Colut;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * (Form tree) This class is responsible for making it easy to 
@@ -47,9 +43,7 @@ public class Fortre {
 		this.allVars.add(root);
 		this.pool = pool;
 		
-		Set<Dob> deduped = Sets.newHashSet(allForms);
-		for (Dob form : deduped) addForm(form);
-		compress();
+		for (Dob form : allForms) addForm(form);
 	}
 	
 	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }
@@ -98,7 +92,7 @@ public class Fortre {
 	/**
 	 * Returns the path from the root down to the last node N
 	 * such that N unifies with the given dob but the siblings
-	 * of N do not.
+	 * of N do not. Also, the dob must not unify with N.
 	 * @param dob
 	 * @return
 	 */
@@ -109,7 +103,8 @@ public class Fortre {
 		
 		while (cur != null) {
 			path.add(cur);
-			
+			if (Unifier.unifyVars(dob, cur, allVars) != null) break;
+
 			Set<Dob> curChildren = this.allChildren.get(cur);
 			if (Colut.empty(curChildren)) break;
 			cur = downwardUnify(dob, curChildren, allVars);
@@ -117,6 +112,8 @@ public class Fortre {
 		
 		return path;
 	}
+	
+	public Dob getTrunkEnd(Dob dob) { return Colut.end(getTrunk(dob)); }
 	
 	/**
 	 * Returns an iterable that covers the subtree from
@@ -181,6 +178,12 @@ public class Fortre {
 		List<Dob> trunk = getTrunk(dob);
 		Dob end = Colut.end(trunk);
 		Set<Dob> endChildren = this.allChildren.get(end);
+		
+		// Handle cognates
+		if (Unifier.unifyVars(dob, end, allVars) != null) {
+			this.cognates.put(end, dob);
+			return;
+		}
 		
 		if (Colut.empty(endChildren)) {
 			this.allChildren.put(end, dob);
@@ -258,36 +261,6 @@ public class Fortre {
 	}
 	
 	/**
-	 * This method will remove all nodes X such that X unifies
-	 * with the parent of X and the parent of X has exactly 
-	 * one child.
-	 */
-	protected void compress() {
-		Set<Dob> candidates = Sets.newHashSet(this.allChildren.keySet());
-		while (candidates.size() > 0) { candidates = compressOnce(candidates); }
-	}
-
-	private Set<Dob> compressOnce(Set<Dob> candidates) {
-		Set<Dob> remaining = Sets.newHashSet();
-		SetMultimap<Dob, Dob> replacement = HashMultimap.create();
-		for (Dob parent : candidates) {
-			Set<Dob> children = allChildren.get(parent);
-			Dob child = Colut.any(children);
-			
-			if (children.size() == 1 &&
-				Unifier.unifyVars(child, parent, allVars) != null) {
-				children = allChildren.get(child);
-				if (children.size() == 1) remaining.add(parent);
-				this.cognates.put(parent, child);
-			}
-			replacement.putAll(parent, children);
-		}
-		
-		this.allChildren = replacement;
-		return remaining;
-	}
-	
-	/**
 	 * Tries to unify the children with the dob. 
 	 * If there is exactly one unification, the child is returned, 
 	 * else null is returned.
@@ -303,6 +276,7 @@ public class Fortre {
 				else return null;
 			}
 		}
+		
 		return result;
 	}
 	
