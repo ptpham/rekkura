@@ -1,12 +1,10 @@
 package rekkura.logic;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 import rekkura.model.Dob;
 import rekkura.util.OTMUtil;
+import rekkura.util.UnionFind;
 
 import com.google.common.collect.*;
 
@@ -110,6 +108,59 @@ public class Topper {
 		
 		return result;
 	}
+
+	public static <U> List<Set<U>> stronglyConnected(Multimap<U, U> edges, Set<U> roots) {
+		if (edges == null || edges.size() == 0) return Lists.newArrayList();
+		
+		UnionFind<U> ufind = new UnionFind<U>();
+		Map<U, Integer> seen = Maps.newHashMap();
+		
+		for (U root : roots) stronglyConnectedFrom(root, edges, seen, ufind);
+		
+		List<Set<U>> result = Lists.newArrayList();
+		HashMultimap<U, U> map = ufind.asBackwardMap();
+		for (U key : map.keySet()) result.add(map.get(key));
+		return result;
+	}
 	
+	private static <U> int stronglyConnectedFrom(U node, Multimap<U, U> edges, 
+			Map<U, Integer> seen, UnionFind<U> ufind) {
+		if (seen.containsKey(node)) return seen.get(node);
+
+		int index = seen.size();
+		seen.put(node, index);
+		
+		int result = index;
+		for (U adjacent : edges.get(node)) {
+			int lowest = stronglyConnectedFrom(adjacent, edges, seen, ufind);
+			if (lowest < index) {
+				ufind.union(node, adjacent);
+				result = Math.min(lowest, result);
+			}
+		}
+		
+		seen.put(node, Integer.MAX_VALUE);
+			
+		return result;
+	}
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
