@@ -265,13 +265,9 @@ public class StratifiedForwardTest {
 		List<List<Dob>> result = Lists.newArrayListWithCapacity(100);
 		result.add(initial);
 		
-		long begin = System.currentTimeMillis();
-		//for (int i = 0; i < 30000; i++) {
-			prover.reset(initial);
-			while (prover.hasMore()) { result.add(prover.proveNext()); }
-		//	result.clear();
-		//}
-		//System.out.println((float)(System.currentTimeMillis() - begin)/30000);
+		prover.reset(initial);
+		while (prover.hasMore()) { result.add(prover.proveNext()); }
+		
 		return result;
 	}
 	

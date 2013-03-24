@@ -112,4 +112,22 @@ public class Colut {
 		if (list == null || i < 0 || i >= list.size()) return null;
 		return list.get(i);
 	}
+
+	public static <U> Iterator<U> firstK(final Iterator<U> raw, final int k) {
+		return new Iterator<U>() {
+			int current = 0;
+			@Override public boolean hasNext() { return current < k && raw.hasNext(); }
+			@Override public U next() { return raw.next(); }
+			@Override public void remove() { raw.remove(); }
+		};
+	}
+	
+	public static <U> Iterable<U> firstK(final Iterable<U> raw, final int k) {
+		return new Iterable<U>() {
+			@Override public Iterator<U> iterator() {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		};
+	}
 }

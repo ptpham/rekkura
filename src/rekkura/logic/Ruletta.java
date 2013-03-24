@@ -2,15 +2,23 @@ package rekkura.logic;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.util.Colut;
 import rekkura.util.OTMUtil;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * result class maintains mappings and sets that are important for 
@@ -82,9 +90,9 @@ public class Ruletta {
 
 		// Prepare data structures to compute dependencies
 		for (Rule rule : result.allRules) { 
-			result.headToRule.put(rule.head.dob, rule);
+			result.headToRule.put(result.fortre.getTrunkEnd(rule.head.dob), rule);
 			for (Dob body : Atom.dobIterableFromAtoms(rule.body)) {
-				result.bodyToRule.put(body, rule);	
+				result.bodyToRule.put(result.fortre.getTrunkEnd(body), rule);	
 			}
 		}
 		
@@ -109,6 +117,17 @@ public class Ruletta {
 		return result;
 	}
 	
+	public List<Dob> getVariables(int num) {
+		List<Dob> result = Lists.newArrayList();
+		
+		while (this.allVars.size() < num) {
+			Dob generated = new Dob("[RTA" + this.allVars.size() + "]");
+			this.allVars.add(generated);
+		}
+		
+		Iterables.addAll(result, Colut.firstK(this.allVars, num)); 
+		return result;
+	}
 
 	/**
 	 * Computes for each target dob the set of source dobs that unify with it.
