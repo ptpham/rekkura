@@ -3,6 +3,7 @@ package rekkura.logic;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
@@ -27,14 +28,19 @@ public class Pool {
 
 	public final LogicFormat fmt = new StandardFormat();
 	Map<String, Dob> dobMap = Maps.newHashMap();
+	Set<Dob> known = Sets.newHashSet();
 	
 	public Dob submerge(Dob dob) {
+		if (known.contains(dob)) return dob;
+		
 		String stringed = fmt.toString(dob);
 		Dob existing = dobMap.get(stringed);
 		if (existing == null) {
 			existing = handleUnseen(dob);
 			dobMap.put(stringed, existing);
 		}
+		
+		this.known.add(existing);
 		return existing;
 	}
 

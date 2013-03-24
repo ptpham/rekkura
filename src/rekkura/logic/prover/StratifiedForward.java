@@ -124,10 +124,17 @@ public class StratifiedForward {
 		return result;
 	}
 
-	public void reset(Collection<Dob> truths) {
+	public void reset(Iterable<Dob> truths) {
 		clear();
 		this.queueTruth(vacuous);
 		for (Dob truth : truths) queueTruth(truth);
+	}
+	
+	public Set<Dob> proveAll(Iterable<Dob> truths) {
+		this.reset(truths);
+		Set<Dob> result = Sets.newHashSet();
+		while (this.hasMore()) result.addAll(this.proveNext());
+		return result;
 	}
 	
 	/**

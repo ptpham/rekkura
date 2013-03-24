@@ -27,6 +27,11 @@ public class Dob {
 		this.name = "";
 		this.children = Lists.newArrayList(children);
 	}
+	
+	public Dob(Dob... dobs) {
+		this.name = "";
+		this.children = Lists.newArrayList(dobs);
+	}
 
 	public boolean isTerminal() { return this.children.size() == 0; }
 	public Dob at(int pos) { return this.children.get(pos); }
