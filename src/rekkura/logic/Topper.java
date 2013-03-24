@@ -1,12 +1,23 @@
 package rekkura.logic;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
-import rekkura.model.Dob;
+import rekkura.util.Colut;
 import rekkura.util.OTMUtil;
 import rekkura.util.UnionFind;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * 
@@ -36,6 +47,7 @@ public class Topper {
 	private static <U> Multiset<U> computeGeneralTopSort(Multimap<U, U> edges, Set<U> roots) {
 		Multiset<U> result = HashMultiset.create();
 		Set<U> touched = Sets.newHashSet();
+		List<Set<U>> components = stronglyConnected(edges, roots);
 		
 		while (edges.size() > 0 && roots.size() > 0) {
 			// Peel back a well-ordered layer and append to our ordering
@@ -44,15 +56,48 @@ public class Topper {
 			for (U u : peel.elementSet()) { result.add(u, resultSize + peel.count(u)); }
 			
 			// Construct a new set of roots and edges for the next iteration
+			// The new roots are the remaining children of the nodes we removed.
 			roots.clear();
 			touched.addAll(peel);
 			Iterables.addAll(roots, OTMUtil.valueIterable(edges, peel));
 			
 			for (U node : peel.elementSet()) edges.removeAll(node);
 			roots.removeAll(touched);
+			
+			// If a strongly connected component has been reached,
+			// induce an ordering over it and append to our ordering
+			Set<U> exposed = Sets.newHashSet();
+			for (Set<U> component : components) {
+				if (Colut.containsNone(component, roots)) continue;
+				
+				for (U node : component) { result.add(node, 1 + result.entrySet().size()); }
+				touched.addAll(component);
+				
+				Iterables.addAll(exposed, OTMUtil.valueIterable(edges, component));
+				exposed.removeAll(component);
+				roots.removeAll(component);
+			}
+			
+			// Compute new roots if we had to remove components
+			if (components.size() > 0) roots.addAll(exposed);
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Finds the set of nodes with no incoming edges.
+	 * @param edges
+	 * @return
+	 */
+	public static <U> Set<U> findRoots(Multimap<U, U> edges) {
+		Set<U> allChildren = Sets.newHashSet(edges.values());
+		Set<U> roots = Sets.newHashSet();
+		for (U parent : edges.keySet()) {
+			if (!allChildren.contains(parent)) roots.add(parent);
+		}
+		
+		return roots;
 	}
 	
 	/**
@@ -73,7 +118,7 @@ public class Topper {
 		for (Map.Entry<U, U> entry : edges.entries()) { incoming.add(entry.getValue()); }
 		
 		// Run topological sort
-		int nextPriority = 0;
+		int nextPriority = 1;
 		for (U root : roots) { zeroEdges.push(root); }
 		while (zeroEdges.size() > 0) {
 			U next = zeroEdges.pop();
