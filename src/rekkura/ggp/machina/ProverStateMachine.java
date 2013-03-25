@@ -13,10 +13,12 @@ import rekkura.logic.prover.StratifiedForward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
@@ -76,13 +78,19 @@ public class ProverStateMachine implements
 	
 
 	@Override
-	public Collection<Dob> getActions(Set<Dob> state) {
-		return proverPass(state, ACTION_UNIFY);
+	public Multimap<Dob, Dob> getActions(Set<Dob> state) {
+		Set<Dob> actions = proverPass(state, ACTION_UNIFY);
+		Multimap<Dob, Dob> result = HashMultimap.create();
+		for (Dob dob : actions) {
+			if (dob.size() < 3) continue;
+			result.put(dob.at(1), dob);
+		}
+		return result;
 	}
 
 	@Override
-	public Set<Dob> nextState(Set<Dob> state, Iterable<Dob> actions) {
-		Iterable<Dob> truths = Iterables.concat(state, actions);
+	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
+		Iterable<Dob> truths = Iterables.concat(state, actions.values());
 		return proverPass(truths, NEXT_TURN_UNIFY);
 	}
 
@@ -118,6 +126,7 @@ public class ProverStateMachine implements
 				
 		for (Dob dob : proven) {
 			Dob replaced = Unifier.replace(dob, unify);
+			if (replaced == dob) continue;
 			advanced.add(this.prover.pool.submerge(replaced));
 		}
 		return advanced;
