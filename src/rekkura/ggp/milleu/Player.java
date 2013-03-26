@@ -1,6 +1,7 @@
 package rekkura.ggp.milleu;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,74 +10,110 @@ import rekkura.ggp.machina.StateMachine;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.util.Colut;
+import rekkura.util.Synchron;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 
-public interface Player {
-	public abstract void start(Dob role, Collection<Rule> rules, MatchConfig config);
-	public abstract Dob play(Map<Dob, Dob> actions);
-	public abstract void stop(Map<Dob, Dob> actions);
+public abstract class Player implements Runnable {
+
+	protected Dob role;
+	protected Game.Config config;
 	
-	public abstract class Partial implements Player {
-
-		protected MatchConfig config;
-		protected Dob role;
-		
-		@Override
-		public final void start(Dob role, Collection<Rule> rules, MatchConfig config) {
-			this.config = config;
-			this.role = role;
-			
-			this.metagame(rules);
-		}
-		
-		protected abstract void metagame(Collection<Rule> rules);
+	private volatile List<Dob> moves = Lists.newArrayList();
+	private volatile List<Map<Dob, Dob>> history = Lists.newArrayList();
+	
+	private boolean started = false;
+	
+	/**
+	 * A player may only be started once.
+	 * @param role
+	 * @param config
+	 */
+	public final synchronized void setMatch(Dob role, Game.Config config) {
+		if (started) throw new IllegalStateException("Player already started a game!");
+		this.role = role;
+		this.config = config;
+		this.started = true;
+		this.notifyAll();
 	}
 	
-	public abstract class StateBased<M extends StateMachine<Set<Dob>, Dob>> extends Partial {
-		private Set<Dob> current;
+	public boolean isStarted() { return this.started; }
+	
+	public final synchronized void advance(int turn, Map<Dob, Dob> actions) { 
+		Colut.addAt(history, turn, actions);
+		this.notifyAll();
+	}
+	
+	protected final synchronized int getHistoryExtent() { return this.history.size(); }
+	protected final synchronized Map<Dob, Dob> getMoves(int turn) { return Colut.get(history, turn); }
+	
+	public final synchronized boolean hasMove(int turn) { return Colut.get(moves, turn) != null; }
+	public final synchronized Dob getMove(int turn) { return Colut.get(moves, turn); }
+	protected final synchronized void setMove(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
+	protected final synchronized void setMove(Game.Move move) { this.setMove(move.turn, move.dob); }
+	
+	public static abstract class StateBased<M extends StateMachine<Set<Dob>, Dob>> extends Player {
+		private Set<Dob> state;
+		private int turn;
+		
 		protected M machine;
 		
 		protected abstract M constructMachine(Collection<Rule> rules);
-		protected abstract void plan(Set<Dob> initial);
-		protected abstract Dob move(Set<Dob> state, Multimap<Dob, Dob> actions);
-		protected abstract void reflect(Set<Dob> state, Multiset<Dob> goals);
+		protected abstract void plan();
+		protected abstract void move();
+		protected abstract void reflect();
+		
+		protected synchronized Game.Turn getTurn() { return new Game.Turn(this.turn, this.state); }
+		
+		protected Game.Move anyMove() {
+			Game.Turn turn = this.getTurn();
+			Multimap<Dob, Dob> actions = this.machine.getActions(turn.state);
+			return new Game.Move(turn.turn, Colut.any(actions.get(this.role))); 
+		}
 		
 		@Override
-		public Dob play(Map<Dob, Dob> actions) {
-			current = this.machine.nextState(current, actions);
-			return move(current, this.machine.getActions(current));
+		public final void run() {
+			while (!this.isStarted()) Synchron.lightWait(this);
+			this.machine = constructMachine(config.rules);
+			while (!isTerminal()) {
+				updateState();
+				if (this.turn == 0) plan();
+				else move();
+			}
+			reflect();
 		}
-
-		@Override
-		public void stop(Map<Dob, Dob> actions) {
-			current = this.machine.nextState(current, actions);
-			reflect(current, this.machine.getGoals(current));
+		
+		private synchronized boolean isTerminal() {
+			return this.state != null && this.machine.isTerminal(state);
 		}
-
-		@Override
-		protected final void metagame(Collection<Rule> rules) {
-			this.machine = constructMachine(rules);
-			current = this.machine.getInitial();
-			plan(current);
+		
+		private synchronized void updateState() {
+			if (this.state == null) {
+				state = this.machine.getInitial();
+				return;
+			}
+			
+			while (this.turn == getHistoryExtent()) Synchron.lightWait(this);
+			while (!validState()) {
+				this.state = this.machine.nextState(state, getMoves(turn));
+				turn++;
+			}
 		}
+		
+		protected boolean validState() { return this.turn == getHistoryExtent(); }
 	}
 	
-	public abstract class ProverBased extends StateBased<ProverStateMachine> {
+	public static abstract class ProverBased extends StateBased<ProverStateMachine> {
 		@Override
 		protected ProverStateMachine constructMachine(Collection<Rule> rules) {
 			return new ProverStateMachine(rules);
 		}
 	}
 	
-	public class Random extends ProverBased {
-		@Override
-		protected Dob move(Set<Dob> state, Multimap<Dob, Dob> actions) {
-			return Colut.any(actions.get(this.role));
-		}
-		
-		@Override protected void plan(Set<Dob> initial) { }
-		@Override protected void reflect(Set<Dob> state, Multiset<Dob> goals) { }
+	public static class Legal extends ProverBased {
+		@Override protected void plan() { setMove(anyMove()); }
+		@Override protected void move() { setMove(anyMove()); }
+		@Override protected void reflect() { }
 	}
 }

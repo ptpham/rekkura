@@ -2,6 +2,7 @@ package rekkura.ggp.milleu;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import rekkura.model.Atom;
 import rekkura.model.Dob;
@@ -9,8 +10,31 @@ import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
 
-public class GameManip {
+public class Game {
 
+	public static class Config {
+		public int startclock, playclock;
+		public List<Rule> rules;
+	}
+	
+	public static class Turn {
+		public int turn;
+		public Set<Dob> state;
+		public Turn(int turn, Set<Dob> state) { 
+			this.turn = turn; 
+			this.state = state; 
+		}
+	}
+	
+	public static class Move {
+		public int turn;
+		public Dob dob;
+		public Move(int turn, Dob dob) { 
+			this.turn = turn; 
+			this.dob = dob; 
+		}
+	}
+	
 	public static List<Dob> getRoles(Collection<Rule> rules) {
 		List<Dob> roles = Lists.newArrayList();
 		
