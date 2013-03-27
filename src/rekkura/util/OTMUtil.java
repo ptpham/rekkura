@@ -157,4 +157,12 @@ public class OTMUtil {
 	public static <U, V> void putAll(Multimap<U, V> target, Map<U, V> map) {
 		for (U u : map.keySet()) target.put(u, map.get(u));
 	}
+	
+	public static <U, V> Multimap<U, V> flatten(Multimap<U, Collection<V>> map) {
+		Multimap<U, V> result = HashMultimap.create();
+		for (Map.Entry<U, Collection<V>> entry : map.entries()) {
+			result.putAll(entry.getKey(), entry.getValue());
+		}
+		return result;
+	}
 }

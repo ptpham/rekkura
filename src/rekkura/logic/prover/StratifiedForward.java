@@ -1,7 +1,6 @@
 package rekkura.logic.prover;
 
 import java.util.*;
-import java.util.Map.Entry;
 
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
@@ -61,7 +60,9 @@ public class StratifiedForward {
 		});
 
 	
-	private Multimap<Integer, Rule> pendingRules = TreeMultimap.create(Ordering.natural(), Ordering.allEqual());
+	private Multimap<Integer, Rule> pendingRules 
+		= TreeMultimap.create(Ordering.natural(), Ordering.arbitrary());
+	
 	private Set<Dob> truths = Sets.newHashSet();
 	
 	private static final int DEFAULT_VARIABLE_SPACE_MIN = 512;
@@ -127,7 +128,7 @@ public class StratifiedForward {
 	public void reset(Iterable<Dob> truths) {
 		clear();
 		this.queueTruth(vacuous);
-		for (Dob truth : truths) queueTruth(truth);
+		for (Dob truth : truths) if (truth != null) queueTruth(truth);
 	}
 	
 	public Set<Dob> proveAll(Iterable<Dob> truths) {
@@ -373,10 +374,7 @@ public class StratifiedForward {
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
 				Map<Dob, Collection<Dob>> replacements = raw;
 				if (Colut.nonEmpty(left.keySet())) {
-					replacements = Maps.newHashMap();
-					for (Entry<Dob, Collection<Dob>> entry : OTMUtil.joinRight(left, raw).entries()) {
-						replacements.put(entry.getKey(), entry.getValue());
-					}
+					replacements = OTMUtil.flatten(OTMUtil.joinRight(left, raw)).asMap();
 				}
 				
 				for (Dob variable : replacements.keySet()) {

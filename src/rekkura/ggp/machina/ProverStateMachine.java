@@ -13,14 +13,7 @@ import rekkura.logic.prover.StratifiedForward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 public class ProverStateMachine implements 
 	StateMachine<Set<Dob>, Dob> {
@@ -34,6 +27,7 @@ public class ProverStateMachine implements
 	public final Map<Dob, Dob> NEXT_TURN_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> INITIALIZE_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> ACTION_UNIFY = Maps.newHashMap();
+	public final Map<Dob, Dob> EMTPY_UNIFY = Maps.newHashMap();
 	
 	public final StratifiedForward prover;
 	public final Ruletta rta;
@@ -64,7 +58,7 @@ public class ProverStateMachine implements
 	}
 	
 	private Dob getDob(String dob) {
-		Dob raw = StandardFormat.inst.dobFromString("(terminal)");
+		Dob raw = StandardFormat.inst.dobFromString(dob);
 		return this.prover.pool.submerge(raw);
 	}
 	
@@ -73,8 +67,9 @@ public class ProverStateMachine implements
 		return proverPass(Lists.<Dob>newArrayList(), INITIALIZE_UNIFY);
 	}
 
-	@Override public boolean isTerminal(Set<Dob> dobs) 
-	{ return dobs.contains(TERMINAL); }
+	@Override public boolean isTerminal(Set<Dob> dobs) {
+		return this.proverPass(dobs, EMTPY_UNIFY).contains(TERMINAL);
+	}
 	
 
 	@Override
@@ -83,6 +78,7 @@ public class ProverStateMachine implements
 		Multimap<Dob, Dob> result = HashMultimap.create();
 		for (Dob dob : actions) {
 			if (dob.size() < 3) continue;
+			if (dob.at(0) != this.DOES) continue;
 			result.put(dob.at(1), dob);
 		}
 		return result;
@@ -122,12 +118,13 @@ public class ProverStateMachine implements
 
 	private Set<Dob> proverPass(Iterable<Dob> truths, Map<Dob, Dob> unify) {
 		Set<Dob> proven = this.prover.proveAll(truths);
+		Iterables.addAll(proven, truths);
+		
 		Set<Dob> advanced = Sets.newHashSetWithExpectedSize(proven.size()); 
-				
 		for (Dob dob : proven) {
 			Dob replaced = Unifier.replace(dob, unify);
-			if (replaced == dob) continue;
-			advanced.add(this.prover.pool.submerge(replaced));
+			if (replaced != dob) replaced = this.prover.pool.submerge(replaced);
+			advanced.add(replaced);
 		}
 		return advanced;
 	}

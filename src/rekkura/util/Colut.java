@@ -3,6 +3,7 @@ package rekkura.util;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
@@ -124,10 +125,9 @@ public class Colut {
 	
 	public static <U> Iterable<U> firstK(final Iterable<U> raw, final int k) {
 		return new Iterable<U>() {
-			@Override public Iterator<U> iterator() {
-				// TODO Auto-generated method stub
-				return null;
-			}
+			@Override public Iterator<U> iterator() { return firstK(raw.iterator(), k); }
 		};
 	}
+	
+	public static <U> Vector<U> newVector() { return new Vector<U>(); }
 }

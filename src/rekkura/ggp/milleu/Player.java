@@ -1,9 +1,9 @@
 package rekkura.ggp.milleu;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import rekkura.ggp.machina.ProverStateMachine;
 import rekkura.ggp.machina.StateMachine;
@@ -12,7 +12,6 @@ import rekkura.model.Rule;
 import rekkura.util.Colut;
 import rekkura.util.Synchron;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 public abstract class Player implements Runnable {
@@ -20,8 +19,8 @@ public abstract class Player implements Runnable {
 	protected Dob role;
 	protected Game.Config config;
 	
-	private volatile List<Dob> moves = Lists.newArrayList();
-	private volatile List<Map<Dob, Dob>> history = Lists.newArrayList();
+	private final Vector<Dob> moves = Colut.newVector();
+	private final Vector<Map<Dob, Dob>> history = Colut.newVector();
 	
 	private boolean started = false;
 	

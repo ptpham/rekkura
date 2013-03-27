@@ -3,21 +3,35 @@ package rekkura.ggp.milleu;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
 
 import rekkura.ggp.machina.ProverStateMachine;
 import rekkura.model.Dob;
+import rekkura.util.Colut;
 import rekkura.util.Synchron;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 public class MatchRunnable implements Runnable {
-	List<Player> players;
-	Game.Config config;
+	public final Vector<Game.Record> history = Colut.newVector();
+	public final Vector<Player> players = Colut.newVector();
+	
+	public final Multimap<Integer, Player> timeouts 
+		= Multimaps.synchronizedSetMultimap(HashMultimap.<Integer,Player>create());
+	public final Game.Config config;
 	
 	public MatchRunnable(List<Player> players, Game.Config config) {
-		this.players = players;
+		if (players == null) players = Lists.newArrayList();
+		this.players.addAll(players);
 		this.config = config;
+	}
+	
+	public MatchRunnable(Game.Config config) {
+		this(null, config);
 	}
 	
 	@Override
@@ -28,9 +42,9 @@ public class MatchRunnable implements Runnable {
 		List<Thread> threads = Lists.newArrayList();
 		
 		// Map players to roles
+		while (players.size() < roles.size()) players.add(new Player.Legal());
 		for (int i = 0; i < roles.size(); i++) {
-			Player player = i < players.size() ? players.get(i) : new Player.Legal();
-			playerRoles.put(player, roles.get(i));
+			playerRoles.put(players.get(i), roles.get(i));
 		}
 		
 		// Construct harnesses for players
@@ -44,7 +58,7 @@ public class MatchRunnable implements Runnable {
 		
 		// Start players
 		for (Thread thread : threads) thread.start();
-		if (!Synchron.lightSleep(config.startclock)) return;
+		Synchron.lightSleep(config.startclock);
 		
 		// Run game
 		Map<Dob, Dob> actions = Maps.newHashMap();
@@ -52,19 +66,29 @@ public class MatchRunnable implements Runnable {
 		int turn = 0;
 		while (!machine.isTerminal(state)) {
 			// Extract decided moves from players
+			Multimap<Dob, Dob> legal = machine.getActions(state);
+			System.out.println("Legals: " + legal);
 			Map<Dob, Dob> next = Maps.newHashMap();
 			for (Player player : players) {
 				Dob role = playerRoles.get(player);
-				next.put(role, player.getMove(turn));
+				Dob move = player.getMove(turn);
+				if (move == null) {
+					move = Colut.any(legal.get(role));
+					this.timeouts.put(turn, player);
+				}
+				next.put(role, move);
 			}
 			actions = next;
 			
 			// Tell players to start thinking about the next move
 			for (Player player : players) player.advance(turn, actions);
+			this.history.add(new Game.Record(state, actions));
+			System.out.println(new Game.Record(state, actions));
 			
 			// Let players think
-			if (!Synchron.lightSleep(config.playclock)) return;
+			Synchron.lightSleep(config.playclock);
 			
+			// Generate the next state
 			state = machine.nextState(state, actions);
 			turn++;
 		}

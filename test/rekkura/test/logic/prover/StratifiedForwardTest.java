@@ -40,6 +40,21 @@ public class StratifiedForwardTest {
 		String[][] rawDobs = { {"(P)"}, {"(Q)"} };
 		syllogismTest(rawRules, rawDobs);
 	}
+	
+	@Test
+	public void multipleVacuous() {
+		String[] rawRules = {
+			"{|<((role)(robot)),true>:-}",
+			"{|<((init)(p)),true>:-}",
+			"{|<((legal)(p)(sing)),true>:-}",
+			"{|<((legal)(p)(noop)),true>:-}",
+		};
+		
+		String[][] rawDobs = { {}, 
+			{"((role)(robot))", "((init)(p))", 
+			 "((legal)(p)(sing))", "((legal)(p)(noop))"} };
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
 
 	@Test
 	public void noVariablesNegation() {

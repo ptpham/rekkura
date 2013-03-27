@@ -2,6 +2,7 @@ package rekkura.ggp.milleu;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Atom;
@@ -15,6 +16,11 @@ public class Game {
 	public static class Config {
 		public int startclock, playclock;
 		public List<Rule> rules;
+		public Config(int startclock, int playclock, List<Rule> rules) {
+			this.startclock = startclock;
+			this.playclock = playclock;
+			this.rules = rules;
+		}
 	}
 	
 	public static class Turn {
@@ -32,6 +38,20 @@ public class Game {
 		public Move(int turn, Dob dob) { 
 			this.turn = turn; 
 			this.dob = dob; 
+		}
+	}
+	
+	public static class Record {
+		public Set<Dob> state;
+		public Map<Dob, Dob> moves;
+		public Record(Set<Dob> state, Map<Dob, Dob> moves) {
+			this.state = state;
+			this.moves = moves;
+		}
+		
+		@Override
+		public String toString() {
+			return "(State:" + state + ", Moves:" + moves + ")";
 		}
 	}
 	
