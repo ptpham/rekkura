@@ -24,12 +24,12 @@ public class Fortre {
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
-	
-	private static final String ROOT_VAR_NAME = "[ROOT]";
-	private static CachingSupplier<Dob> vargen = new CachingSupplier<Dob>() {
+	private CachingSupplier<Dob> vargen = new CachingSupplier<Dob>() {
 		private int current = 0;
 		@Override public Dob create() { return new Dob("[FTV" + current++ + "]"); }
 	};
+
+	private static final String ROOT_VAR_NAME = "[ROOT]";
 	
 	/**
 	 * This constructor requires the full set of variables that

@@ -100,7 +100,9 @@ public abstract class Player implements Runnable {
 			}
 		}
 		
-		protected boolean validState() { return this.turn == getHistoryExtent(); }
+		protected synchronized boolean validState() { 
+			return this.turn == getHistoryExtent(); 
+		}
 	}
 	
 	public static abstract class ProverBased extends StateBased<ProverStateMachine> {
