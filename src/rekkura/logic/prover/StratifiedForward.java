@@ -1,21 +1,20 @@
 package rekkura.logic.prover;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
-import rekkura.logic.Pool;
-import rekkura.logic.Ruletta;
-import rekkura.logic.Terra;
-import rekkura.logic.Unifier;
-import rekkura.logic.perf.Cachet;
-import rekkura.logic.perf.GroundScope;
-import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.Cartesian;
 import rekkura.util.Colut;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
+import com.google.common.collect.TreeMultimap;
 
 /**
  * The set of rules provided to this prover must satisfy the following:
@@ -28,73 +27,14 @@ import com.google.common.collect.*;
  * @author ptpham
  *
  */
-public class StratifiedForward {
-	public final Ruletta rta;
-	public final Cachet cachet;
-	public final Pool pool = new Pool();
-	public final GroundScope scope = new GroundScope();
-	public final Set<Dob> truths = Sets.newHashSet();
-
-	private static final int DEFAULT_VARIABLE_SPACE_MIN = 512;
-	public int variableSpaceMin = DEFAULT_VARIABLE_SPACE_MIN;
+public class StratifiedForward extends StratifiedProver {
 
 	private Multimap<Integer, Rule> pendingRules 
 		= TreeMultimap.create(Ordering.natural(), Ordering.arbitrary());
-	
-	/**
-	 * This dob is used as a trigger for fully grounded rules
-	 * that are entirely negative.
-	 */
-	private Dob vacuous = new Dob("[VACUOUS]");
-	
+
 	public StratifiedForward(Collection<Rule> rules) {
-		Set<Rule> submerged = Sets.newHashSet();
-		
-		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
-		submerged = preprocess(submerged);
-		
-		this.rta = Ruletta.create(submerged, pool);
-		for (Rule rule : rta.allRules) {
-			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
-		}
-		
-		this.cachet = new Cachet(rta);
+		super(rules);
 		clear();
-	}
-	
-	/**
-	 * This method adds a vacuous positive term to rules that 
-	 * have bodies that are entirely negative and grounded.
-	 * It will also reorder rules so that negative terms come last.
-	 * 
-	 * This method will not ruin a submersion.
-	 * @param rules
-	 * @return
-	 */
-	private Set<Rule> preprocess(Collection<Rule> rules) {
-		Set<Rule> result = Sets.newHashSet();
-		
-		for (Rule rule : rules) {
-			List<Atom> positives = rule.getPositives();
-			List<Atom> negatives = rule.getNegatives();
-			
-			boolean grounded = true;
-			for (Atom atom : negatives) {
-				if (!rule.isGrounded(atom.dob)) grounded = false;
-			}
-			
-			if (grounded && positives.size() == 0) {
-				positives.add(new Atom(this.vacuous, true));
-			}
-			
-			rule.body.clear();
-			rule.body.addAll(positives);
-			rule.body.addAll(negatives);
-			
-			result.add(rule);
-		}
-		
-		return result;
 	}
 
 	public void reset(Iterable<Dob> truths) {
@@ -110,9 +50,6 @@ public class StratifiedForward {
 		return result;
 	}
 	
-	/**
-	 * Initialize private variables that track the state of the prover
-	 */
 	public void clear() {
 		this.truths.clear();
 		this.pendingRules.clear();
@@ -174,49 +111,6 @@ public class StratifiedForward {
 			if (submerged != vacuous) result.add(submerged);
 		}
 		
-		return result;
-	}
-
-	public Set<Dob> expandRule(Rule rule) {		
-		Set<Dob> result = Sets.newHashSet();
-		
-		// Prepare the domains of each positive body in the rule
-		List<Iterable<Dob>> assignments = Terra.getBodySpace(rule, cachet, scope);
-		int bodySpaceSize = Cartesian.size(assignments);
-		
-		// Decide whether to expand by terms or by variables based on the relative
-		// sizes of the replacements. This test is only triggered for a sufficiently 
-		// large body size because it costs more time to generate the variable space.
-		boolean useVariables = (variableSpaceMin <= 0);
-		if (useVariables || bodySpaceSize > variableSpaceMin) {
-			List<Iterable<Dob>> variables = Terra.getVariableSpace(rule, cachet, scope);
-			useVariables |= bodySpaceSize > Cartesian.size(variables);
-			if (useVariables) assignments = variables;
-		}
-		
-		// Iterate through the Cartesian product of possibilities
-		Map<Dob, Dob> unify = Maps.newHashMap();
-		
-		List<List<Dob>> space = Lists.newArrayListWithCapacity(assignments.size());
-		for (Iterable<Dob> iterable : assignments) { space.add(Lists.newArrayList(iterable)); }
-		
-		for (List<Dob> assignment : Cartesian.asIterable(space)) {
-			Map<Dob, Dob> success = null;
-
-			if (!useVariables) success = Terra.applyBodies(rule, assignment, pool, truths);
-			else success = Terra.applyVariables(rule, assignment, pool, truths);
-			
-			// If we manage to unify against all bodies, apply the substitution
-			// to the head and render it. If the generated head still has variables
-			// in it, then do not add it to the result.
-			if (success != null && rule.vars.size() == success.size()) {
-				Dob generated = this.pool.submerge(Unifier.replace(rule.head.dob, success));
-				result.add(generated);
-			}
-			
-			unify.clear();
-		}
-				
 		return result;
 	}
 	

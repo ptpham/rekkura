@@ -1,5 +1,13 @@
 package rekkura.logic.prover;
 
-public class StratifiedBackward {
+import java.util.Collection;
+
+import rekkura.model.Rule;
+
+public class StratifiedBackward extends StratifiedProver {
+
+	public StratifiedBackward(Collection<Rule> rules) {
+		super(rules);
+	}
 
 }

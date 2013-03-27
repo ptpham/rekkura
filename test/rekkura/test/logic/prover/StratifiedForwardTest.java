@@ -22,90 +22,88 @@ public class StratifiedForwardTest {
 
 	@Test
 	public void noVariables() {
-		String[] rawRules = { 
+		String[] rules = { 
 			"{| <(Q),true> :- <(P),true> }",
 			"{| <(R),true> :- <(Q),true> }"
 		};
 		
-		String[][] rawDobs = { {"(P)"}, {"(Q)"}, {"(R)"} };
-		syllogismTest(rawRules, rawDobs);
+		String[] initial = {"(P)"};
+		String[] expected = {"(Q)", "(R)"};
+		overallMatchTest(rules, initial, expected);
 	}
 	
 	@Test
 	public void vacuouslyTrue() {
-		String[] rawRules = { 
-				"{| <(Q),true> :-  }",
-		};
+		String[] rules = { "{| <(Q),true> :-  }", };
 		
-		String[][] rawDobs = { {"(P)"}, {"(Q)"} };
-		syllogismTest(rawRules, rawDobs);
+		String[] initial = {"(P)"};
+		String[] expected = {"(Q)"};
+		overallMatchTest(rules, initial, expected);
 	}
 	
 	@Test
 	public void multipleVacuous() {
-		String[] rawRules = {
+		String[] rules =  {
 			"{|<((role)(robot)),true>:-}",
 			"{|<((init)(p)),true>:-}",
 			"{|<((legal)(p)(sing)),true>:-}",
 			"{|<((legal)(p)(noop)),true>:-}",
 		};
 		
-		String[][] rawDobs = { {}, 
-			{"((role)(robot))", "((init)(p))", 
-			 "((legal)(p)(sing))", "((legal)(p)(noop))"} };
-		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+		String[] initial = {};
+		String[] expected = {"((role)(robot))", "((init)(p))", 
+				 "((legal)(p)(sing))", "((legal)(p)(noop))"};
+		overallMatchTest(rules, initial, expected);
 	}
 
 	@Test
 	public void noVariablesNegation() {
-		String[] rawRules = { 
+		String[] rules =  {
 			"{| <(Q),true> :- <(P),false> }",
 			"{| <(R),true> :- <(Q),true> }"
 		};
-		
-		String[][] rawDobs = { {"(Z)"}, {"(Q)"}, {"(R)"} };
-		syllogismTest(rawRules, rawDobs);
+			
+		String[] initial = { "(Z)" };
+		String[] expected = { "(Q)", "(R)" };
+		overallMatchTest(rules, initial, expected);
 	}
 
 
 	@Test
 	public void variablesRequired() {
-		String[] rawRules = { 
+		String[] rules =  {
 			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
 			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> }"
 		};
-		
-		String[][] rawDobs = { {"((P)(X))"}, {} };
-		syllogismTest(rawRules, rawDobs);
+			
+		String[] initial = { "((P)(X))" };
+		String[] expected = { };
+		overallMatchTest(rules, initial, expected);
 	}
 	
 	@Test
 	public void variablesGrounded() {
-		String[] rawRules = { 
+		String[] rules =  {
 			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
 			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> }"
 		};
-		
-		String[][] rawDobs = {
-			{"((P)(a))"}, {"((Q)(a))"}, {"((R)(a))"}
-		};
-		
-		syllogismTest(rawRules, rawDobs);
+			
+		String[] initial = { "((P)(a))" };
+		String[] expected = { "((Q)(a))", "((R)(a))" };
+		overallMatchTest(rules, initial, expected);
 	}
 	
 	@Test
 	public void pendingAssignments() {
-		String[] rawRules = { 
+		String[] rules =  {
 			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
 			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> <((N)(X)),true> }",
 			"{(X) | <((R)(X)),true> :- <((Q)(X)),true> <((M)(X)),false> }"
 		};
-		
-		String[][] rawDobs = {
-			{"((P)(a))"}, {"((Q)(a))"}, {}, {"((R)(a))"}
-		};
-		
-		syllogismTest(rawRules, rawDobs);
+			
+		String[] initial = { "((P)(a))" };
+		String[] expected = { "((Q)(a))", "((R)(a))" };
+		overallMatchTest(rules, initial, expected);
 	}
 	
 	@Test
@@ -241,25 +239,8 @@ public class StratifiedForwardTest {
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
 	
-	private void syllogismTest(String[] rawRules, String[][] rawDobs) {
-		LogicFormat fmt = new StandardFormat();
-		List<List<Dob>> allProven = runProver(rawRules, rawDobs[0]);
-		
-		for (int i = 1; i < rawDobs.length; i++) {
-			List<String> next = Lists.newArrayList(rawDobs[i]);
-			
-			Assert.assertTrue(allProven.size() > i);
-			List<Dob> proven = allProven.get(i);
-
-			Assert.assertEquals(next.size(), proven.size());
-			Assert.assertTrue(next.containsAll(fmt.dobsToStrings(proven)));
-		}
-		
-		Assert.assertEquals(rawDobs.length, allProven.size());
-	}
-	
-	private void overallMatchTest(String[] rawRules, String[] initial, String[] expected) {
-		List<List<Dob>> allProven = runProver(rawRules, initial);
+	private void overallMatchTest(String[] rules, String[] initial, String[] expected) {
+		List<List<Dob>> allProven = runProver(rules, initial);
 		
 		LogicFormat fmt = new StandardFormat();
 		List<Dob> provenList = Colut.collapseAsList(allProven);
