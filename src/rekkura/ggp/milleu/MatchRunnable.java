@@ -67,7 +67,6 @@ public class MatchRunnable implements Runnable {
 		while (!machine.isTerminal(state)) {
 			// Extract decided moves from players
 			Multimap<Dob, Dob> legal = machine.getActions(state);
-			System.out.println("Legals: " + legal);
 			Map<Dob, Dob> next = Maps.newHashMap();
 			for (Player player : players) {
 				Dob role = playerRoles.get(player);
@@ -83,7 +82,6 @@ public class MatchRunnable implements Runnable {
 			// Tell players to start thinking about the next move
 			for (Player player : players) player.advance(turn, actions);
 			this.history.add(new Game.Record(state, actions));
-			System.out.println(new Game.Record(state, actions));
 			
 			// Let players think
 			Synchron.lightSleep(config.playclock);

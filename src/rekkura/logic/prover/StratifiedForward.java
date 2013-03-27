@@ -65,7 +65,7 @@ public class StratifiedForward {
 	
 	private Set<Dob> truths = Sets.newHashSet();
 	
-	private static final int DEFAULT_VARIABLE_SPACE_MIN = 512;
+	private static final int DEFAULT_VARIABLE_SPACE_MIN = 512000;
 	
 	/**
 	 * This dob is used as a trigger for fully grounded rules
@@ -292,7 +292,7 @@ public class StratifiedForward {
 		boolean success = true;
 		for (int i = 0; i < body.size() && success; i++) {
 			Atom atom = body.get(i);
-			
+
 			// If the atom must be true, use the possibility provided
 			// in the full assignment.
 			Dob base = atom.dob;
@@ -303,9 +303,7 @@ public class StratifiedForward {
 			// If the atom must be false, check that the state 
 			// substitution applied to the dob does not yield 
 			// something that is true.
-			} else if (!vars.containsAll(unify.keySet())) { 
-				success = false;
-			} else { 
+			} else {
 				Dob generated = this.pool.submerge(Unifier.replace(base, unify));
 				if (isTrue(generated)) success = false;
 			}
@@ -373,7 +371,7 @@ public class StratifiedForward {
 				Map<Dob, Collection<Dob>> raw = this.unispaces.get(node).replacements.asMap();
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
 				Map<Dob, Collection<Dob>> replacements = raw;
-				if (Colut.nonEmpty(left.keySet())) {
+				if (left != null && Colut.nonEmpty(left.keySet())) {
 					replacements = OTMUtil.flatten(OTMUtil.joinRight(left, raw)).asMap();
 				}
 				
@@ -388,6 +386,7 @@ public class StratifiedForward {
 				
 				// Add stuff that was not included in the join but is 
 				// still necessary for a valid unification.
+				if (left == null) continue;
 				for (Map.Entry<Dob, Dob> entry: left.entrySet()) {
 					if (!this.rta.fortre.allVars.contains(entry.getValue()))
 						variables.put(entry.getKey(), entry.getValue());

@@ -1,6 +1,7 @@
 package rekkura.ggp.machina;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,7 +65,9 @@ public class ProverStateMachine implements
 	
 	@Override
 	public Set<Dob> getInitial() {
-		return proverPass(Lists.<Dob>newArrayList(), INITIALIZE_UNIFY);
+		Set<Dob> result = proverPass(Lists.<Dob>newArrayList(), INITIALIZE_UNIFY);
+		keepTrues(result);
+		return result;
 	}
 
 	@Override public boolean isTerminal(Set<Dob> dobs) {
@@ -87,7 +90,9 @@ public class ProverStateMachine implements
 	@Override
 	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
 		Iterable<Dob> truths = Iterables.concat(state, actions.values());
-		return proverPass(truths, NEXT_TURN_UNIFY);
+		Set<Dob> result = proverPass(truths, NEXT_TURN_UNIFY);
+		keepTrues(result);
+		return result;
 	}
 
 	@Override
@@ -115,10 +120,20 @@ public class ProverStateMachine implements
 		
 		return result;
 	}
+	
+	private void keepTrues(Set<Dob> dobs) {
+		Iterator<Dob> iterator = dobs.iterator();
+		while (iterator.hasNext()) {
+			Dob next = iterator.next();
+			
+			boolean keep = !next.isTerminal() 
+				&& next.size() > 0 && next.at(0) == this.TRUE;
+			if (!keep) iterator.remove();
+		}
+	}
 
 	private Set<Dob> proverPass(Iterable<Dob> truths, Map<Dob, Dob> unify) {
 		Set<Dob> proven = this.prover.proveAll(truths);
-		Iterables.addAll(proven, truths);
 		
 		Set<Dob> advanced = Sets.newHashSetWithExpectedSize(proven.size()); 
 		for (Dob dob : proven) {

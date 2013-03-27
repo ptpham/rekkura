@@ -32,7 +32,7 @@ public class MatchRunnableTest {
 	
 	@Test
 	public void ticTacToe() {
-		Game.Config config = new Game.Config(1000, 1000, SimpleGames.getTicTacToe());
+		Game.Config config = new Game.Config(3000, 100, SimpleGames.getTicTacToe());
 		MatchRunnable match = new MatchRunnable(config);
 		match.run();
 

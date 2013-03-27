@@ -113,7 +113,6 @@ public class Ruletta {
 		Multimaps.invertFrom(result.ruleToGenRule, ruleToDescRule);
 		
 		result.ruleOrder = Topper.generalTopSort(ruleToDescRule, result.ruleRoots);
-
 		return result;
 	}
 	
