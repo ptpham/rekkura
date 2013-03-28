@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.logic.perf.Cachet;
-import rekkura.logic.perf.GroundScope;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
@@ -37,7 +35,7 @@ public class Terra {
 	 * @param ground
 	 * @return
 	 */
-	public static List<Iterable<Dob>> getVariableSpace(Rule rule, Cachet cachet, GroundScope scope) {
+	public static List<Iterable<Dob>> getVariableSpace(Rule rule, Cachet cachet) {
 		// Add a single null for rules with no variables
 		List<Iterable<Dob>> candidates = Lists.newArrayList();
 		if (rule.vars.size() == 0) {
@@ -56,7 +54,7 @@ public class Terra {
 			// to rephrase in terms of variables in the rule.
 			Iterable<Dob> subtree = cachet.spines.get(atom.dob);
 			for (Dob node : subtree) {
-				Map<Dob, Collection<Dob>> raw = scope.unispaces.get(node).replacements.asMap();
+				Map<Dob, Collection<Dob>> raw = cachet.unispaces.get(node).replacements.asMap();
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
 				Map<Dob, Collection<Dob>> replacements = raw;
 				if (left != null && Colut.nonEmpty(left.keySet())) {
@@ -95,11 +93,11 @@ public class Terra {
 	 * @param dob
 	 * @return
 	 */
-	public static Iterable<Dob> getGroundCandidates(Dob dob, Cachet cachet, final GroundScope scope) {
+	public static Iterable<Dob> getGroundCandidates(Dob dob, final Cachet cachet) {
 		Iterable<Dob> subtree = cachet.spines.get(dob);
 		return new NestedIterable<Dob, Dob>(subtree) {
 			@Override protected Iterator<Dob> prepareNext(Dob u) {
-				return scope.unisuccess.get(u).iterator();
+				return cachet.unisuccess.get(u).iterator();
 			}
 		};
 	}
@@ -114,7 +112,7 @@ public class Terra {
 	 * @param dob
 	 * @return
 	 */
-	public static List<Iterable<Dob>> getBodySpace(Rule rule, Cachet cachet, GroundScope scope) {
+	public static List<Iterable<Dob>> getBodySpace(Rule rule, Cachet cachet) {
 		List<Iterable<Dob>> candidates = Lists.newArrayList(); 
 		
 		for (int i = 0; i < rule.body.size(); i++) {
@@ -122,7 +120,7 @@ public class Terra {
 			
 			Iterable<Dob> next;
 			if (!atom.truth) next = Lists.newArrayList((Dob)null);
-			else next = getGroundCandidates(atom.dob, cachet, scope);
+			else next = getGroundCandidates(atom.dob, cachet);
 			
 			if (Iterables.isEmpty(next)) return Lists.newArrayList();
 			candidates.add(next);

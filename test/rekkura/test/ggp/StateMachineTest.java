@@ -18,7 +18,7 @@ public class StateMachineTest {
 
 	@Test
 	public void ticTacToe() {
-		ProverStateMachine machine = new ProverStateMachine(SimpleGames.getTicTacToe());
+		ProverStateMachine machine = ProverStateMachine.createWithStratifiedBackward(SimpleGames.getTicTacToe());
 		Set<Dob> initial = machine.getInitial();
 		
 		Multimap<Dob, Dob> joint = machine.getActions(initial);

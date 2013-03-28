@@ -12,13 +12,7 @@ import rekkura.model.Rule;
 import rekkura.util.Colut;
 import rekkura.util.OTMUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * result class maintains mappings and sets that are important for 

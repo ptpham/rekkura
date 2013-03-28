@@ -5,12 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import rekkura.logic.Cachet;
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
 import rekkura.logic.Terra;
 import rekkura.logic.Unifier;
-import rekkura.logic.perf.Cachet;
-import rekkura.logic.perf.GroundScope;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
@@ -25,7 +24,6 @@ public abstract class StratifiedProver {
 	public final Ruletta rta;
 	public final Cachet cachet;
 	public final Pool pool = new Pool();
-	public final GroundScope scope = new GroundScope();
 	public final Set<Dob> truths = Sets.newHashSet();
 
 	private static final int DEFAULT_VARIABLE_SPACE_MIN = 512;
@@ -36,6 +34,8 @@ public abstract class StratifiedProver {
 	 * that are entirely negative.
 	 */
 	protected Dob vacuous = new Dob("[VACUOUS]");
+	
+	public abstract Set<Dob> proveAll(Iterable<Dob> truths);
 	
 	public StratifiedProver(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
@@ -87,11 +87,25 @@ public abstract class StratifiedProver {
 		return result;
 	}
 	
-	public Set<Dob> expandRule(Rule rule) {		
+
+	/**
+	 * This method makes sure that the given dob is indexable from the 
+	 * last node in the trunk of the fortre.
+	 * @param dob
+	 * @return
+	 */
+	public Dob storeTruth(Dob dob) {
+		dob = this.pool.submerge(dob);
+		truths.add(dob);
+		this.cachet.storeGround(dob);
+		return dob;
+	}
+	
+	public Set<Dob> expandRule(Rule rule) {	
 		Set<Dob> result = Sets.newHashSet();
-		
+			
 		// Prepare the domains of each positive body in the rule
-		List<Iterable<Dob>> assignments = Terra.getBodySpace(rule, cachet, scope);
+		List<Iterable<Dob>> assignments = Terra.getBodySpace(rule, cachet);
 		int bodySpaceSize = Cartesian.size(assignments);
 		
 		// Decide whether to expand by terms or by variables based on the relative
@@ -99,7 +113,7 @@ public abstract class StratifiedProver {
 		// large body size because it costs more time to generate the variable space.
 		boolean useVariables = (variableSpaceMin <= 0);
 		if (useVariables || bodySpaceSize > variableSpaceMin) {
-			List<Iterable<Dob>> variables = Terra.getVariableSpace(rule, cachet, scope);
+			List<Iterable<Dob>> variables = Terra.getVariableSpace(rule, cachet);
 			useVariables |= bodySpaceSize > Cartesian.size(variables);
 			if (useVariables) assignments = variables;
 		}

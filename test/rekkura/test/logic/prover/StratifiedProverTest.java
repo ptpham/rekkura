@@ -1,25 +1,49 @@
 package rekkura.test.logic.prover;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
+import rekkura.logic.prover.StratifiedBackward;
 import rekkura.logic.prover.StratifiedForward;
+import rekkura.logic.prover.StratifiedProver;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.Colut;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class StratifiedForwardTest {
+@RunWith(Parameterized.class)
+public class StratifiedProverTest {
 
+	private static enum ProverType {
+		FORWARD,
+		BACKWARD
+	}
+	
+	@Parameters
+	public static Collection<Object[]> paramters() {
+		return Arrays.asList(new Object[][] {
+			{ ProverType.FORWARD },
+			{ ProverType.BACKWARD }
+		});
+	}
+	
+	private ProverType type;
+	
+	public StratifiedProverTest(ProverType type) {
+		this.type = type;
+	}
+	
 	@Test
 	public void noVariables() {
 		String[] rules = { 
@@ -240,11 +264,10 @@ public class StratifiedForwardTest {
 	}
 	
 	private void overallMatchTest(String[] rules, String[] initial, String[] expected) {
-		List<List<Dob>> allProven = runProver(rules, initial);
+		Set<Dob> allProven = runProver(rules, initial);
 		
 		LogicFormat fmt = new StandardFormat();
-		List<Dob> provenList = Colut.collapseAsList(allProven);
-		Set<String> provenSet = Sets.newHashSet(fmt.dobsToStrings(provenList));
+		Set<String> provenSet = Sets.newHashSet(fmt.dobsToStrings(allProven));
 		
 		Set<String> expectedSet = Sets.newHashSet(expected);
 		expectedSet.addAll(Arrays.asList(initial));
@@ -252,38 +275,24 @@ public class StratifiedForwardTest {
 		Assert.assertEquals(expectedSet, provenSet);
 	}
 	
-	public static List<List<Dob>> runProver(String[] rawRules, String[] rawInitial) {
+	public Set<Dob> runProver(String[] rawRules, String[] rawInitial) {
 		LogicFormat fmt = new StandardFormat();
 		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
 		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawInitial));
-		StratifiedForward prover = new StratifiedForward(rules);
+		StratifiedProver prover = null;
+		switch (type) {
+		case FORWARD: 
+			prover = new StratifiedForward(rules);
+			break;
+		case BACKWARD:
+			prover = new StratifiedBackward(rules);
+			break;
+		}
 
-		List<List<Dob>> result = Lists.newArrayListWithCapacity(100);
-		result.add(initial);
-		
-		prover.reset(initial);
-		while (prover.hasMore()) { result.add(prover.proveNext()); }
+		Set<Dob> result = Sets.newHashSet();
+		result.addAll(initial);
+		result.addAll(prover.proveAll(initial));
 		
 		return result;
-	}
-	
-	protected void syllogismPrint(String[] rawRules, String[][] rawDobs) {
-		LogicFormat fmt = new StandardFormat();
-		List<List<Dob>> allProven = runProver(rawRules, rawDobs[0]);
-		
-		for (int i = 1; i < rawDobs.length; i++) {
-			List<Dob> proven = Lists.newArrayList();
-			if (i < allProven.size()) proven = allProven.get(i);
-			System.out.println("Seen: " + proven.size() + ", Expected: " + rawDobs[i].length);
-			System.out.println("Proven: ");
-			for (Dob dob : proven) {
-				System.out.println(fmt.toString(dob));
-			}
-			System.out.println("Expected: ");
-			for (int j = 0; j < rawDobs[i].length; j++) {
-				System.out.println(rawDobs[i][j]);
-			}
-			System.out.println();
-		}
 	}
 }

@@ -1,10 +1,15 @@
 package rekkura.test.ggp;
 
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.MatchRunnable;
+import rekkura.ggp.milleu.Player;
+
+import com.google.common.collect.Lists;
 
 public class MatchRunnableTest {
 	
@@ -24,7 +29,8 @@ public class MatchRunnableTest {
 	@Test
 	public void timeoutRecord() {
 		Game.Config config = new Game.Config(0, 0, SimpleGames.getTrivial());
-		MatchRunnable match = new MatchRunnable(config);
+		List<Player> players = Lists.<Player>newArrayList(new Player.Unresponsive());
+		MatchRunnable match = new MatchRunnable(players, config);
 		match.run();
 		
 		Assert.assertEquals(1, match.timeouts.size());

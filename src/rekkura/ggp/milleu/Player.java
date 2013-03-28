@@ -52,6 +52,13 @@ public abstract class Player implements Runnable {
 	protected final synchronized void setMove(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
 	protected final synchronized void setMove(Game.Move move) { this.setMove(move.turn, move.dob); }
 	
+	/**
+	 * This represents a player that needs to update the state of the game using a state 
+	 * machine. Most players will want to derive from this.
+	 * @author ptpham
+	 *
+	 * @param <M>
+	 */
 	public static abstract class StateBased<M extends StateMachine<Set<Dob>, Dob>> extends Player {
 		private Set<Dob> state;
 		private int turn;
@@ -108,8 +115,14 @@ public abstract class Player implements Runnable {
 	public static abstract class ProverBased extends StateBased<ProverStateMachine> {
 		@Override
 		protected ProverStateMachine constructMachine(Collection<Rule> rules) {
-			return new ProverStateMachine(rules);
+			return ProverStateMachine.createWithStratifiedBackward(rules);
 		}
+	}
+	
+	public static class Unresponsive extends ProverBased {
+		@Override protected void plan() { }
+		@Override protected void move() { }
+		@Override protected void reflect() { }
 	}
 	
 	public static class Legal extends ProverBased {

@@ -53,7 +53,7 @@ public class StratifiedForward extends StratifiedProver {
 	public void clear() {
 		this.truths.clear();
 		this.pendingRules.clear();
-		this.scope.unisuccess.clear();
+		this.cachet.unisuccess.clear();
 	}
 
 	/**
@@ -67,8 +67,7 @@ public class StratifiedForward extends StratifiedProver {
 	 * @param dob
 	 */
 	protected Dob queueTruth(Dob dob) {
-		dob = this.pool.submerge(dob);
-		if (truths.contains(dob)) return this.vacuous;
+		dob = storeTruth(dob);
 		
 		Iterable<Rule> generated = this.cachet.affectedRules.get(dob);
 
@@ -77,24 +76,8 @@ public class StratifiedForward extends StratifiedProver {
 			int priority = this.rta.ruleOrder.count(rule);
 			this.pendingRules.put(priority, rule);
 		}
-		
-		storeGround(dob);
 
 		return dob;
-	}
-
-	/**
-	 * This method makes sure that the given dob is indexable from the 
-	 * last node in the trunk of the fortre.
-	 * @param dob
-	 * @return
-	 */
-	private void storeGround(Dob dob) {
-		truths.add(dob);
-
-		// The root of the subtree is the end of the trunk.
-		Dob end = this.cachet.canonicalForms.get(dob);
-		if (end != null) this.scope.storeGround(dob, end);
 	}
 
 	public boolean hasMore() { return this.pendingRules.size() > 0; }
@@ -107,7 +90,7 @@ public class StratifiedForward extends StratifiedProver {
 		// Submerge all of the newly generated dobs
 		List<Dob> result = Lists.newArrayListWithCapacity(generated.size());
 		for (Dob dob : generated) {
-			Dob submerged =queueTruth(dob);
+			Dob submerged = queueTruth(dob);
 			if (submerged != vacuous) result.add(submerged);
 		}
 		

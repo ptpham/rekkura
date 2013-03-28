@@ -36,7 +36,7 @@ public class MatchRunnable implements Runnable {
 	
 	@Override
 	public void run() {
-		ProverStateMachine machine = new ProverStateMachine(config.rules);
+		ProverStateMachine machine = ProverStateMachine.createWithStratifiedBackward(config.rules);
 		List<Dob> roles = Game.getRoles(config.rules);
 		Map<Player, Dob> playerRoles = Maps.newHashMap();
 		List<Thread> threads = Lists.newArrayList();
