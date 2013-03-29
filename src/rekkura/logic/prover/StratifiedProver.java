@@ -133,7 +133,8 @@ public abstract class StratifiedProver {
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
 			// in it, then do not add it to the result.
-			if (success != null && rule.vars.size() == success.size()) {
+			if (success != null && rule.vars.size() == success.size()
+				&& rule.evaluateDistinct(success)) {
 				Dob generated = this.pool.submerge(Unifier.replace(rule.head.dob, success));
 				result.add(generated);
 			}

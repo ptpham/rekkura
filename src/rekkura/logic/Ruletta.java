@@ -23,7 +23,7 @@ import com.google.common.collect.*;
 public class Ruletta {
 	
 	public Set<Rule> allRules;
-	public Set<Dob> allVars, allDobs, posDobs, negDobs;
+	public Set<Dob> allVars, posDobs, negDobs;
 	public Multimap<Dob, Rule> bodyToRule, headToRule;
 	public Fortre fortre;
 
@@ -61,14 +61,12 @@ public class Ruletta {
 		result.allRules = Sets.newHashSet(rules);
 		
 		result.allVars = Sets.newHashSet();
-		result.allDobs = Sets.newHashSet();
 		result.posDobs = Sets.newHashSet();
 		result.negDobs = Sets.newHashSet();
 
 		result.bodyToRule = HashMultimap.create();
 		result.headToRule = HashMultimap.create();
 		
-		for (Dob dob : Rule.dobIterableFromRules(result.allRules)) { result.allDobs.add(dob); }
 		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) {
 			if (atom.truth) result.posDobs.add(atom.dob);
 			else result.negDobs.add(atom.dob);

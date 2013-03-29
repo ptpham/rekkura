@@ -1,6 +1,7 @@
 package rekkura.fmt;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import rekkura.model.Atom;
@@ -8,9 +9,26 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
+/**
+ * Apologies for the grossness. 
+ * 
+ * Dob Example: ((f)((g)(X)))
+ * Atom Example: <((f)(X)),true>
+ * Rule Example: {(X)(Y)|<((p)(X)),true>:-<((q)(X)(Y)),true><(X)!=(Y)>}
+ * 
+ * The rule reads "p(X) being true is entailed if there exists 
+ * variables X and Y such such that q(X)(Y) is true and that
+ * X is not equal to Y".
+ * 
+ * @author ptpham
+ *
+ */
 public class StandardFormat extends LogicFormat {
 	
+	public static final String NOT_EQUAL = "!=";
+
 	@Override
 	public String toString(Dob dob) {
 		StringBuilder builder = new StringBuilder();
@@ -89,16 +107,30 @@ public class StandardFormat extends LogicFormat {
 	@Override
 	public Atom atomFromString(String s) {
 		s = s.trim();
-		int endIdx = s.length() - 1;
 		String parts[] = s.split(",");
 		if (s.length() < 3 || s.charAt(0) != '<'
-				|| s.charAt(endIdx) != '>'
+				|| !s.endsWith(">")
 				|| parts.length != 2) {
 			throw new Error("Atom parse error: " + s);
 		}
 		
 		return new Atom(dobFromString(parts[0].replace("<", "")), 
 				Boolean.parseBoolean(parts[1].replace(">", "").trim()));
+	}
+	
+	private Map<Dob, Dob> distinctFromString(String string) {
+		String[] split = string.split(NOT_EQUAL);
+		if (split.length != 2 || split[0].charAt(0) != '<' ||
+				!split[1].endsWith(">")) {
+			throw new Error("Distinct parse error: " + string);
+		}
+		
+		String first = split[0].replace("<", "");
+		String second = split[1].replace(">", "");
+		
+		Map<Dob, Dob> result = Maps.newHashMap();
+		result.put(dobFromString(first), dobFromString(second));
+		return result;
 	}
 	
 	@Override
@@ -110,9 +142,24 @@ public class StandardFormat extends LogicFormat {
 	public List<Atom> atomListFromString(String s) {
 		List<Atom> result = Lists.newArrayList();
 		for (String part : s.split("<|>")) {
+			if (part.contains(NOT_EQUAL)) continue;
+			
 			part = part.trim();
 			if (part.length() > 0) {
 				result.add(atomFromString("<" + part + ">"));
+			}
+		}
+		return result;
+	}
+	
+	public Map<Dob, Dob> distinctListFromString(String s) {
+		Map<Dob, Dob> result = Maps.newHashMap();
+		for (String part : s.split("<|>")) {
+			if (!part.contains(NOT_EQUAL)) continue;
+			
+			part = part.trim();
+			if (part.length() > 0) {
+				result.putAll(distinctFromString("<" + part + ">"));
 			}
 		}
 		return result;
@@ -125,18 +172,24 @@ public class StandardFormat extends LogicFormat {
 	@Override
 	public Rule ruleFromString(String s) {
 		s = s.trim();
-		int endIdx = s.length() - 1;
 		String parts[] = s.split("\\||:-");
-		if (s.length() < 5 || s.charAt(0) != '{'
-			|| s.charAt(endIdx) != '}' || parts.length != 3) {
+		if (checkRuleValidity(s, parts)) {
 			throw new Error("Rule parse error: " + s);
 		}
 		
+		String constraints = parts[2].replace("}", "");
 		Rule rule = new Rule();
 		rule.head = atomFromString(parts[1]);
-		rule.body = atomListFromString(parts[2].replace("}", ""));
-		rule.vars = dobListFromString(parts[0].replace("{", ""));	
+		rule.body = atomListFromString(constraints);
+		rule.vars = dobListFromString(parts[0].replace("{", ""));
+		rule.distinct = distinctListFromString(constraints);
+		
 		return rule;
+	}
+	
+	private boolean checkRuleValidity(String s, String[] parts) {
+		return s.length() < 5 || s.charAt(0) != '{'
+			|| !s.endsWith("}") || parts.length != 3;
 	}
 	
 	public static final StandardFormat inst = new StandardFormat();

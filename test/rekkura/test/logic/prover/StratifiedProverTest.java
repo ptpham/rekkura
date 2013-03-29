@@ -131,6 +131,18 @@ public class StratifiedProverTest {
 	}
 	
 	@Test
+	public void distinct() {
+		String[] rules =  {
+			"{(X)(Y) | <((Q)(X)(Y)),true> :- <((P)(X)(Y)),true> <(X)!=(Y)>}",
+			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> <(X)!=(a)>}"
+		};
+			
+		String[] initial = { "((P)(a)(b))", "((P)(b))" };
+		String[] expected = { "((Q)(a)(b))", "((Q)(b))" };
+		overallMatchTest(rules, initial, expected);
+	}
+	
+	@Test
 	public void multipleVariables() {
 		String[] rawRules = { 
 			"{(X) | <((Q)(X)),true> :- <((P)(X)),true> }",
@@ -241,7 +253,7 @@ public class StratifiedProverTest {
 			};
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
-	
+
 	@Test
 	public void complex() {
 		String[] rawRules = { 
@@ -262,6 +274,7 @@ public class StratifiedProverTest {
 
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
+	
 	
 	private void overallMatchTest(String[] rules, String[] initial, String[] expected) {
 		Set<Dob> allProven = runProver(rules, initial);
