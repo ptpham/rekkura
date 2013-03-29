@@ -19,11 +19,14 @@ public class GameLogicContext {
 	public final Dob ROLE, DOES, NEXT, TRUE, GOAL;
 	
 	// Data structures for doing GGP manipulations
-	public final Dob GOAL_QUERY, GOAL_QUERY_ROLE_VAR;
-	public final Map<Dob, Dob> NEXT_TURN_UNIFY = Maps.newHashMap();
-	public final Map<Dob, Dob> INITIALIZE_UNIFY = Maps.newHashMap();
-	public final Map<Dob, Dob> ACTION_UNIFY = Maps.newHashMap();
+	public final Dob ROLE_VAR, GENERIC_VAR;
+	public final Dob GOAL_QUERY, INIT_QUERY, NEXT_QUERY, LEGAL_QUERY;
+	public final Map<Dob, Dob> NEXT_UNIFY = Maps.newHashMap();
+	public final Map<Dob, Dob> INIT_UNIFY = Maps.newHashMap();
+	public final Map<Dob, Dob> LEGAL_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> EMTPY_UNIFY = Maps.newHashMap();
+	
+	public final Set<Dob> EMPTY_STATE = Sets.newHashSet();
 	
 	public final Pool pool;
 	public final Ruletta rta;
@@ -43,13 +46,16 @@ public class GameLogicContext {
 		this.ROLE = getDob("(role)");
 
 		List<Dob> var = rta.getVariables(2);
-		this.GOAL_QUERY_ROLE_VAR = var.get(0);
-		Dob rawGoalQuery = new Dob(GOAL, GOAL_QUERY_ROLE_VAR, var.get(1));
-		this.GOAL_QUERY = pool.submerge(rawGoalQuery);
-		
-		this.NEXT_TURN_UNIFY.put(this.NEXT, this.TRUE);
-		this.INITIALIZE_UNIFY.put(this.INIT, this.TRUE);
-		this.ACTION_UNIFY.put(this.LEGAL, this.DOES);
+		this.ROLE_VAR = var.get(0);
+		this.GENERIC_VAR = var.get(1);
+		this.GOAL_QUERY = pool.submerge(new Dob(GOAL, ROLE_VAR, GENERIC_VAR));
+		this.LEGAL_QUERY = pool.submerge(new Dob(LEGAL, ROLE_VAR, GENERIC_VAR));
+		this.INIT_QUERY = pool.submerge(new Dob(INIT, GENERIC_VAR));
+		this.NEXT_QUERY = pool.submerge(new Dob(NEXT, GENERIC_VAR));
+
+		this.NEXT_UNIFY.put(this.NEXT, this.TRUE);
+		this.INIT_UNIFY.put(this.INIT, this.TRUE);
+		this.LEGAL_UNIFY.put(this.LEGAL, this.DOES);
 	}
 
 	private Dob getDob(String dob) {
@@ -68,7 +74,7 @@ public class GameLogicContext {
 			Dob value = null;
 			if (unify.entrySet().size() != 2) continue;
 			for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
-				if (entry.getKey() == GOAL_QUERY_ROLE_VAR) role = entry.getValue();
+				if (entry.getKey() == ROLE_VAR) role = entry.getValue();
 				else if (value != null) value = entry.getValue();
 			}
 			

@@ -101,6 +101,10 @@ public abstract class StratifiedProver {
 		return dob;
 	}
 	
+	public void storeTruths(Iterable<Dob> truths) {
+		for (Dob dob : truths) storeTruth(dob);
+	}
+	
 	public Set<Dob> expandRule(Rule rule) {	
 		Set<Dob> result = Sets.newHashSet();
 			

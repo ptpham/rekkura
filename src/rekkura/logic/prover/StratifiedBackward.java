@@ -29,6 +29,11 @@ public class StratifiedBackward extends StratifiedProver {
 		this.storeTruth(vacuous);
 	}
 
+	/**
+	 * Returns the set of 
+	 * @param dob
+	 * @return
+	 */
 	public Set<Dob> ask(Dob dob) {
 		Dob form = this.cachet.canonicalForms.get(dob);
 		Collection<Rule> rules = this.rta.headToRule.get(form);
@@ -41,7 +46,7 @@ public class StratifiedBackward extends StratifiedProver {
 	@Override
 	public Set<Dob> proveAll(Iterable<Dob> truths) {
 		this.clear();
-		for (Dob truth : truths) storeTruth(truth);
+		this.storeTruths(truths);
 		
 		Set<Dob> result = Sets.newHashSet();
 		for (Rule rule : this.rta.allRules) ask(rule, result);
@@ -50,7 +55,10 @@ public class StratifiedBackward extends StratifiedProver {
 	}
 
 	private void ask(Rule rule, Set<Dob> result) {
-		if (known.containsKey(rule)) return;
+		if (known.containsKey(rule)) {
+			result.addAll(known.get(rule));
+			return;
+		}
 		
 		for (Rule parent : this.rta.ruleToGenRule.get(rule)) {
 			ask(parent, result);
