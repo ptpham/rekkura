@@ -41,6 +41,8 @@ public class StateMachineTest {
 		Set<Dob> initial = machine.getInitial();
 		
 		Multimap<Dob, Dob> joint = machine.getActions(initial);
+		System.out.println(initial);
+		System.out.println(joint);
 		Map<Dob, Dob> actions = Maps.newHashMap();
 		
 		for (Dob role : joint.keySet()) {

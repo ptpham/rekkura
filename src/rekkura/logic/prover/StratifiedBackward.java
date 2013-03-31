@@ -1,10 +1,12 @@
 package rekkura.logic.prover;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.util.OTMUtil;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -35,8 +37,8 @@ public class StratifiedBackward extends StratifiedProver {
 	 * @return
 	 */
 	public Set<Dob> ask(Dob dob) {
-		Dob form = this.cachet.canonicalForms.get(dob);
-		Collection<Rule> rules = this.rta.headToRule.get(form);
+		List<Dob> spine = this.cachet.canonicalSpines.get(dob);
+		Iterable<Rule> rules = OTMUtil.valueIterable(this.rta.headToRule, spine);
 		
 		Set<Dob> result = Sets.newHashSet();
 		for (Rule rule : rules) ask(rule, result);

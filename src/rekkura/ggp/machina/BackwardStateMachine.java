@@ -1,6 +1,7 @@
 package rekkura.ggp.machina;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,6 +11,7 @@ import rekkura.logic.prover.StratifiedBackward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
@@ -31,7 +33,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	 */
 	private Set<Dob> last;
 	
-	public BackwardStateMachine(StratifiedBackward prover) {
+	private BackwardStateMachine(StratifiedBackward prover) {
 		super(prover.pool, prover.rta);
 		this.prover = prover;
 		this.pool = prover.pool;
@@ -65,7 +67,9 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	}
 
 	public static BackwardStateMachine createForRules(Collection<Rule> rules) {
-		return new BackwardStateMachine(new StratifiedBackward(rules));
+		List<Rule> augmented = Lists.newArrayList(rules);
+		augmented.addAll(GameLogicContext.getVacuousQueryRules());
+		return new BackwardStateMachine(new StratifiedBackward(augmented));
 	}
 	
 	private Set<Dob> proverPass(Set<Dob> state, Dob query, Map<Dob, Dob> unify) {
@@ -82,5 +86,4 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 			last = state;
 		}
 	}	
-	
 }

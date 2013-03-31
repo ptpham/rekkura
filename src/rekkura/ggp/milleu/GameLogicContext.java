@@ -9,8 +9,15 @@ import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
 import rekkura.logic.Unifier;
 import rekkura.model.Dob;
+import rekkura.model.Rule;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 public class GameLogicContext {
 
@@ -30,6 +37,10 @@ public class GameLogicContext {
 	
 	public final Pool pool;
 	public final Ruletta rta;
+	
+	public GameLogicContext() {
+		this(new Pool(), new Ruletta());
+	}
 	
 	public GameLogicContext(Pool pool, Ruletta rta) {
 		this.pool = pool;
@@ -106,6 +117,18 @@ public class GameLogicContext {
 			if (dob.at(0) != this.DOES) continue;
 			result.put(dob.at(1), dob);
 		}
+		return result;
+	}
+	
+	public static List<Rule> getVacuousQueryRules() {
+		List<Rule> result = Lists.newArrayList();
+		
+		GameLogicContext context = new GameLogicContext();
+		List<Dob> queries = Lists.newArrayList(context.INIT_QUERY,
+			context.NEXT_QUERY, context.GOAL_QUERY, context.LEGAL_QUERY);
+		
+		List<Dob> vars = Lists.newArrayList(context.ROLE_VAR, context.GENERIC_VAR);
+		for (Dob dob : queries) result.add(Rule.asVacuousRule(dob, vars));
 		return result;
 	}
 }

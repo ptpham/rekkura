@@ -36,7 +36,7 @@ public abstract class StratifiedProver {
 	protected Dob vacuous = new Dob("[VACUOUS]");
 	
 	public abstract Set<Dob> proveAll(Iterable<Dob> truths);
-	
+
 	public StratifiedProver(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
 		

@@ -56,16 +56,22 @@ public class Ruletta {
 	 */
 	public Multiset<Rule> ruleOrder;
 	
+	public Ruletta() {
+		allRules = Sets.newHashSet();
+		
+		allVars = Sets.newHashSet();
+		posDobs = Sets.newHashSet();
+		negDobs = Sets.newHashSet();
+
+		bodyToRule = HashMultimap.create();
+		headToRule = HashMultimap.create();
+		
+		ruleRoots = Sets.newHashSet();
+	}
+	
 	public static Ruletta create(Collection<Rule> rules, Pool pool) {
 		Ruletta result = new Ruletta();
-		result.allRules = Sets.newHashSet(rules);
-		
-		result.allVars = Sets.newHashSet();
-		result.posDobs = Sets.newHashSet();
-		result.negDobs = Sets.newHashSet();
-
-		result.bodyToRule = HashMultimap.create();
-		result.headToRule = HashMultimap.create();
+		result.allRules.addAll(rules);
 		
 		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) {
 			if (atom.truth) result.posDobs.add(atom.dob);
@@ -94,7 +100,6 @@ public class Ruletta {
 		result.bodyToGenRule = OTMUtil.joinRight(result.bodyToGenHead, result.headToRule);
 		result.ruleToGenRule = OTMUtil.joinLeft(result.bodyToGenRule, result.bodyToRule);
 		
-		result.ruleRoots = Sets.newHashSet();
 		for (Rule rule : result.allRules) {
 			if (result.ruleToGenRule.get(rule).size() == 0) {
 				result.ruleRoots.add(rule);

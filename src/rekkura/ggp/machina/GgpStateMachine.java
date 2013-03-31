@@ -3,7 +3,6 @@ package rekkura.ggp.machina;
 import java.util.Collection;
 import java.util.Set;
 
-import rekkura.logic.prover.StratifiedBackward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.model.StateMachine;
@@ -28,6 +27,6 @@ public interface GgpStateMachine extends StateMachine<Set<Dob>, Dob> {
 	public static final Factory<BackwardStateMachine> BACKWARD_PROVER = 
 	new Factory<BackwardStateMachine>() {
 		@Override public BackwardStateMachine create(Collection<Rule> rules) 
-		{ return new BackwardStateMachine(new StratifiedBackward(rules)); }
+		{ return BackwardStateMachine.createForRules(rules); }
 	};
 }

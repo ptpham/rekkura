@@ -79,6 +79,13 @@ public class Rule {
 		return negatives;
 	}
 	
+	public static Rule asVacuousRule(Dob dob, Collection<Dob> vars) {
+		Rule result = new Rule();
+		result.head = new Atom(dob, true);
+		result.vars.addAll(vars);
+		return result;
+	}
+	
 	public static Iterator<Atom> atomIteratorFromRule(final Rule rule) {
 		return Iterators.concat(rule.body.iterator(), Iterators.forArray(rule.head));
 	}
