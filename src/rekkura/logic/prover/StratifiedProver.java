@@ -105,6 +105,11 @@ public abstract class StratifiedProver {
 		for (Dob dob : truths) storeTruth(dob);
 	}
 	
+	/**
+	 * So basically the whole system exists to support this method.
+	 * @param rule
+	 * @return
+	 */
 	public Set<Dob> expandRule(Rule rule) {	
 		Set<Dob> result = Sets.newHashSet();
 			
@@ -145,7 +150,21 @@ public abstract class StratifiedProver {
 			
 			unify.clear();
 		}
-				
+		
 		return result;
 	}
+	
+	public static interface Factory { StratifiedProver create(Collection<Rule> rules); }
+
+	public static Factory FORWARD_FACTORY = new Factory() {
+		@Override public StratifiedProver create(Collection<Rule> rules) {
+			return new StratifiedForward(rules);
+		}
+	};
+	
+	public static Factory BACKWARD_FACTORY = new Factory() {
+		@Override public StratifiedProver create(Collection<Rule> rules) {
+			return new StratifiedBackward(rules);
+		}
+	};
 }

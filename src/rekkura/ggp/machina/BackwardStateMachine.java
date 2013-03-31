@@ -13,8 +13,13 @@ import rekkura.model.Rule;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
-public class BackwardStateMachine extends GameLogicContext implements 
-	StateMachine<Set<Dob>, Dob> {
+/**
+ * This state machine leverages the proving style of the backward prover
+ * to greater effect than the "generic" prover state machine.
+ * @author ptpham
+ *
+ */
+public class BackwardStateMachine extends GameLogicContext implements GgpStateMachine {
 
 	public final StratifiedBackward prover;
 	
@@ -44,8 +49,9 @@ public class BackwardStateMachine extends GameLogicContext implements
 
 	@Override
 	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
+		applyState(state);
+		prover.storeTruths(actions.values());
 		return extractTrues(proverPass(state, NEXT_QUERY, NEXT_UNIFY));
-
 	}
 
 	@Override
@@ -63,15 +69,18 @@ public class BackwardStateMachine extends GameLogicContext implements
 	}
 	
 	private Set<Dob> proverPass(Set<Dob> state, Dob query, Map<Dob, Dob> unify) {
+		applyState(state);
+		Set<Dob> proven = prover.ask(query);
+		Set<Dob> submerged = ProverStateMachine.submersiveReplace(proven, unify, pool);
+		return submerged;
+	}
+
+	private void applyState(Set<Dob> state) {
 		if (state != last) {
 			prover.clear();
 			prover.storeTruths(state);
 			last = state;
 		}
-		
-		Set<Dob> proven = prover.ask(query);
-		Set<Dob> submerged = ProverStateMachine.submersiveReplace(proven, unify, pool);
-		return submerged;
 	}	
 	
 }

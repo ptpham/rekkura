@@ -14,8 +14,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
-import rekkura.logic.prover.StratifiedBackward;
-import rekkura.logic.prover.StratifiedForward;
 import rekkura.logic.prover.StratifiedProver;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
@@ -25,23 +23,17 @@ import com.google.common.collect.Sets;
 @RunWith(Parameterized.class)
 public class StratifiedProverTest {
 
-	private static enum ProverType {
-		FORWARD,
-		BACKWARD
+	private StratifiedProver.Factory factory;
+	public StratifiedProverTest(StratifiedProver.Factory factory) {
+		this.factory = factory;
 	}
 	
 	@Parameters
 	public static Collection<Object[]> paramters() {
 		return Arrays.asList(new Object[][] {
-			{ ProverType.FORWARD },
-			{ ProverType.BACKWARD }
+			{ StratifiedProver.FORWARD_FACTORY },
+			{ StratifiedProver.BACKWARD_FACTORY }
 		});
-	}
-	
-	private ProverType type;
-	
-	public StratifiedProverTest(ProverType type) {
-		this.type = type;
 	}
 	
 	@Test
@@ -292,15 +284,7 @@ public class StratifiedProverTest {
 		LogicFormat fmt = new StandardFormat();
 		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
 		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawInitial));
-		StratifiedProver prover = null;
-		switch (type) {
-		case FORWARD: 
-			prover = new StratifiedForward(rules);
-			break;
-		case BACKWARD:
-			prover = new StratifiedBackward(rules);
-			break;
-		}
+		StratifiedProver prover = factory.create(rules);
 
 		Set<Dob> result = Sets.newHashSet();
 		result.addAll(initial);

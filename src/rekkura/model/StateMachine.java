@@ -1,8 +1,7 @@
-package rekkura.ggp.machina;
+package rekkura.model;
 
 import java.util.Map;
 
-import rekkura.model.Dob;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;

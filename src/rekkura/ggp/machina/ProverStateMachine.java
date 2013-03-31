@@ -20,8 +20,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
-public class ProverStateMachine extends GameLogicContext implements 
-	StateMachine<Set<Dob>, Dob> {
+public class ProverStateMachine extends GameLogicContext implements GgpStateMachine {
 	
 	public final StratifiedProver prover;
 	public final Ruletta rta;
@@ -79,4 +78,6 @@ public class ProverStateMachine extends GameLogicContext implements
 	public static ProverStateMachine createWithStratifiedBackward(Collection<Rule> rules) {
 		return new ProverStateMachine(new StratifiedBackward(rules));
 	}
+	
+	
 }
