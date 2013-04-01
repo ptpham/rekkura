@@ -79,6 +79,10 @@ public class Rule {
 		return negatives;
 	}
 	
+	public static Rule asVacuousRule(Dob dob) {
+		return asVacuousRule(dob, Lists.<Dob>newArrayList());
+	}
+	
 	public static Rule asVacuousRule(Dob dob, Collection<Dob> vars) {
 		Rule result = new Rule();
 		result.head = new Atom(dob, true);
@@ -100,12 +104,21 @@ public class Rule {
 		return atomIteratorFromRules(rules.iterator());
 	}
 	
+	public static Iterable<Atom> atomIterableFromRule(Rule rule) {
+		return atomIterableFromRules(Lists.newArrayList(rule));
+	}
+	
 	public static Iterable<Atom> atomIterableFromRules(final Collection<Rule> rules) {
 		return new Iterable<Atom>() {
 			@Override public Iterator<Atom> iterator() { return atomIteratorFromRules(rules); }
 		};
 	}
 	
+	public static Iterable<Dob> dobIterableFromRule(Rule rule) {
+		return Atom.dobIterableFromAtoms(atomIterableFromRule(rule));
+	}
+	
 	@Override public String toString() { return StandardFormat.inst.toString(this); }
+
 }
 

@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import rekkura.util.Colut;
-import rekkura.util.OTMUtil;
+import rekkura.util.OtmUtil;
 import rekkura.util.UnionFind;
 
 import com.google.common.collect.HashMultimap;
@@ -59,7 +59,7 @@ public class Topper {
 			// The new roots are the remaining children of the nodes we removed.
 			roots.clear();
 			touched.addAll(peel);
-			Iterables.addAll(roots, OTMUtil.valueIterable(edges, peel));
+			Iterables.addAll(roots, OtmUtil.valueIterable(edges, peel));
 			
 			for (U node : peel.elementSet()) edges.removeAll(node);
 			roots.removeAll(touched);
@@ -73,7 +73,7 @@ public class Topper {
 				for (U node : component) { result.add(node, 1 + result.entrySet().size()); }
 				touched.addAll(component);
 				
-				Iterables.addAll(exposed, OTMUtil.valueIterable(edges, component));
+				Iterables.addAll(exposed, OtmUtil.valueIterable(edges, component));
 				exposed.removeAll(component);
 				roots.removeAll(component);
 			}

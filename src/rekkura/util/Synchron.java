@@ -13,6 +13,6 @@ public class Synchron {
 	
 	public static void lightWait(Object o) {
 		try { o.wait(); } 
-		catch (InterruptedException e) { e.printStackTrace(); }
+		catch (InterruptedException e) { }
 	}
 }

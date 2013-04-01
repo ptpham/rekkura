@@ -45,12 +45,12 @@ public abstract class Player implements Runnable {
 	}
 	
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
-	protected final synchronized Map<Dob, Dob> getMoves(int turn) { return Colut.get(history, turn); }
+	protected final synchronized Map<Dob, Dob> getMemory(int turn) { return Colut.get(history, turn); }
 	
-	public final synchronized boolean hasMove(int turn) { return Colut.get(moves, turn) != null; }
-	public final synchronized Dob getMove(int turn) { return Colut.get(moves, turn); }
-	protected final synchronized void setMove(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
-	protected final synchronized void setMove(Game.Move move) { this.setMove(move.turn, move.dob); }
+	public final synchronized boolean hasAction(int turn) { return Colut.get(moves, turn) != null; }
+	public final synchronized Dob getAction(int turn) { return Colut.get(moves, turn); }
+	protected final synchronized void setAction(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
+	protected final synchronized void setAction(Game.Move move) { this.setAction(move.turn, move.dob); }
 	
 	/**
 	 * This represents a player that needs to update the state of the game using a state 
@@ -102,7 +102,7 @@ public abstract class Player implements Runnable {
 			
 			while (this.turn == getHistoryExtent()) Synchron.lightWait(this);
 			while (!validState()) {
-				this.state = this.machine.nextState(state, getMoves(turn));
+				this.state = this.machine.nextState(state, getMemory(turn));
 				turn++;
 			}
 		}
@@ -126,8 +126,8 @@ public abstract class Player implements Runnable {
 	}
 	
 	public static class Legal extends ProverBased {
-		@Override protected void plan() { setMove(anyMove()); }
-		@Override protected void move() { setMove(anyMove()); }
+		@Override protected void plan() { setAction(anyMove()); }
+		@Override protected void move() { setAction(anyMove()); }
 		@Override protected void reflect() { }
 	}
 }

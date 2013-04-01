@@ -1,6 +1,5 @@
 package rekkura.model;
 
-import java.util.Collection;
 import java.util.Iterator;
 
 import rekkura.fmt.StandardFormat;
@@ -14,7 +13,7 @@ public class Atom {
 		this.truth = truth;
 	}
 	
-	public static Iterator<Dob> dobIteratorFromAtoms(final Collection<Atom> atoms) {
+	public static Iterator<Dob> dobIteratorFromAtoms(final Iterable<Atom> atoms) {
 		return dobIteratorFromAtoms(atoms.iterator());
 	}
 	
@@ -27,7 +26,7 @@ public class Atom {
 		};
 	}
 	
-	public static Iterable<Dob> dobIterableFromAtoms(final Collection<Atom> atoms) {
+	public static Iterable<Dob> dobIterableFromAtoms(final Iterable<Atom> atoms) {
 		return new Iterable<Dob>() {
 			@Override public Iterator<Dob> iterator() { return dobIteratorFromAtoms(atoms); }
 		};

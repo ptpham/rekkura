@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.fmt.StandardFormat;
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
 import rekkura.logic.Unifier;
@@ -46,15 +45,15 @@ public class GameLogicContext {
 		this.pool = pool;
 		this.rta = rta;
 		
-		this.TERMINAL = getDob("(terminal)");
-		this.BASE = getDob("(base)");
-		this.TRUE = getDob("(true)");
-		this.DOES = getDob("(does)");
-		this.INIT = getDob("(init)");
-		this.LEGAL = getDob("(legal)");
-		this.NEXT = getDob("(next)");
-		this.GOAL = getDob("(goal)");
-		this.ROLE = getDob("(role)");
+		this.TERMINAL = getTerminalDob(Game.TERMINAL_NAME);
+		this.BASE = getTerminalDob(Game.BASE_NAME);
+		this.TRUE = getTerminalDob(Game.TRUE_NAME);
+		this.DOES = getTerminalDob(Game.DOES_NAME);
+		this.INIT = getTerminalDob(Game.INIT_NAME);
+		this.LEGAL = getTerminalDob(Game.LEGAL_NAME);
+		this.NEXT = getTerminalDob(Game.NEXT_NAME);
+		this.GOAL = getTerminalDob(Game.GOAL_NAME);
+		this.ROLE = getTerminalDob(Game.ROLE_NAME);
 
 		List<Dob> var = rta.getVariables(2);
 		this.ROLE_VAR = var.get(0);
@@ -69,9 +68,8 @@ public class GameLogicContext {
 		this.LEGAL_UNIFY.put(this.LEGAL, this.DOES);
 	}
 
-	private Dob getDob(String dob) {
-		Dob raw = StandardFormat.inst.dobFromString(dob);
-		return this.pool.submerge(raw);
+	private Dob getTerminalDob(String name) {
+		return this.pool.submerge(new Dob(name));
 	}
 	
 

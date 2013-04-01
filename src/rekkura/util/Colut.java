@@ -128,6 +128,21 @@ public class Colut {
 			@Override public Iterator<U> iterator() { return firstK(raw.iterator(), k); }
 		};
 	}
+
+	public static <U> List<U> slice(List<U> list, int begin, int end) {
+		List<U> result = Lists.newArrayList();
+		for (int i = begin; i < end && i < list.size(); i++) {
+			result.add(list.get(i));
+		}
+		return result;
+	}
+	
+	public static int parseInt(String s) {
+		int result = 0;
+		try { result = Integer.parseInt(s); } catch (Exception e) { }
+		return result;
+	}
 	
 	public static <U> Vector<U> newVector() { return new Vector<U>(); }
+	
 }

@@ -65,6 +65,9 @@ public class StandardFormat extends LogicFormat {
 	}
 
 	private Dob dobParse(String s) {
+		s = s.trim();
+		if (!s.startsWith("(")) return new Dob(s);
+		
 		Stack<List<Dob>> dobs = new Stack<List<Dob>>();
 		StringBuilder builder = new StringBuilder();
 		
@@ -135,8 +138,18 @@ public class StandardFormat extends LogicFormat {
 	
 	@Override
 	public String toString(Rule rule) {
+		StringBuilder distinct = new StringBuilder();
+		for (Map.Entry<Dob, Dob> entry : rule.distinct.entrySet()) {
+			distinct.append("<");
+			distinct.append(toString(entry.getKey()));
+			distinct.append("!=");
+			distinct.append(toString(entry.getValue()));
+			distinct.append(">");			
+		}
+		
 		return "{" + dobsToString(rule.vars) + "|" + 
-			toString(rule.head) + ":-" + atomsToString(rule.body) + "}";
+			toString(rule.head) + ":-" + atomsToString(rule.body) +
+			distinct.toString() + "}";
 	}
 	
 	public List<Atom> atomListFromString(String s) {

@@ -11,7 +11,7 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
-import rekkura.util.OTMUtil;
+import rekkura.util.OtmUtil;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
@@ -58,7 +58,7 @@ public class Terra {
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
 				Map<Dob, Collection<Dob>> replacements = raw;
 				if (left != null && Colut.nonEmpty(left.keySet())) {
-					replacements = OTMUtil.flatten(OTMUtil.joinRight(left, raw)).asMap();
+					replacements = OtmUtil.flatten(OtmUtil.joinRight(left, raw)).asMap();
 				}
 				
 				for (Dob variable : replacements.keySet()) {

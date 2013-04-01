@@ -70,7 +70,7 @@ public class MatchRunnable implements Runnable {
 			Map<Dob, Dob> next = Maps.newHashMap();
 			for (Player player : players) {
 				Dob role = playerRoles.get(player);
-				Dob move = player.getMove(turn);
+				Dob move = player.getAction(turn);
 				if (move == null) {
 					move = Colut.any(legal.get(role));
 					this.timeouts.put(turn, player);

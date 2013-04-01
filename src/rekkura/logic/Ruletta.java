@@ -10,7 +10,7 @@ import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.util.Colut;
-import rekkura.util.OTMUtil;
+import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
 
@@ -97,8 +97,8 @@ public class Ruletta {
 		result.bodyToGenHead = dependencies(result.bodyToRule.keySet(), 
 				result.headToRule.keySet(), result.allVars);
 		
-		result.bodyToGenRule = OTMUtil.joinRight(result.bodyToGenHead, result.headToRule);
-		result.ruleToGenRule = OTMUtil.joinLeft(result.bodyToGenRule, result.bodyToRule);
+		result.bodyToGenRule = OtmUtil.joinRight(result.bodyToGenHead, result.headToRule);
+		result.ruleToGenRule = OtmUtil.joinLeft(result.bodyToGenRule, result.bodyToRule);
 		
 		for (Rule rule : result.allRules) {
 			if (result.ruleToGenRule.get(rule).size() == 0) {
@@ -166,10 +166,10 @@ public class Ruletta {
 	}
 	
 	public Iterator<Rule> ruleIteratorFromBodyDobs(Iterator<Dob> dobs) {
-		return OTMUtil.valueIterator(bodyToRule, dobs);
+		return OtmUtil.valueIterator(bodyToRule, dobs);
 	}
 	
 	public Iterable<Rule> ruleIterableFromBodyDobs(final Iterable<Dob> dobs) {
-		return OTMUtil.valueIterable(bodyToRule, dobs);
+		return OtmUtil.valueIterable(bodyToRule, dobs);
 	}
 }

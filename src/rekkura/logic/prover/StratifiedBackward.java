@@ -6,7 +6,7 @@ import java.util.Set;
 
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.OTMUtil;
+import rekkura.util.OtmUtil;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -38,7 +38,7 @@ public class StratifiedBackward extends StratifiedProver {
 	 */
 	public Set<Dob> ask(Dob dob) {
 		List<Dob> spine = this.cachet.canonicalSpines.get(dob);
-		Iterable<Rule> rules = OTMUtil.valueIterable(this.rta.headToRule, spine);
+		Iterable<Rule> rules = OtmUtil.valueIterable(this.rta.headToRule, spine);
 		
 		Set<Dob> result = Sets.newHashSet();
 		for (Rule rule : rules) ask(rule, result);

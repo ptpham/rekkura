@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Stack;
 
 import rekkura.fmt.StandardFormat;
+import rekkura.util.NestedIterable;
 
 import com.google.common.collect.Lists;
 
@@ -67,6 +68,14 @@ public class Dob {
 	}
 
 	public Iterable<Dob> childIterable() { return this.children; }
+	
+	public static Iterable<Dob> fullIterable(Iterable<Dob> dobs) {
+		return new NestedIterable<Dob, Dob>(dobs) {
+			@Override protected Iterator<Dob> prepareNext(Dob dob) {
+				return dob.fullIterator();
+			}
+		};
+	}
 	
 	@Override public String toString() { return StandardFormat.inst.toString(this); }
 }

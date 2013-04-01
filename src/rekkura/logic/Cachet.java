@@ -8,7 +8,7 @@ import rekkura.model.Logimos.DobSpace;
 import rekkura.model.Rule;
 import rekkura.util.Cache;
 import rekkura.util.Colut;
-import rekkura.util.OTMUtil;
+import rekkura.util.OtmUtil;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
@@ -103,6 +103,6 @@ public class Cachet {
 	public void storeVariableReplacements(Dob ground, Dob body) {
 		Map<Dob, Dob> unify = Unifier.unify(body, ground);
 		DobSpace space = this.unispaces.get(body);
-		OTMUtil.putAll(space.replacements, unify);
+		OtmUtil.putAll(space.replacements, unify);
 	}
 }

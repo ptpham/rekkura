@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
  * @author ptpham
  *
  */
-public class OTMUtil {
+public class OtmUtil {
 	
 	public static <U, V> Iterator<V> valueIterator(final Multimap<U, V> map, Iterator<U> keys) {
 		if (map == null) return Iterators.emptyIterator();

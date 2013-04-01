@@ -9,10 +9,22 @@ import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class Game {
 
+	public static final String ROLE_NAME = "role";
+	public static final String TERMINAL_NAME = "terminal";
+	public static final String BASE_NAME = "base";
+	public static final String TRUE_NAME = "true";
+	public static final String DOES_NAME = "does";
+	public static final String INIT_NAME = "init";
+	public static final String LEGAL_NAME = "legal";
+	public static final String NEXT_NAME = "next";
+	public static final String GOAL_NAME = "goal";
+		
 	public static class Config {
 		public int startclock, playclock;
 		public List<Rule> rules;
@@ -66,7 +78,7 @@ public class Game {
 			
 			Dob first = head.dob.at(0);
 			if (!first.isTerminal()) continue;
-			if (!first.name.equals("role")) continue;
+			if (!first.name.equals(ROLE_NAME)) continue;
 			
 			roles.add(head.dob.at(1));
 		}
@@ -74,4 +86,23 @@ public class Game {
 		return roles;
 	}
 	
+	public static Dob convertMoveToAction(Dob role, Dob move) {
+		return new Dob(new Dob(DOES_NAME), role, move);
+	}
+	
+	public static Map<Dob, Dob> convertMovesToActionMap(List<Dob> roles, List<Dob> moves) {
+		Preconditions.checkArgument(roles.size() == moves.size());
+		
+		Map<Dob, Dob> result = Maps.newHashMap();
+		for (int i = 0; i < roles.size(); i++) {
+			Dob role = roles.get(i), move = moves.get(i);
+			result.put(role, convertMoveToAction(role, move));
+		}
+		
+		return result;
+	}
+	
+	public static Dob convertActionToMove(Dob action) {
+		return action.at(2);
+	}
 }
