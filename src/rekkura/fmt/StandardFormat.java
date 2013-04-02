@@ -1,7 +1,6 @@
 package rekkura.fmt;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import rekkura.model.Atom;
@@ -9,7 +8,7 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.sun.tools.javac.util.Pair;
 
 /**
  * Apologies for the grossness. 
@@ -121,7 +120,7 @@ public class StandardFormat extends LogicFormat {
 				Boolean.parseBoolean(parts[1].replace(">", "").trim()));
 	}
 	
-	private Map<Dob, Dob> distinctFromString(String string) {
+	private Pair<Dob, Dob> distinctFromString(String string) {
 		String[] split = string.split(NOT_EQUAL);
 		if (split.length != 2 || split[0].charAt(0) != '<' ||
 				!split[1].endsWith(">")) {
@@ -131,19 +130,17 @@ public class StandardFormat extends LogicFormat {
 		String first = split[0].replace("<", "");
 		String second = split[1].replace(">", "");
 		
-		Map<Dob, Dob> result = Maps.newHashMap();
-		result.put(dobFromString(first), dobFromString(second));
-		return result;
+		return new Pair<Dob, Dob>(dobFromString(first), dobFromString(second));
 	}
 	
 	@Override
 	public String toString(Rule rule) {
 		StringBuilder distinct = new StringBuilder();
-		for (Map.Entry<Dob, Dob> entry : rule.distinct.entrySet()) {
+		for (Pair<Dob, Dob> entry : rule.distinct) {
 			distinct.append("<");
-			distinct.append(toString(entry.getKey()));
+			distinct.append(toString(entry.fst));
 			distinct.append("!=");
-			distinct.append(toString(entry.getValue()));
+			distinct.append(toString(entry.snd));
 			distinct.append(">");			
 		}
 		
@@ -165,14 +162,14 @@ public class StandardFormat extends LogicFormat {
 		return result;
 	}
 	
-	public Map<Dob, Dob> distinctListFromString(String s) {
-		Map<Dob, Dob> result = Maps.newHashMap();
+	public List<Pair<Dob, Dob>> distinctListFromString(String s) {
+		List<Pair<Dob, Dob>> result = Lists.newArrayList();
 		for (String part : s.split("<|>")) {
 			if (!part.contains(NOT_EQUAL)) continue;
 			
 			part = part.trim();
 			if (part.length() > 0) {
-				result.putAll(distinctFromString("<" + part + ">"));
+				result.add(distinctFromString("<" + part + ">"));
 			}
 		}
 		return result;

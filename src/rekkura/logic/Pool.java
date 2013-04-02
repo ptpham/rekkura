@@ -14,6 +14,7 @@ import rekkura.model.Rule;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.sun.tools.javac.util.Pair;
 
 /**
  * A pool represents a set of dobs that can be compared 
@@ -61,16 +62,15 @@ public class Pool {
 	}
 	
 	public Rule submerge(Rule rule) {
-		Map<Dob, Dob> distinct = Maps.newHashMap();
-		for (Dob key : rule.distinct.keySet()) {
-			distinct.put(submerge(key), submerge(rule.distinct.get(key)));
+		Rule result = new Rule(submerge(rule.head),
+				submergeAtoms(rule.body),
+				Sets.newHashSet(submergeDobs(rule.vars)));
+		
+		for (Pair<Dob, Dob> pair : rule.distinct) {
+			result.addDistinct(submerge(pair.fst), submerge(pair.snd));
 		}
 		
-		return new Rule(
-			submerge(rule.head),
-			submergeAtoms(rule.body),
-			Sets.newHashSet(submergeDobs(rule.vars)),
-			distinct);
+		return result;
 	}
 
 	private Dob handleUnseen(Dob dob) {

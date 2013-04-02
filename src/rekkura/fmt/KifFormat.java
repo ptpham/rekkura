@@ -1,7 +1,6 @@
 package rekkura.fmt;
 
 import java.util.List;
-import java.util.Map;
 
 import rekkura.model.Atom;
 import rekkura.model.Dob;
@@ -11,6 +10,7 @@ import rekkura.util.Colut;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.sun.tools.javac.util.Pair;
 
 public class KifFormat extends LogicFormat {
 
@@ -27,19 +27,19 @@ public class KifFormat extends LogicFormat {
 			return;
 		}
 		
-		builder.append('(');
+		if (!dob.isTerminal()) builder.append('(');
 		for (int i = 0; i < dob.size(); i++) {
 			append(dob.at(i), builder);
 			if (i < dob.size() - 1) builder.append(' ');
 		}
-		builder.append(')');
+		if (!dob.isTerminal()) builder.append(')');
 	}
 
 	@Override
 	public Dob dobFromString(String s) {
 		s = s.trim();
 		if (!s.startsWith("(") || !s.endsWith(")")) return new Dob(s);
-		
+		s = addSpaceBetweenSiblings(s);
 		s = s.substring(1, s.length() - 1);
 		
 		List<Dob> children = Lists.newArrayList();
@@ -69,14 +69,13 @@ public class KifFormat extends LogicFormat {
 	@Override
 	public String toString(Atom atom) {
 		if (atom.truth) return toString(atom.dob);
-		return "(not" + toString(atom.dob) + ")";
+		return "(not " + toString(atom.dob) + ")";
 	}
 
 	@Override
 	public Atom atomFromString(String s) {
 		Dob dob = dobFromString(s);
-		Dob first = dob.at(0);
-		if (first.isTerminal() && first.name.equals("not")) {
+		if (dob.size() == 2 && dob.at(0).name.equals("not")) {
 			Dob second = dob.at(1);
 			return new Atom(second, false);
 		} else return new Atom(dob, true);
@@ -85,19 +84,17 @@ public class KifFormat extends LogicFormat {
 	@Override
 	public String toString(Rule rule) {
 		Preconditions.checkArgument(rule.head.truth);
-		StringBuilder distinct = new StringBuilder();
-		if (rule.distinct.size() > 0) distinct.append(' ');
-		for (Map.Entry<Dob, Dob> pair : rule.distinct.entrySet()) {
-			distinct.append("(distinct ");
-			this.append(pair.getKey(), distinct);
-			distinct.append(' ');
-			this.append(pair.getValue(), distinct);
-			distinct.append(")");
+		Joiner joiner = Joiner.on(' ');
+		
+		List<String> terms = Lists.newArrayList("(<=", toString(rule.head));
+		terms.addAll(atomsToStrings(rule.body));
+		
+		for (Pair<Dob, Dob> pair : rule.distinct) {
+			terms.add(joiner.join("(distinct", 
+				toString(pair.fst), toString(pair.snd) + ")"));
 		}
 		
-		return "(<= " + toString(rule.head) + " " 
-				+ Joiner.on(" ").join(atomsToStrings(rule.body)) + 
-				distinct.toString() + ")";
+		return joiner.join(terms) + ")";
 	}
 
 	@Override
@@ -112,7 +109,7 @@ public class KifFormat extends LogicFormat {
 		List<Dob> body = Colut.slice(raw.childCopy(), 2, raw.size());
 		for (Dob elem : body) {
 			if (elem.size() == 3 && elem.at(0).name.equals("distinct")) {
-				result.distinct.put(elem.at(1), elem.at(2));
+				result.addDistinct(elem.at(1), elem.at(2));
 				continue;
 			}
 			
@@ -130,4 +127,8 @@ public class KifFormat extends LogicFormat {
 		return result;
 	}
 
+	private String addSpaceBetweenSiblings(String s) {
+		return s.replace(")(", ") (");
+	}
+	
 }
