@@ -37,6 +37,7 @@ public class GgpProtocol {
 		private int turn, ggpPlayClock, ggpStartClock;
 		
 		private DefaultPlayerHandler(Player player) { this.player = player; }
+		private static final int EPSILON = 500;
 		
 		@Override
 		public PlayerState handleStart(String match, Dob role, Config config) {
@@ -49,7 +50,7 @@ public class GgpProtocol {
 			ggpStartClock = getGgpStartClock(config);
 			roles = Game.getRoles(config.rules);
 			
-			Synchron.lightSleep(ggpStartClock);
+			Synchron.lightSleep(ggpStartClock - EPSILON);
 			return PlayerState.READY;
 		}
 
@@ -57,11 +58,13 @@ public class GgpProtocol {
 		public Dob handlePlay(String match, List<Dob> moves) {
 			if (!validMatch(match)) return new Dob("");
 			
-			Map<Dob, Dob> actions = Game.convertMovesToActionMap(roles, moves);
-			player.advance(turn, actions);
-			Synchron.lightSleep(ggpPlayClock);
+			if (moves.size() == roles.size()) {
+				Map<Dob, Dob> actions = Game.convertMovesToActionMap(roles, moves);
+				player.advance(turn++, actions);
+			}
+			Synchron.lightSleep(ggpPlayClock - EPSILON);
 			
-			Dob action = player.getAction(turn++);
+			Dob action = player.getAction(turn);
 			return Game.convertActionToMove(action);
 		}
 
@@ -76,7 +79,7 @@ public class GgpProtocol {
 		}
 		
 		private boolean validMatch(String match) {
-			return current != null && current.equals(match);
+			return current == null || current.equals(match);
 		}
 	}
 		
@@ -134,17 +137,17 @@ public class GgpProtocol {
 			
 			// Vacuous rules are generated for dobs that carry a string that 
 			// does not properly parse as a rule
-			List<Dob> rawRules = Colut.slice(dob.childCopy(), 2, dob.size() - 2);
+			List<Dob> rawRules = dob.at(3).childCopy();
 			List<Rule> rules = Lists.newArrayList();
 			for (Dob rawRule : rawRules) { 
 				try { rules.add(fmt.ruleFromString(fmt.toString(rawRule))); }
-				catch (Exception e) { rules.add(Rule.asVacuousRule(dob)); }
+				catch (Exception e) { rules.add(Rule.asVacuousRule(rawRule)); }
 			}
 			
-			int ggpStart = Colut.parseInt(stringAt(dob, dob.size() - 2));
-			int ggpPlay = Colut.parseInt(stringAt(dob, dob.size() - 1));
+			int ggpStart = Colut.parseInt(stringAt(dob, dob.size() - 2))*1000;
+			int ggpPlay = Colut.parseInt(stringAt(dob, dob.size() - 1))*1000;
 			
-			Game.Config config = new Game.Config(ggpStart, ggpPlay, rules);
+			Game.Config config = new Game.Config(ggpStart + ggpPlay, ggpPlay, rules);
 			PlayerState state = handler.handleStart(match, role, config);
 			result = fmt.toString(PLAYER_STATE_DOBS.get(state));
 			return result;
@@ -152,14 +155,14 @@ public class GgpProtocol {
 
 		private String play(Dob dob) {
 			String result;
-			List<Dob> moves = Colut.slice(dob.childCopy(), 2, dob.size());
+			List<Dob> moves = dob.at(2).childCopy();
 			result = fmt.toString(handler.handlePlay(stringAt(dob, 1), moves));
 			return result;
 		}
 		
 		private String stringAt(Dob message, int position) {
 			if (message.size() <= position) return "";
-			return message.at(position).name.toLowerCase();
+			return message.at(position).name.trim().toLowerCase();
 		}
 	}
 	

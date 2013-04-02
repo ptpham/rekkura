@@ -12,8 +12,13 @@ import com.sun.net.httpserver.HttpServer;
 public class PlayerServer {
 
 	public static void main(String args[]) throws IOException {
-		HttpServer server = HttpServer.create(new InetSocketAddress(9147), 16);
-		server.createContext("./", new ServerHarness(new Player.Legal(), new KifFormat()));
+		HttpServer server = HttpServer.create(new InetSocketAddress(9147), 32);
+		
+		Player player = new Player.Legal();
+		Thread thread = new Thread(player);
+		thread.start();
+		
+		server.createContext("/", new ServerHarness(player, new KifFormat()));
 		server.setExecutor(null);
 		server.start();
 	}

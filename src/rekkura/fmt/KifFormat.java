@@ -56,6 +56,8 @@ public class KifFormat extends LogicFormat {
 			}
 			
 			if (nest == 0) {
+				String raw = current.toString().trim();
+				if (raw.length() == 0) continue;
 				children.add(dobFromString(current.toString()));
 				current = new StringBuilder();
 			}

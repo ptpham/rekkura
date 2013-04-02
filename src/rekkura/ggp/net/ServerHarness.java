@@ -1,10 +1,11 @@
 package rekkura.ggp.net;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.ggp.milleu.Player;
@@ -21,21 +22,31 @@ import com.sun.net.httpserver.HttpHandler;
 public class ServerHarness implements HttpHandler {
 
 	public final GgpProtocol.PlayerDemuxer demuxer;
+	
 	public ServerHarness(Player player, LogicFormat fmt) { 
-		this.demuxer = GgpProtocol.createDefaultPlayerDemuxer(player, fmt); 
+		this(GgpProtocol.createDefaultPlayerDemuxer(player, fmt)); 
+	}
+	public ServerHarness(GgpProtocol.PlayerDemuxer demuxer) {
+		this.demuxer = demuxer;
 	}
 	
 	@Override
 	public void handle(HttpExchange exchange) throws IOException {
 		InputStream in = exchange.getRequestBody();
-		DataInputStream din = new DataInputStream(in);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		
-		String message = din.readUTF();
+		String message = reader.readLine();
 		String response = this.demuxer.handleMessage(message);
+		if (response == null || response.isEmpty()) response = "Invalid Protocol Exception";
+		in.close();
 
+		exchange.sendResponseHeaders(200, response.length());
+		
 		OutputStream out = exchange.getResponseBody();
-		DataOutputStream dout = new DataOutputStream(out);
-		dout.writeUTF(response);
+		PrintWriter writer = new PrintWriter(out);
+		writer.write(response);
+		writer.flush();
+		out.close();
 	}
 	
 }

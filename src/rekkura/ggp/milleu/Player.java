@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import rekkura.ggp.machina.ProverStateMachine;
+import rekkura.ggp.machina.BackwardStateMachine;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.model.StateMachine;
@@ -21,7 +21,6 @@ public abstract class Player implements Runnable {
 	
 	private final Vector<Dob> moves = Colut.newVector();
 	private final Vector<Map<Dob, Dob>> history = Colut.newVector();
-	
 	private boolean started = false;
 	
 	/**
@@ -42,6 +41,10 @@ public abstract class Player implements Runnable {
 	public final synchronized void advance(int turn, Map<Dob, Dob> actions) { 
 		Colut.addAt(history, turn, actions);
 		this.notifyAll();
+	}
+	
+	protected final synchronized void waitForInput() {
+		Synchron.lightWait(this);
 	}
 	
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
@@ -66,7 +69,7 @@ public abstract class Player implements Runnable {
 		protected M machine;
 		
 		protected abstract M constructMachine(Collection<Rule> rules);
-		protected abstract void plan();
+		protected abstract void prepare();
 		protected abstract void move();
 		protected abstract void reflect();
 		
@@ -80,11 +83,12 @@ public abstract class Player implements Runnable {
 		
 		@Override
 		public final void run() {
-			while (!this.isStarted()) Synchron.lightWait(this);
+			while (!this.isStarted()) waitForInput();
 			this.machine = constructMachine(config.rules);
-			while (!isTerminal()) {
+			while (true) {
 				updateState();
-				if (this.turn == 0) plan();
+				if (isTerminal()) break;
+				if (this.turn == 0) prepare();
 				else move();
 			}
 			reflect();
@@ -99,8 +103,9 @@ public abstract class Player implements Runnable {
 				state = this.machine.getInitial();
 				return;
 			}
+
+			while (validState()) waitForInput();
 			
-			while (this.turn == getHistoryExtent()) Synchron.lightWait(this);
 			while (!validState()) {
 				this.state = this.machine.nextState(state, getMemory(turn));
 				turn++;
@@ -112,11 +117,19 @@ public abstract class Player implements Runnable {
 		}
 	}
 	
-	public static abstract class ProverBased extends StateBased<ProverStateMachine> {
+	public static abstract class ProverBased extends StateBased<BackwardStateMachine> {
 		@Override
-		protected ProverStateMachine constructMachine(Collection<Rule> rules) {
-			return ProverStateMachine.createWithStratifiedBackward(rules);
+		protected BackwardStateMachine constructMachine(Collection<Rule> rules) {
+			return BackwardStateMachine.createForRules(rules);
 		}
+		
+		@Override
+		protected final void prepare() {
+			this.role = machine.prover.pool.submerge(role);
+			plan();
+		}
+		
+		protected abstract void plan();
 	}
 	
 	public static class Unresponsive extends ProverBased {
