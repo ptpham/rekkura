@@ -10,13 +10,7 @@ import rekkura.logic.Unifier;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 public class GameLogicContext {
 
@@ -108,8 +102,8 @@ public class GameLogicContext {
 		return result;
 	}
 	
-	public Multimap<Dob, Dob> extractActions(Set<Dob> truths) {
-		Multimap<Dob, Dob> result = HashMultimap.create();
+	public ListMultimap<Dob, Dob> extractActions(Set<Dob> truths) {
+		ListMultimap<Dob, Dob> result = ArrayListMultimap.create();
 		for (Dob dob : truths) {
 			if (dob.size() < 3) continue;
 			if (dob.at(0) != this.DOES) continue;

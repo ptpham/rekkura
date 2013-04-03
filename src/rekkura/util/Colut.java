@@ -3,6 +3,7 @@ package rekkura.util;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Vector;
 
 import com.google.common.base.Function;
@@ -141,6 +142,11 @@ public class Colut {
 		int result = 0;
 		try { result = Integer.parseInt(s); } catch (Exception e) { }
 		return result;
+	}
+	
+	public static <U> U randomSelection(List<U> vals, Random rand) {
+		int index = rand.nextInt(vals.size());
+		return vals.get(index);
 	}
 	
 	public static <U> Vector<U> newVector() { return new Vector<U>(); }

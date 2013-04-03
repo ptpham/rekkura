@@ -1,18 +1,9 @@
 package rekkura.util;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.base.Function;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * (One-to-Many Utilities)
@@ -163,6 +154,23 @@ public class OtmUtil {
 		for (Map.Entry<U, Collection<V>> entry : map.entries()) {
 			result.putAll(entry.getKey(), entry.getValue());
 		}
+		return result;
+	}
+	
+	public static <U, V> Map<U, V> randomAssignment(ListMultimap<U, V> actions, Random rand) {
+		return randomAssignment(actions, null, rand);
+	}
+	
+	public static <U, V> Map<U, V> randomAssignment(ListMultimap<U, V> actions, Map<U, V> fixed, Random rand) {
+		Map<U, V> result = Maps.newHashMap();
+		if (fixed != null) result.putAll(fixed);
+		
+		for (U key : actions.keySet()) {
+			if (result.containsKey(key)) continue;
+			V value = Colut.randomSelection(actions.get(key), rand);
+			result.put(key, value);
+		}
+		
 		return result;
 	}
 }
