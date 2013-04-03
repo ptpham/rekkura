@@ -32,6 +32,8 @@ public class MonteCarloPlayer extends ProverBased {
 		ListMultimap<Dob, Dob> actions = machine.getActions(state);
 		List<Dob> playerActions = actions.get(role);
 		
+		// This holds an accumulation of goal values over
+		// many depth charges.
 		Multiset<Dob> goals = HashMultiset.create();
 		
 		int charges = 0;
