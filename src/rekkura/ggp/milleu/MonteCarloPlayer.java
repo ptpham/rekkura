@@ -9,7 +9,7 @@ import java.util.Set;
 import rekkura.alg.DepthCharge;
 import rekkura.ggp.milleu.Player.ProverBased;
 import rekkura.model.Dob;
-import rekkura.util.BestPair;
+import rekkura.util.RankedCarry;
 import rekkura.util.Colut;
 
 import com.google.common.collect.HashMultiset;
@@ -37,7 +37,7 @@ public class MonteCarloPlayer extends ProverBased {
 		Multiset<Dob> goals = HashMultiset.create();
 		
 		int charges = 0;
-		BestPair<Float, Dob> best = BestPair.createReverseNatural(-Float.MAX_VALUE, null);
+		RankedCarry<Float, Dob> best = RankedCarry.createReverseNatural(-Float.MAX_VALUE, null);
 		while (validState()) {
 			if (!chargePerAction(playerActions, goals)) break;
 			charges++;

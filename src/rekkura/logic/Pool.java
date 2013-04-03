@@ -10,11 +10,11 @@ import rekkura.fmt.StandardFormat;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.model.Rule.Distinct;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.sun.tools.javac.util.Pair;
 
 /**
  * A pool represents a set of dobs that can be compared 
@@ -66,8 +66,8 @@ public class Pool {
 				submergeAtoms(rule.body),
 				Sets.newHashSet(submergeDobs(rule.vars)));
 		
-		for (Pair<Dob, Dob> pair : rule.distinct) {
-			result.addDistinct(submerge(pair.fst), submerge(pair.snd));
+		for (Distinct pair : rule.distinct) {
+			result.addDistinct(submerge(pair.first), submerge(pair.second));
 		}
 		
 		return result;

@@ -6,9 +6,9 @@ import java.util.Stack;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.model.Rule.Distinct;
 
 import com.google.common.collect.Lists;
-import com.sun.tools.javac.util.Pair;
 
 /**
  * Apologies for the grossness. 
@@ -120,7 +120,7 @@ public class StandardFormat extends LogicFormat {
 				Boolean.parseBoolean(parts[1].replace(">", "").trim()));
 	}
 	
-	private Pair<Dob, Dob> distinctFromString(String string) {
+	private Distinct distinctFromString(String string) {
 		String[] split = string.split(NOT_EQUAL);
 		if (split.length != 2 || split[0].charAt(0) != '<' ||
 				!split[1].endsWith(">")) {
@@ -130,17 +130,17 @@ public class StandardFormat extends LogicFormat {
 		String first = split[0].replace("<", "");
 		String second = split[1].replace(">", "");
 		
-		return new Pair<Dob, Dob>(dobFromString(first), dobFromString(second));
+		return new Distinct(dobFromString(first), dobFromString(second));
 	}
 	
 	@Override
 	public String toString(Rule rule) {
 		StringBuilder distinct = new StringBuilder();
-		for (Pair<Dob, Dob> entry : rule.distinct) {
+		for (Rule.Distinct entry : rule.distinct) {
 			distinct.append("<");
-			distinct.append(toString(entry.fst));
+			distinct.append(toString(entry.first));
 			distinct.append("!=");
-			distinct.append(toString(entry.snd));
+			distinct.append(toString(entry.second));
 			distinct.append(">");			
 		}
 		
@@ -162,8 +162,8 @@ public class StandardFormat extends LogicFormat {
 		return result;
 	}
 	
-	public List<Pair<Dob, Dob>> distinctListFromString(String s) {
-		List<Pair<Dob, Dob>> result = Lists.newArrayList();
+	public List<Distinct> distinctListFromString(String s) {
+		List<Distinct> result = Lists.newArrayList();
 		for (String part : s.split("<|>")) {
 			if (!part.contains(NOT_EQUAL)) continue;
 			

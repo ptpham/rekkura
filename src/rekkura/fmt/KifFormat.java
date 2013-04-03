@@ -10,7 +10,6 @@ import rekkura.util.Colut;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.sun.tools.javac.util.Pair;
 
 public class KifFormat extends LogicFormat {
 
@@ -89,9 +88,9 @@ public class KifFormat extends LogicFormat {
 		List<String> terms = Lists.newArrayList("(<=", toString(rule.head));
 		terms.addAll(atomsToStrings(rule.body));
 		
-		for (Pair<Dob, Dob> pair : rule.distinct) {
+		for (Rule.Distinct pair : rule.distinct) {
 			terms.add(joiner.join("(distinct", 
-				toString(pair.fst), toString(pair.snd) + ")"));
+				toString(pair.first), toString(pair.second) + ")"));
 		}
 		
 		return joiner.join(terms) + ")";

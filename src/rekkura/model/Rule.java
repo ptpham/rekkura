@@ -11,7 +11,6 @@ import rekkura.util.NestedIterator;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.sun.tools.javac.util.Pair;
 
 /**
  * Unlike the other logical objects, rules are mutable.
@@ -25,20 +24,28 @@ public class Rule {
 	public Atom head;
 	public List<Atom> body = Lists.newArrayList();
 	public List<Dob> vars = Lists.newArrayList();
-	public List<Pair<Dob, Dob>> distinct = Lists.newArrayList();
+	public List<Distinct> distinct = Lists.newArrayList();
 		
 	public Rule() { }
 	
 	public Rule(Atom head, Collection<Atom> body, Collection<Dob> variables) {
-		this(head, body, variables, Lists.<Pair<Dob, Dob>>newArrayList());
+		this(head, body, variables, Lists.<Distinct>newArrayList());
 	}
 	
 	public Rule(Atom head, Collection<Atom> body, 
-			Collection<Dob> variables, List<Pair<Dob, Dob>> distinct) {
+			Collection<Dob> variables, List<Distinct> distinct) {
 		this.head = head;
 		this.body = Lists.newArrayList(body);
 		this.vars = Lists.newArrayList(variables);
 		this.distinct = Lists.newArrayList(distinct);
+	}
+	
+	public static class Distinct {
+		public final Dob first, second;
+		public Distinct(Dob first, Dob second) {
+			this.first = first;
+			this.second = second;
+		}
 	}
 	
 	public boolean isGrounded(Dob dob) {
@@ -46,7 +53,7 @@ public class Rule {
 	}
 	
 	public void addDistinct(Dob first, Dob second) {
-		this.distinct.add(new Pair<Dob, Dob>(first, second));
+		this.distinct.add(new Distinct(first, second));
 	}
 	
 	/**
@@ -58,9 +65,9 @@ public class Rule {
 	public boolean evaluateDistinct(Map<Dob, Dob> unify) {
 		if (this.distinct.size() == 0) return true;
 		
-		for (Pair<Dob, Dob> pair : this.distinct) {
-			Dob first = pair.fst;
-			Dob second = pair.snd;
+		for (Distinct pair : this.distinct) {
+			Dob first = pair.first;
+			Dob second = pair.second;
 			
 			if (this.vars.contains(first)) first = unify.get(first);
 			if (this.vars.contains(second)) second = unify.get(second);
