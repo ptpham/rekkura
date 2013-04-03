@@ -2,6 +2,7 @@ package rekkura.fmt;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import rekkura.model.Atom;
 import rekkura.model.Dob;
@@ -11,6 +12,7 @@ import rekkura.util.Colut;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class KifFormat extends LogicFormat {
 
@@ -121,10 +123,15 @@ public class KifFormat extends LogicFormat {
 		}
 		
 		Iterable<Dob> terms = Rule.dobIterableFromRule(result);
+		Set<String> seen = Sets.newHashSet();
 		for (Dob value : Dob.fullIterable(terms)) {
+			String name = value.name;
 			if (!value.isTerminal()) continue;
-			if (value.name.length() < 2) continue;
-			if (value.name.charAt(0) == '?') result.vars.add(value);
+			if (name.length() < 2) continue;
+			if (name.charAt(0) != '?') continue;
+			if (seen.contains(name)) continue;
+			result.vars.add(value);
+			seen.add(name);
 		}
 		
 		return result;

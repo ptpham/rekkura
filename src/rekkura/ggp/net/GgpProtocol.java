@@ -124,7 +124,7 @@ public class GgpProtocol {
 		private String stop(Dob dob) {
 			String result;
 			String match = stringAt(dob, 1);
-			List<Dob> moves = Colut.slice(dob.childCopy(), 2, dob.size());
+			List<Dob> moves = dob.at(2).childCopy();
 			PlayerState state = handler.handleStop(match, moves);
 			result = fmt.toString(PLAYER_STATE_DOBS.get(state));
 			return result;
