@@ -56,4 +56,5 @@ public class SimpleGames {
 		);
 		return StandardFormat.inst.rulesFromStrings(rules);
 	}
+	
 }

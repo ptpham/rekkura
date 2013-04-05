@@ -3,12 +3,13 @@ package rekkura.util;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.Vector;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
@@ -149,6 +150,9 @@ public class Colut {
 		return vals.get(index);
 	}
 	
-	public static <U> Vector<U> newVector() { return new Vector<U>(); }
-	
+	public static <U, V> Map<U, V> asMap(U u, V v) {
+		Map<U, V> result = Maps.newHashMap();
+		result.put(u, v);
+		return result;
+	}
 }

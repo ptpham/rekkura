@@ -32,8 +32,8 @@ public class DepthCharge {
 		
 		while (!machine.isTerminal(state)) {
 			ListMultimap<Dob, A> actions = machine.getActions(state);
-			Map<Dob, A> joint = OtmUtil.randomAssignment(actions, null, rand);
-			machine.nextState(state, joint);
+			Map<Dob, A> joint = OtmUtil.randomAssignment(actions, fixed, rand);
+			state = machine.nextState(state, joint);
 			result.add(state);
 		}
 		

@@ -12,6 +12,7 @@ import rekkura.model.StateMachine;
 import rekkura.util.Colut;
 import rekkura.util.Synchron;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
 public abstract class Player implements Runnable {
@@ -19,8 +20,8 @@ public abstract class Player implements Runnable {
 	protected Dob role;
 	protected Game.Config config;
 	
-	private final Vector<Dob> moves = Colut.newVector();
-	private final Vector<Map<Dob, Dob>> history = Colut.newVector();
+	private final Vector<Dob> decisions = Synchron.newVector();
+	private final Vector<Map<Dob, Dob>> history = Synchron.newVector();
 	private boolean started = false;
 	
 	/**
@@ -38,6 +39,12 @@ public abstract class Player implements Runnable {
 	
 	public boolean isStarted() { return this.started; }
 	
+	public final void advance(int turn, Iterable<Dob> actions) {
+		Map<Dob, Dob> actionMap = Maps.newHashMap();
+		for (Dob action : actions) { actionMap.put(Game.getRoleForAction(action), action); }
+		advance(turn, actionMap);
+	}
+	
 	public final synchronized void advance(int turn, Map<Dob, Dob> actions) { 
 		Colut.addAt(history, turn, actions);
 		this.notifyAll();
@@ -50,10 +57,10 @@ public abstract class Player implements Runnable {
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
 	protected final synchronized Map<Dob, Dob> getMemory(int turn) { return Colut.get(history, turn); }
 	
-	public final synchronized boolean hasAction(int turn) { return Colut.get(moves, turn) != null; }
-	public final synchronized Dob getAction(int turn) { return Colut.get(moves, turn); }
-	protected final synchronized void setAction(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
-	protected final synchronized void setAction(Game.Move move) { this.setAction(move.turn, move.dob); }
+	public final synchronized boolean hasAction(int turn) { return Colut.get(decisions, turn) != null; }
+	public final synchronized Dob getAction(int turn) { return Colut.get(decisions, turn); }
+	protected final synchronized void setDecision(int turn, Dob dob) { Colut.addAt(decisions, turn, dob); }
+	protected final synchronized void setDecision(Game.Decision move) { this.setDecision(move.turn, move.action); }
 	
 	/**
 	 * This represents a player that needs to update the state of the game using a state 
@@ -75,10 +82,10 @@ public abstract class Player implements Runnable {
 		
 		protected synchronized Game.Turn getTurn() { return new Game.Turn(this.turn, this.state); }
 		
-		protected Game.Move anyMove() {
+		protected Game.Decision anyDecision() {
 			Game.Turn turn = this.getTurn();
 			Multimap<Dob, Dob> actions = this.machine.getActions(turn.state);
-			return new Game.Move(turn.turn, Colut.any(actions.get(this.role))); 
+			return new Game.Decision(turn.turn, Colut.any(actions.get(this.role))); 
 		}
 		
 		@Override
@@ -137,10 +144,27 @@ public abstract class Player implements Runnable {
 		@Override protected void move() { }
 		@Override protected void reflect() { }
 	}
+
+	/**
+	 * This player will respond with decisions that are given to it 
+	 * when constructed.
+	 * @author ptpham
+	 *
+	 */
+	public class FixedPlayer extends Player {
+		private final Player inner;
+		public FixedPlayer(Iterable<Game.Decision> moves) { this(null, moves); }
+		public FixedPlayer(Player inner, Iterable<Game.Decision> moves) {
+			this.inner = inner;
+			for (Game.Decision move : moves) this.setDecision(move);
+		}
+	
+		@Override public void run() { if (this.inner != null) inner.run(); }
+	}
 	
 	public static class Legal extends ProverBased {
-		@Override protected void plan() { setAction(anyMove()); }
-		@Override protected void move() { setAction(anyMove()); }
+		@Override protected void plan() { setDecision(anyDecision()); }
+		@Override protected void move() { setDecision(anyDecision()); }
 		@Override protected void reflect() { }
 	}
 }

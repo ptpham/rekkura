@@ -73,15 +73,9 @@ public class GameLogicContext {
 			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, rta.allVars);
 			if (unify == null) continue;
 			
-			Dob role = null;
-			Dob value = null;
-			if (unify.entrySet().size() != 2) continue;
-			for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
-				if (entry.getKey() == ROLE_VAR) role = entry.getValue();
-				else if (value != null) value = entry.getValue();
-			}
-			
-			if (!value.isTerminal()) continue;			
+			Dob role = unify.get(ROLE_VAR);
+			Dob value = unify.get(GENERIC_VAR);
+			if (value == null || role == null) continue;			
 			
 			int goal = 0;
 			try { goal = Integer.parseInt(value.name); } 

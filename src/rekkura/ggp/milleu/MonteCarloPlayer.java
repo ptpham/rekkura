@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import rekkura.alg.DepthCharge;
 import rekkura.ggp.milleu.Player.ProverBased;
@@ -21,10 +22,12 @@ public class MonteCarloPlayer extends ProverBased {
 	@Override protected void plan() { explore(); }
 	@Override protected void move() { explore(); }
 	@Override protected void reflect() { }
-
+	
 	private Random rand = new Random();
+	private AtomicInteger wavesComputed = new AtomicInteger();
+	
 	private void explore() {
-		setAction(anyMove());
+		setDecision(anyDecision());
 		
 		Game.Turn current = getTurn();
 		Set<Dob> state = current.state;
@@ -36,17 +39,18 @@ public class MonteCarloPlayer extends ProverBased {
 		// many depth charges.
 		Multiset<Dob> goals = HashMultiset.create();
 		
-		int charges = 0;
-		RankedCarry<Float, Dob> best = RankedCarry.createReverseNatural(-Float.MAX_VALUE, null);
+		RankedCarry<Integer, Dob> best = RankedCarry.createReverseNatural(-Integer.MIN_VALUE, null);
+		
 		while (validState()) {
-			if (!chargePerAction(playerActions, goals)) break;
-			charges++;
+			if (!computeWave(playerActions, goals)) break;
 			
 			// See if we need to update the move we want to make
 			for (Dob action : goals.elementSet()) {
-				float value = ((float) goals.count(action))/charges;
-				if (best.consider(value, action)) setAction(current.turn, best.getCarry());
+				int value = goals.count(action);
+				if (best.consider(value, action)) setDecision(current.turn, best.getCarry());
 			}
+			
+			wavesComputed.addAndGet(1);
 		}
 	}
 	
@@ -58,7 +62,7 @@ public class MonteCarloPlayer extends ProverBased {
 	 * @param goals running sum of goal values
 	 * @return returns true if all actions were considered and false otherwise.
 	 */
-	private boolean chargePerAction(Collection<Dob> actions, Multiset<Dob> goals) {
+	private boolean computeWave(Collection<Dob> actions, Multiset<Dob> goals) {
 		Set<Dob> state = this.getTurn().state;
 		
 		for (Dob action : actions) {
@@ -75,4 +79,6 @@ public class MonteCarloPlayer extends ProverBased {
 		
 		return true;
 	}
+	
+	public int getWavesComputed() { return this.wavesComputed.get(); }
 }
