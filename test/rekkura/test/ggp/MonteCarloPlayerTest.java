@@ -48,7 +48,7 @@ public class MonteCarloPlayerTest {
 		Thread thread = new Thread(player);
 		thread.start();
 		
-		while (player.getWavesComputed() < 1) { Synchron.lightSleep(200); }
+		while (player.getWavesComputed() < 1) { Synchron.lightSleep(100); }
 		
 		String taken = StandardFormat.inst.toString(player.getAction(1));
 		Assert.assertEquals("((does)(o)((mark)(2)(2)))", taken);
