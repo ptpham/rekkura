@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 
-import rekkura.fmt.LogicFormat;
 import rekkura.ggp.milleu.Player;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -23,8 +22,8 @@ public class ServerHarness implements HttpHandler {
 
 	public final GgpProtocol.PlayerDemuxer demuxer;
 	
-	public ServerHarness(Player player, LogicFormat fmt) { 
-		this(GgpProtocol.createDefaultPlayerDemuxer(player, fmt)); 
+	public ServerHarness(Player player) { 
+		this(GgpProtocol.createDefaultPlayerDemuxer(player)); 
 	}
 	public ServerHarness(GgpProtocol.PlayerDemuxer demuxer) {
 		this.demuxer = demuxer;

@@ -4,7 +4,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import rekkura.fmt.LogicFormat;
+import rekkura.fmt.KifFormat;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Game.Config;
 import rekkura.ggp.milleu.Player;
@@ -88,7 +88,7 @@ public class GgpProtocol {
 	}
 	
 	private static class DefaultPlayerDemuxer implements PlayerDemuxer {
-		private LogicFormat fmt;
+		private final KifFormat fmt = new KifFormat();
 		private PlayerHandler handler;
 		
 		public static String START_NAME = "start";
@@ -103,9 +103,8 @@ public class GgpProtocol {
 			PLAYER_STATE_DOBS.put(PlayerState.DONE, new Dob("done"));
 		}
 		
-		private DefaultPlayerDemuxer(PlayerHandler handler, LogicFormat fmt) {
+		private DefaultPlayerDemuxer(PlayerHandler handler) {
 			this.handler = handler;
-			this.fmt = fmt;
 		}
 
 		@Override
@@ -144,12 +143,31 @@ public class GgpProtocol {
 				catch (Exception e) { rules.add(Rule.asVacuousRule(rawRule)); }
 			}
 			
+			rules = deorPass(rules);
+			
+			System.out.println(rules);
 			int ggpStart = Colut.parseInt(stringAt(dob, dob.size() - 2))*1000;
 			int ggpPlay = Colut.parseInt(stringAt(dob, dob.size() - 1))*1000;
 			
 			Game.Config config = new Game.Config(ggpStart + ggpPlay, ggpPlay, rules);
 			PlayerState state = handler.handleStart(match, role, config);
 			result = fmt.toString(PLAYER_STATE_DOBS.get(state));
+			return result;
+		}
+		
+		/**
+		 *  In a glorious future in which we don't have ORs anymore,
+		 *  this class could be made more general and this could be removed.
+		 * @param rules
+		 * @return
+		 */
+		private List<Rule> deorPass(List<Rule> rules) {
+			List<Rule> result = Lists.newArrayList();
+			for (Rule rule : rules) { 
+				for (Rule expanded : fmt.deor(rule)) { 
+					result.add(fmt.ruleFromString(fmt.toString(expanded)));
+				}
+			}
 			return result;
 		}
 
@@ -166,7 +184,7 @@ public class GgpProtocol {
 		}
 	}
 	
-	public static PlayerDemuxer createDefaultPlayerDemuxer(Player player, LogicFormat fmt) {
-		return new DefaultPlayerDemuxer(new DefaultPlayerHandler(player), fmt);
+	public static PlayerDemuxer createDefaultPlayerDemuxer(Player player) {
+		return new DefaultPlayerDemuxer(new DefaultPlayerHandler(player));
 	}
 }

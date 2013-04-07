@@ -139,8 +139,12 @@ public abstract class Player implements Runnable {
 	}
 	
 	public static class Legal extends ProverBased {
-		@Override protected void plan() { setAction(anyMove()); }
-		@Override protected void move() { setAction(anyMove()); }
+		@Override protected void plan() { makeAnyMove(); }
+		@Override protected void move() { makeAnyMove(); }
 		@Override protected void reflect() { }
+		
+		private void makeAnyMove() {
+			setAction(anyMove());
+		}
 	}
 }

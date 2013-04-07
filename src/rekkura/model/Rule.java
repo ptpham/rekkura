@@ -41,6 +41,10 @@ public class Rule {
 		this.distinct = Maps.newHashMap(distinct);
 	}
 	
+	public Rule(Rule other) {
+		this(other.head, other.body, other.vars, other.distinct);
+	}
+	
 	public boolean isGrounded(Dob dob) {
 		return Colut.containsNone(dob.fullIterable(), vars);
 	}
