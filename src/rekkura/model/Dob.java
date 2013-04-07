@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Stack;
 
 import rekkura.fmt.StandardFormat;
+import rekkura.util.CachingSupplier;
 import rekkura.util.NestedIterable;
 
 import com.google.common.collect.Lists;
@@ -78,4 +79,11 @@ public class Dob {
 	}
 	
 	@Override public String toString() { return StandardFormat.inst.toString(this); }
+	
+	public static class PrefixedGenerator extends CachingSupplier<Dob> {
+		private int current = 0;
+		public final String prefix;
+		public PrefixedGenerator(String prefix) { this.prefix = prefix; }
+		@Override public Dob create() { return new Dob("[" + prefix + current++ + "]"); }
+	};
 }

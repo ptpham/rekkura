@@ -13,11 +13,7 @@ import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 
 /**
  * This class holds a collection of utilities for generating
@@ -54,11 +50,19 @@ public class Terra {
 			// to rephrase in terms of variables in the rule.
 			Iterable<Dob> subtree = cachet.spines.get(atom.dob);
 			for (Dob node : subtree) {
-				Map<Dob, Collection<Dob>> raw = cachet.unispaces.get(node).replacements.asMap();
+				Multimap<Dob, Dob> raw = cachet.unispaces.get(node).replacements;
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
-				Map<Dob, Collection<Dob>> replacements = raw;
+				Multimap<Dob, Dob> replacements = HashMultimap.create();
 				if (left != null && Colut.nonEmpty(left.keySet())) {
-					replacements = OtmUtil.flatten(OtmUtil.joinRight(left, raw)).asMap();
+					replacements.putAll(OtmUtil.joinRight(Multimaps.forMap(left), raw));
+				}
+				
+				// This happens when the variable in the rule has the same
+				// name/position as the variable in the form.
+				for (Dob variable : rule.vars) {
+					if (!replacements.containsKey(variable)) {
+						replacements.putAll(variable, raw.get(variable));
+					}
 				}
 				
 				for (Dob variable : replacements.keySet()) {
@@ -105,8 +109,8 @@ public class Terra {
 	
 	/**
 	 * Returns a list that contains the assignment domain of each body 
-	 * term in the given rule assuming that we want to expand the given
-	 * dob at the given position.
+	 * term in the given rule given the unification successes in the 
+	 * given {@code Cachet}.
 	 * @param rule
 	 * @param position
 	 * @param dob

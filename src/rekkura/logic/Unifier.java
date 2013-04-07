@@ -135,6 +135,11 @@ public class Unifier {
 			if (variables.contains(key)) continue;
 			if (variables.contains(value)) {
 				result.put(key, vargen.get());
+				
+				// It should not be the case that a
+				// variable in the unification target
+				// has to map to different grounds in the 
+				// unification base.
 				if (!targets.add(value)) return null;
 			}
 			else return null;
@@ -143,13 +148,21 @@ public class Unifier {
 		return result;
 	}
 	
-	public static Dob getSymmetricGeneralization(Dob first, Dob second, Set<Dob> vars, Supplier<Dob> vargen) {
-		Dob result = computeSymmetricGeneralization(first, second, vars, vargen);
-		if (result == null) return computeSymmetricGeneralization(second, first, vars, vargen);
-		else return result;
+	public static boolean isSymmetricPair(Dob first, Dob second, Set<Dob> vars) {
+		Dob.PrefixedGenerator vargen = new Dob.PrefixedGenerator("tmp");
+		Map<Dob, Dob> unification = Unifier.unify(first, second);
+		Map<Dob, Dob> symmetrizer = Unifier.symmetrizeUnification(unification, vars, vargen);
+		return symmetrizer != null;
 	}
-
-	private static Dob computeSymmetricGeneralization(Dob first, Dob second,
+	
+	public static Dob computeSymmetricGeneralization(Dob first, Dob second,
+			Set<Dob> vars, Supplier<Dob> vargen) {
+		Dob result = oneSidedSymmetricGeneralization(first, second, vars, vargen);
+		if (result == null) result = oneSidedSymmetricGeneralization(second, first, vars, vargen);
+		return result;
+	}
+	
+	public static Dob oneSidedSymmetricGeneralization(Dob first, Dob second,
 			Set<Dob> vars, Supplier<Dob> vargen) {
 		Map<Dob, Dob> unify = Unifier.unify(first, second);
 		Map<Dob, Dob> symmetrizer = Unifier.symmetrizeUnification(unify, vars, vargen);

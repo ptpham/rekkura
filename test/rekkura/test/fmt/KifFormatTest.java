@@ -41,7 +41,6 @@ public class KifFormatTest {
 						"(distinct a b) (distinct ?x ?y))";
 		Rule rule = fmt.ruleFromString(raw);
 		Assert.assertEquals(2, rule.distinct.size());
-		System.out.println(fmt.toString(rule));
 		Assert.assertEquals(raw, fmt.toString(rule));
 	}
 	
