@@ -1,7 +1,6 @@
 package rekkura.fmt;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import rekkura.model.Atom;
@@ -9,7 +8,6 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Apologies for the grossness. 
@@ -121,7 +119,7 @@ public class StandardFormat extends LogicFormat {
 				Boolean.parseBoolean(parts[1].replace(">", "").trim()));
 	}
 	
-	private Map<Dob, Dob> distinctFromString(String string) {
+	private Rule.Distinct distinctFromString(String string) {
 		String[] split = string.split(NOT_EQUAL);
 		if (split.length != 2 || split[0].charAt(0) != '<' ||
 				!split[1].endsWith(">")) {
@@ -131,25 +129,34 @@ public class StandardFormat extends LogicFormat {
 		String first = split[0].replace("<", "");
 		String second = split[1].replace(">", "");
 		
-		Map<Dob, Dob> result = Maps.newHashMap();
-		result.put(dobFromString(first), dobFromString(second));
-		return result;
+		return new Rule.Distinct(dobFromString(first), dobFromString(second));
 	}
 	
 	@Override
 	public String toString(Rule rule) {
 		StringBuilder distinct = new StringBuilder();
-		for (Map.Entry<Dob, Dob> entry : rule.distinct.entrySet()) {
-			distinct.append("<");
-			distinct.append(toString(entry.getKey()));
-			distinct.append("!=");
-			distinct.append(toString(entry.getValue()));
-			distinct.append(">");			
+		for (Rule.Distinct entry : rule.distinct) {
+			appendDistinct(distinct, entry);			
 		}
 		
 		return "{" + dobsToString(rule.vars) + "|" + 
 			toString(rule.head) + ":-" + atomsToString(rule.body) +
 			distinct.toString() + "}";
+	}
+	
+	@Override
+	public String toString(Rule.Distinct distinct) {
+		StringBuilder builder = new StringBuilder();
+		appendDistinct(builder, distinct);
+		return builder.toString();
+	}
+
+	private void appendDistinct(StringBuilder distinct, Rule.Distinct entry) {
+		distinct.append("<");
+		distinct.append(toString(entry.first));
+		distinct.append("!=");
+		distinct.append(toString(entry.second));
+		distinct.append(">");
 	}
 	
 	public List<Atom> atomListFromString(String s) {
@@ -165,14 +172,14 @@ public class StandardFormat extends LogicFormat {
 		return result;
 	}
 	
-	public Map<Dob, Dob> distinctListFromString(String s) {
-		Map<Dob, Dob> result = Maps.newHashMap();
+	public List<Rule.Distinct> distinctListFromString(String s) {
+		List<Rule.Distinct> result = Lists.newArrayList();
 		for (String part : s.split("<|>")) {
 			if (!part.contains(NOT_EQUAL)) continue;
 			
 			part = part.trim();
 			if (part.length() > 0) {
-				result.putAll(distinctFromString("<" + part + ">"));
+				result.add(distinctFromString("<" + part + ">"));
 			}
 		}
 		return result;
@@ -206,4 +213,5 @@ public class StandardFormat extends LogicFormat {
 	}
 	
 	public static final StandardFormat inst = new StandardFormat();
+
 }

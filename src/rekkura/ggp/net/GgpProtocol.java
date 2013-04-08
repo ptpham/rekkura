@@ -145,7 +145,6 @@ public class GgpProtocol {
 			
 			rules = deorPass(rules);
 			
-			System.out.println(rules);
 			int ggpStart = Colut.parseInt(stringAt(dob, dob.size() - 2))*1000;
 			int ggpPlay = Colut.parseInt(stringAt(dob, dob.size() - 1))*1000;
 			

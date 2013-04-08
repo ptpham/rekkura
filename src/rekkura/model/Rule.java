@@ -11,7 +11,6 @@ import rekkura.util.NestedIterator;
 
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 /**
  * Unlike the other logical objects, rules are mutable.
@@ -25,20 +24,20 @@ public class Rule {
 	public Atom head;
 	public List<Atom> body = Lists.newArrayList();
 	public List<Dob> vars = Lists.newArrayList();
-	public Map<Dob, Dob> distinct = Maps.newHashMap();
+	public List<Distinct> distinct = Lists.newArrayList();
 	
 	public Rule() { }
 	
 	public Rule(Atom head, Collection<Atom> body, Collection<Dob> variables) {
-		this(head, body, variables, Maps.<Dob, Dob>newHashMap());
+		this(head, body, variables, Lists.<Distinct>newArrayList());
 	}
 	
 	public Rule(Atom head, Collection<Atom> body, 
-			Collection<Dob> variables, Map<Dob, Dob> distinct) {
+			Collection<Dob> variables, Collection<Distinct> distinct) {
 		this.head = head;
 		this.body = Lists.newArrayList(body);
 		this.vars = Lists.newArrayList(variables);
-		this.distinct = Maps.newHashMap(distinct);
+		this.distinct = Lists.newArrayList(distinct);
 	}
 	
 	public Rule(Rule other) {
@@ -47,6 +46,19 @@ public class Rule {
 	
 	public boolean isGrounded(Dob dob) {
 		return Colut.containsNone(dob.fullIterable(), vars);
+	}
+	
+	public static class Distinct {
+		public final Dob first, second;
+		public Distinct(Dob first, Dob second) {
+			this.first = first;
+			this.second = second;
+		}
+		
+		@Override
+		public String toString() {
+			return StandardFormat.inst.toString(this);
+		}
 	}
 	
 	/**
@@ -58,9 +70,9 @@ public class Rule {
 	public boolean evaluateDistinct(Map<Dob, Dob> unify) {
 		if (this.distinct.size() == 0) return true;
 		
-		for (Map.Entry<Dob, Dob> entry : this.distinct.entrySet()) {
-			Dob first = entry.getKey();
-			Dob second = entry.getValue();
+		for (Distinct entry : this.distinct) {
+			Dob first = entry.first;
+			Dob second = entry.second;
 			
 			if (this.vars.contains(first)) first = unify.get(first);
 			if (this.vars.contains(second)) second = unify.get(second);

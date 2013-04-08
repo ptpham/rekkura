@@ -20,6 +20,8 @@ public abstract class LogicFormat {
 	public abstract String toString(Rule rule);
 	public abstract Rule ruleFromString(String s);
 	
+	public abstract String toString(Rule.Distinct distinct);
+	
 	public List<Rule> rulesFromStrings(Collection<String> strings) {
 		List<Rule> result = Lists.newArrayList();
 		for (String s : strings) { result.add(ruleFromString(s)); }

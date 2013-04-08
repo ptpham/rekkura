@@ -1,6 +1,5 @@
 package rekkura.logic;
 
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +17,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 
 /**
  * This class holds a collection of utilities for generating
@@ -54,20 +54,21 @@ public class Terra {
 			// to rephrase in terms of variables in the rule.
 			Iterable<Dob> subtree = cachet.spines.get(atom.dob);
 			for (Dob node : subtree) {
-				Map<Dob, Collection<Dob>> raw = cachet.unispaces.get(node).replacements.asMap();
+				Multimap<Dob, Dob> raw = cachet.unispaces.get(node).replacements;
 				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
-				Map<Dob, Collection<Dob>> replacements = raw;
+				Multimap<Dob, Dob> replacements = HashMultimap.create();
 				if (left != null && Colut.nonEmpty(left.keySet())) {
-					replacements = OtmUtil.flatten(OtmUtil.joinRight(left, raw)).asMap();
+					replacements = OtmUtil.joinRight(Multimaps.forMap(left), raw);
+				}
+				
+				for (Dob variable : rule.vars) {
+					if (left == null || !left.containsKey(variable)) {
+						replacements.putAll(variable, raw.get(variable));
+					}
 				}
 				
 				for (Dob variable : replacements.keySet()) {
-					Collection<Dob> current = replacements.get(variable);
-					if (variables.containsKey(variable)) {
-						variables.get(variable).retainAll(current);
-					} else {
-						variables.putAll(variable, current);
-					}
+					variables.putAll(variable, replacements.get(variable));
 				}
 				
 				// Add stuff that was not included in the join but is 

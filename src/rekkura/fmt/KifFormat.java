@@ -1,7 +1,6 @@
 package rekkura.fmt;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Atom;
@@ -103,17 +102,28 @@ public class KifFormat extends LogicFormat {
 		Preconditions.checkArgument(rule.head.truth);
 		StringBuilder distinct = new StringBuilder();
 		if (rule.distinct.size() > 0) distinct.append(' ');
-		for (Map.Entry<Dob, Dob> pair : rule.distinct.entrySet()) {
-			distinct.append("(distinct ");
-			this.append(pair.getKey(), distinct);
-			distinct.append(' ');
-			this.append(pair.getValue(), distinct);
-			distinct.append(")");
+		for (Rule.Distinct pair : rule.distinct) {
+			appendDistinct(distinct, pair);
 		}
 		
 		return "(<= " + toString(rule.head) + " " 
 				+ Joiner.on(" ").join(atomsToStrings(rule.body)) + 
 				distinct.toString() + ")";
+	}
+	
+	@Override
+	public String toString(Rule.Distinct distinct) {
+		StringBuilder builder = new StringBuilder();
+		appendDistinct(builder, distinct);
+		return builder.toString();
+	}
+
+	private void appendDistinct(StringBuilder distinct, Rule.Distinct pair) {
+		distinct.append("(distinct ");
+		this.append(pair.first, distinct);
+		distinct.append(' ');
+		this.append(pair.second, distinct);
+		distinct.append(")");
 	}
 
 	@Override
@@ -129,7 +139,7 @@ public class KifFormat extends LogicFormat {
 		List<Dob> body = Colut.slice(raw.childCopy(), 2, raw.size());
 		for (Dob elem : body) {
 			if (elem.size() == 3 && elem.at(0).name.equals(DISTINCT_NAME)) {
-				result.distinct.put(elem.at(1), elem.at(2));
+				result.distinct.add(new Rule.Distinct(elem.at(1), elem.at(2)));
 				continue;
 			}
 			

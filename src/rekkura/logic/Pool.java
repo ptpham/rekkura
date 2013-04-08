@@ -61,16 +61,17 @@ public class Pool {
 	}
 	
 	public Rule submerge(Rule rule) {
-		Map<Dob, Dob> distinct = Maps.newHashMap();
-		for (Dob key : rule.distinct.keySet()) {
-			distinct.put(submerge(key), submerge(rule.distinct.get(key)));
+		List<Rule.Distinct> distincts = Lists.newArrayList();
+		for (Rule.Distinct distinct : rule.distinct) {
+			distincts.add(new Rule.Distinct(submerge(distinct.first), 
+					submerge(distinct.second)));
 		}
 		
 		return new Rule(
 			submerge(rule.head),
 			submergeAtoms(rule.body),
 			Sets.newHashSet(submergeDobs(rule.vars)),
-			distinct);
+			distincts);
 	}
 
 	private Dob handleUnseen(Dob dob) {
