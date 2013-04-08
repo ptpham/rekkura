@@ -3,7 +3,6 @@ package rekkura.logic;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Atom;
@@ -12,7 +11,13 @@ import rekkura.model.Rule;
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * result class maintains mappings and sets that are important for 
@@ -138,8 +143,8 @@ public class Ruletta {
 		
 		for (Dob target : targetDobs) {
 			for (Dob source : sourceDobs) {
-				Map<Dob, Dob> unify = Unifier.unifyVars(target, source, vars);
-				if (unify == null) continue;
+				if (Unifier.unifyVars(target, source, vars) == null 
+					&& Unifier.unifyVars(source, target, vars) == null) continue;
 				result.put(target, source);
 			}
 		}

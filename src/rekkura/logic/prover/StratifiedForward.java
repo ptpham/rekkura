@@ -84,7 +84,8 @@ public class StratifiedForward extends StratifiedProver {
 	
 	public List<Dob> proveNext() {
 		if (!hasMore()) throw new NoSuchElementException();
-		Rule rule = Colut.popAny(this.pendingRules.values());	
+		Rule rule = Colut.popAny(this.pendingRules.values());
+		
 		Set<Dob> generated = expandRule(rule);
 		
 		// Submerge all of the newly generated dobs

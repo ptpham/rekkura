@@ -27,7 +27,7 @@ public class Cartesian {
 		};
 	}
 	
-	public static <U> int size(List<Iterable<U>> candidates) {
+	public static <U> int size(List<? extends Iterable<U>> candidates) {
 		if (Colut.empty(candidates)) return 0;
 		
 		int product = 1;

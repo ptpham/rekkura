@@ -190,10 +190,13 @@ public class GgpProtocol {
 		}
 		
 		private String play(Dob dob) {
-			String result;
-			List<Dob> moves = dob.at(2).childCopy();
-			result = fmt.toString(handler.handlePlay(stringAt(dob, 1), moves));
-			System.out.println(result);
+			String result = "";
+			try {
+				List<Dob> moves = dob.at(2).childCopy();
+				result = fmt.toString(handler.handlePlay(stringAt(dob, 1), moves));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 			return result;
 		}
 		
