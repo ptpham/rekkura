@@ -1,11 +1,14 @@
 package rekkura.test.ggp;
 
+import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.collect.Lists;
-
+import rekkura.fmt.KifFormat;
 import rekkura.fmt.StandardFormat;
+import rekkura.ggp.net.GgpProtocol;
 import rekkura.model.Rule;
+
+import com.google.common.collect.Lists;
 
 public class SimpleGames {
 
@@ -54,5 +57,65 @@ public class SimpleGames {
 		      "{|<(terminal),true>:-<(empty),false>}"
 		);
 		return StandardFormat.inst.rulesFromStrings(rules);
+	}
+	
+	public static List<Rule> getConnectFour() {
+		String[] raw = {
+				"(role white)", "(role black)",
+				"(init (cell 1 1 b))", "(init (cell 1 2 b))",
+				"(init (cell 1 3 b))", "(init (cell 1 4 b))",
+				"(init (cell 1 5 b))", "(init (cell 1 6 b))",
+				"(init (cell 2 1 b))", "(init (cell 2 2 b))",
+				"(init (cell 2 3 b))", "(init (cell 2 4 b))",
+				"(init (cell 2 5 b))", "(init (cell 2 6 b))",
+				"(init (cell 3 1 b))", "(init (cell 3 2 b))",
+				"(init (cell 3 3 b))", "(init (cell 3 4 b))",
+				"(init (cell 3 5 b))", "(init (cell 3 6 b))",
+				"(init (cell 4 1 b))", "(init (cell 4 2 b))",
+				"(init (cell 4 3 b))", "(init (cell 4 4 b))",
+				"(init (cell 4 5 b))", "(init (cell 4 6 b))",
+				"(init (cell 5 1 b))", "(init (cell 5 2 b))",
+				"(init (cell 5 3 b))", "(init (cell 5 4 b))",
+				"(init (cell 5 5 b))", "(init (cell 5 6 b))",
+				"(init (cell 6 1 b))", "(init (cell 6 2 b))",
+				"(init (cell 6 3 b))", "(init (cell 6 4 b))",
+				"(init (cell 6 5 b))", "(init (cell 6 6 b))",
+				"(init (cell 7 1 b))", "(init (cell 7 2 b))",
+				"(init (cell 7 3 b))", "(init (cell 7 4 b))",
+				"(init (cell 7 5 b))", "(init (cell 7 6 b))",
+				"(init (control white))",
+				"(succ 1 2)", "(succ 2 3)",
+				"(succ 3 4)", "(succ 4 5)",
+				"(succ 5 6)", "(succ 6 7)",
+				"(<= (cm ?c ?r) (or (true (cell ?c ?r x)) (true (cell ?c ?r o))))",
+				"(<= (sequential ?a ?b ?c ?d) (succ ?a ?b) (succ ?b ?c) (succ ?c ?d))",
+				"(<= (top-unused ?c ?r) (true (cell ?c ?r b)) (cm ?c ?s) (succ ?s ?r))",
+				"(<= (top-unused ?c 1) (true (cell ?c 1 b)))",
+				"(<= (plays-on ?c ?r) (does ?x (drop ?c)) (top-unused ?c ?r))",
+				"(<= (next (cell ?c ?r ?x)) (true (cell ?c ?r ?x)) (not (plays-on ?c ?r)))",
+				"(<= (next (control white)) (true (control black)))",
+				"(<= (next (control black)) (true (control white)))",
+				"(<= (legal ?x (drop ?c)) (true (cell ?c 6 b)) (true (control ?x)))",
+				"(<= (legal white noop) (true (control black)))",
+				"(<= (legal black noop) (true (control white)))",
+				"(<= (next (cell ?c ?r x)) (does white (drop ?c)) (top-unused ?c ?r))",
+				"(<= (next (cell ?c ?r o)) (does black (drop ?c)) (top-unused ?c ?r))",
+				"(<= (row ?x) (sequential ?a ?b ?c ?d) (true (cell ?a ?r ?x)) (true (cell ?b ?r ?x)) (true (cell ?c ?r ?x)) (true (cell ?d ?r ?x)))",
+				"(<= (col  ?x) (sequential ?a ?b ?c ?d) (true (cell ?e ?a ?x)) (true (cell ?e ?b ?x)) (true (cell ?e ?c ?x)) (true (cell ?e ?d ?x)))",
+				"(<= (diag1 ?x) (sequential ?a ?b ?c ?d) (sequential ?e ?f ?g ?h) (true (cell ?a ?e ?x)) (true (cell ?b ?f ?x)) (true (cell ?c ?g ?x)) (true (cell ?d ?h ?x)))",
+				"(<= (diag2 ?x) (sequential ?a ?b ?c ?d) (sequential ?e ?f ?g ?h) (true (cell ?a ?h ?x)) (true (cell ?b ?g ?x)) (true (cell ?c ?f ?x)) (true (cell ?d ?e ?x)))",
+				"(<= (connfour ?x) (or (col ?x) (row ?x) (diag1 ?x) (diag2 ?x)))",
+				"(<= (goal ?x 50) (not (connfour x)) (not (connfour o)) (role ?x))",
+				"(<= (goal white 100) (connfour x))",
+				"(<= (goal black 0) (connfour x))",
+				"(<= (goal white 0) (connfour o))",
+				"(<= (goal black 100) (connfour o))",
+				"(<= terminal (or (connfour x) (connfour o)))",
+				"(<= not-filled (true (cell ?c 6 b)))",
+				"(<= terminal (not not-filled))" };
+		
+		KifFormat fmt = new KifFormat();
+		List<Rule> original = fmt.rulesFromStrings(Arrays.asList(raw));
+		return GgpProtocol.deorPass(original, fmt);
 	}
 }

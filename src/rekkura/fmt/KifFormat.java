@@ -93,6 +93,7 @@ public class KifFormat extends LogicFormat {
 		if (first != null && first.isTerminal() 
 				&& first.name.equals("not")) {
 			Dob second = dob.at(1);
+			if (second == null) throw new Error("Kif parse error: " + s);
 			return new Atom(second, false);
 		} else return new Atom(dob, true);
 	}
@@ -166,7 +167,7 @@ public class KifFormat extends LogicFormat {
 		List<List<Atom>> termLists = Lists.newArrayList();
 		for (Atom term : rule.body) {
 			Dob dob = term.dob;
-			Dob firstChild = dob.at(0);
+			Dob firstChild = dob.size() > 0 ? dob.at(0) : null;
 			List<Atom> alternates = Lists.newArrayList();
 			if (firstChild == null || !firstChild.name.equals(OR_NAME)) {
 				alternates.add(term);

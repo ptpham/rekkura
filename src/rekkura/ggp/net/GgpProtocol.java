@@ -143,7 +143,7 @@ public class GgpProtocol {
 				catch (Exception e) { rules.add(Rule.asVacuousRule(rawRule)); }
 			}
 			
-			rules = deorPass(rules);
+			rules = deorPass(rules, fmt);
 			
 			int ggpStart = Colut.parseInt(stringAt(dob, dob.size() - 2))*1000;
 			int ggpPlay = Colut.parseInt(stringAt(dob, dob.size() - 1))*1000;
@@ -154,26 +154,11 @@ public class GgpProtocol {
 			return result;
 		}
 		
-		/**
-		 *  In a glorious future in which we don't have ORs anymore,
-		 *  this class could be made more general and this could be removed.
-		 * @param rules
-		 * @return
-		 */
-		private List<Rule> deorPass(List<Rule> rules) {
-			List<Rule> result = Lists.newArrayList();
-			for (Rule rule : rules) { 
-				for (Rule expanded : fmt.deor(rule)) { 
-					result.add(fmt.ruleFromString(fmt.toString(expanded)));
-				}
-			}
-			return result;
-		}
-
 		private String play(Dob dob) {
 			String result;
 			List<Dob> moves = dob.at(2).childCopy();
 			result = fmt.toString(handler.handlePlay(stringAt(dob, 1), moves));
+			System.out.println(result);
 			return result;
 		}
 		
@@ -181,6 +166,23 @@ public class GgpProtocol {
 			if (message.size() <= position) return "";
 			return message.at(position).name.trim().toLowerCase();
 		}
+	}
+
+	/**
+	 *  In a glorious future in which we don't have ORs anymore,
+	 *  this class could be made more general and this could be removed.
+	 * @param rules
+	 * @return
+	 */
+	public static List<Rule> deorPass(List<Rule> rules, KifFormat fmt) {
+		List<Rule> result = Lists.newArrayList();
+		for (Rule rule : rules) { 
+			for (Rule expanded : fmt.deor(rule)) { 
+				Rule cleaned = fmt.ruleFromString(fmt.toString(expanded));
+				result.add(cleaned);
+			}
+		}
+		return result;
 	}
 	
 	public static PlayerDemuxer createDefaultPlayerDemuxer(Player player) {
