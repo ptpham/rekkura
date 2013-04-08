@@ -19,8 +19,8 @@ public abstract class Player implements Runnable {
 	protected Dob role;
 	protected Game.Config config;
 	
-	private final Vector<Dob> moves = Colut.newVector();
-	private final Vector<Map<Dob, Dob>> history = Colut.newVector();
+	private final Vector<Dob> moves = Synchron.newVector();
+	private final Vector<Map<Dob, Dob>> history = Synchron.newVector();
 	private boolean started = false;
 	
 	/**
@@ -53,7 +53,7 @@ public abstract class Player implements Runnable {
 	public final synchronized boolean hasAction(int turn) { return Colut.get(moves, turn) != null; }
 	public final synchronized Dob getAction(int turn) { return Colut.get(moves, turn); }
 	protected final synchronized void setAction(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
-	protected final synchronized void setAction(Game.Move move) { this.setAction(move.turn, move.dob); }
+	protected final synchronized void setAction(Game.Decision decision) { this.setAction(decision.turn, decision.action); }
 	
 	/**
 	 * This represents a player that needs to update the state of the game using a state 
@@ -75,10 +75,10 @@ public abstract class Player implements Runnable {
 		
 		protected synchronized Game.Turn getTurn() { return new Game.Turn(this.turn, this.state); }
 		
-		protected Game.Move anyMove() {
+		protected Game.Decision anyDecision() {
 			Game.Turn turn = this.getTurn();
 			Multimap<Dob, Dob> actions = this.machine.getActions(turn.state);
-			return new Game.Move(turn.turn, Colut.any(actions.get(this.role))); 
+			return new Game.Decision(turn.turn, Colut.any(actions.get(this.role))); 
 		}
 		
 		@Override
@@ -144,7 +144,7 @@ public abstract class Player implements Runnable {
 		@Override protected void reflect() { }
 		
 		private void makeAnyMove() {
-			setAction(anyMove());
+			setAction(anyDecision());
 		}
 	}
 }

@@ -1,5 +1,6 @@
 package rekkura.ggp.milleu;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -96,7 +97,7 @@ public class GameLogicContext {
 		return result;
 	}
 	
-	public ListMultimap<Dob, Dob> extractActions(Set<Dob> truths) {
+	public ListMultimap<Dob, Dob> extractActions(Collection<Dob> truths) {
 		ListMultimap<Dob, Dob> result = ArrayListMultimap.create();
 		for (Dob dob : truths) {
 			if (dob.size() < 3) continue;

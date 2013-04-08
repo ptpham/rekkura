@@ -81,7 +81,7 @@ public class KifFormat extends LogicFormat {
 	@Override
 	public String toString(Atom atom) {
 		if (atom.truth) return toString(atom.dob);
-		return "(not" + toString(atom.dob) + ")";
+		return "(not " + toString(atom.dob) + ")";
 	}
 
 	@Override
@@ -101,15 +101,14 @@ public class KifFormat extends LogicFormat {
 	@Override
 	public String toString(Rule rule) {
 		Preconditions.checkArgument(rule.head.truth);
-		StringBuilder distinct = new StringBuilder();
-		if (rule.distinct.size() > 0) distinct.append(' ');
+		
+		List<String> terms = Lists.newArrayList(toString(rule.head));
+		terms.addAll(atomsToStrings(rule.body));
 		for (Rule.Distinct pair : rule.distinct) {
-			appendDistinct(distinct, pair);
+			terms.add(toString(pair));
 		}
 		
-		return "(<= " + toString(rule.head) + " " 
-				+ Joiner.on(" ").join(atomsToStrings(rule.body)) + 
-				distinct.toString() + ")";
+		return "(<= " + Joiner.on(" ").join(terms) + ")";
 	}
 	
 	@Override

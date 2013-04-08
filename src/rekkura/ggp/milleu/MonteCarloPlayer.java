@@ -27,7 +27,7 @@ public class MonteCarloPlayer extends ProverBased {
 	private AtomicInteger wavesComputed = new AtomicInteger();
 	
 	private void explore() {
-		setDecision(anyDecision());
+		setAction(anyDecision());
 		
 		Game.Turn current = getTurn();
 		Set<Dob> state = current.state;
@@ -47,7 +47,7 @@ public class MonteCarloPlayer extends ProverBased {
 			// See if we need to update the move we want to make
 			for (Dob action : goals.elementSet()) {
 				int value = goals.count(action);
-				if (best.consider(value, action)) setDecision(current.turn, best.getCarry());
+				if (best.consider(value, action)) setAction(current.turn, best.getCarry());
 			}
 			
 			wavesComputed.addAndGet(1);

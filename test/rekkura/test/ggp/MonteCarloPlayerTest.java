@@ -1,6 +1,7 @@
 package rekkura.test.ggp;
 
 import java.util.List;
+import java.util.Map;
 
 import junit.framework.Assert;
 
@@ -14,6 +15,7 @@ import rekkura.model.Rule;
 import rekkura.util.Synchron;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class MonteCarloPlayerTest {
 
@@ -40,10 +42,14 @@ public class MonteCarloPlayerTest {
 		
 		List<Dob> actions = StandardFormat.inst.dobsFromStrings(rawActions);
 		
+		// Yeah this is a total hack.
+		Map<Dob, Dob> actionMap = Maps.newHashMap();
+		for (Dob action : actions) { actionMap.put(action, action); }
+		
 		// Advance the player to a state where there
 		// should be a clear best move.
 		player.setMatch(role, config);
-		player.advance(0, actions);
+		player.advance(0, actionMap);
 		
 		Thread thread = new Thread(player);
 		thread.start();
