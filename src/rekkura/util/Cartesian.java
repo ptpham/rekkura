@@ -1,5 +1,6 @@
 package rekkura.util;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -71,28 +72,30 @@ public class Cartesian {
 			if (!hasNext()) throw new NoSuchElementException();
 			List<U> result = Lists.newArrayListWithCapacity(candidateSize);
 			int descender = this.current;
-			for (int i = 0; i < candidateSize; i++) {
+			for (int i = candidateSize - 1; i >= 0; i--) {
 				int sliceSize = this.candidates.get(i).size();
 				int index = descender % sliceSize;
 				result.add(this.candidates.get(i).get(index));
 				descender /= sliceSize;
 			}
 			this.current++;
+			Collections.reverse(result);
 			return result;
 		}
 		
 		public int dimensions() { return this.candidates.size(); }
 		
 		/**
-		 * This forces a move forward in the given dimension. There 
-		 * may be no next after an advance so hasNext should be 
-		 * called to verify.
+		 * This forces a move forward in the given dimension. If next
+		 * has not been called in the current dimension, this method
+		 * will do nothing.
 		 * @param dim
 		 */
 		public void advance(int dim) {
 			int subspace = 1;
-			for (int i = 0; i < dim; i++) { subspace *= this.candidates.get(i).size(); }
-			this.current += subspace;
+			for (int i = dim + 1; i < candidateSize; i++) { subspace *= this.candidates.get(i).size(); }
+			if (this.current % subspace == 0) return;
+			this.current = subspace*((current/subspace) + 1);
 		}
 	
 		@Override public void remove() 

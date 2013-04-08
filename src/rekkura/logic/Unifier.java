@@ -18,6 +18,7 @@ import com.google.common.collect.Sets;
 public class Unifier {
 
 	public static Dob replace(Dob base, Map<Dob, Dob> substitution) {
+		if (substitution == null) return null;
 		if (substitution.containsKey(base)) return substitution.get(base);
 		
 		boolean changed = false;
@@ -150,9 +151,15 @@ public class Unifier {
 	
 	public static boolean isSymmetricPair(Dob first, Dob second, Set<Dob> vars) {
 		Dob.PrefixedGenerator vargen = new Dob.PrefixedGenerator("tmp");
+		Map<Dob, Dob> symmetrizer = oneSidedSymmetrizer(first, second, vars, vargen);
+		return symmetrizer != null;
+	}
+
+	private static Map<Dob, Dob> oneSidedSymmetrizer(Dob first, Dob second,
+			Set<Dob> vars, Supplier<Dob> vargen) {
 		Map<Dob, Dob> unification = Unifier.unify(first, second);
 		Map<Dob, Dob> symmetrizer = Unifier.symmetrizeUnification(unification, vars, vargen);
-		return symmetrizer != null;
+		return symmetrizer;
 	}
 	
 	public static Dob computeSymmetricGeneralization(Dob first, Dob second,
@@ -164,9 +171,7 @@ public class Unifier {
 	
 	public static Dob oneSidedSymmetricGeneralization(Dob first, Dob second,
 			Set<Dob> vars, Supplier<Dob> vargen) {
-		Map<Dob, Dob> unify = Unifier.unify(first, second);
-		Map<Dob, Dob> symmetrizer = Unifier.symmetrizeUnification(unify, vars, vargen);
-		if (symmetrizer == null) return null;
+		Map<Dob, Dob> symmetrizer = oneSidedSymmetrizer(first, second, vars, vargen);
 		return replace(first, symmetrizer);
 	}
 }

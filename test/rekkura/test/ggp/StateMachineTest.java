@@ -39,15 +39,18 @@ public class StateMachineTest {
 	public void ticTacToe() {
 		StateMachine<Set<Dob>, Dob> machine = factory.create(SimpleGames.getTicTacToe());
 		Set<Dob> initial = machine.getInitial();
+		Assert.assertEquals(10, initial.size());
 		
 		Multimap<Dob, Dob> joint = machine.getActions(initial);
 		Map<Dob, Dob> actions = Maps.newHashMap();
+		Assert.assertEquals(10, joint.size());
 		
 		for (Dob role : joint.keySet()) {
 			actions.put(role, Colut.any(joint.get(role)));
 		}
 		
 		Set<Dob> next = machine.nextState(initial, actions);
+		System.out.println(next);
 		Assert.assertEquals(10, next.size());
 	}
 

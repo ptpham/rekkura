@@ -84,7 +84,7 @@ public class Fortre {
 		// Create the generalization forms by compressing each component
 		List<Dob> symmetrized = Lists.newArrayList(allForms);
 		for (Set<Dob> component : symmetrizingComponents) {
-			if (component.size() == 0) continue;
+			if (component.size() < 2) continue;
 			Stack<Dob> remaining = new Stack<Dob>();
 			Dob generalization = Colut.popAny(component);
 			remaining.addAll(symmetricEdges.get(generalization));

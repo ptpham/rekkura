@@ -2,21 +2,18 @@ package rekkura.logic.prover;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import rekkura.logic.Cachet;
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
 import rekkura.logic.Terra;
-import rekkura.logic.Unifier;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.Cartesian;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 
 public abstract class StratifiedProver {
@@ -24,9 +21,6 @@ public abstract class StratifiedProver {
 	public final Cachet cachet;
 	public final Pool pool = new Pool();
 	public final Set<Dob> truths = Sets.newHashSet();
-
-	private static final int DEFAULT_VARIABLE_SPACE_MIN = 512;
-	public int variableSpaceMin = DEFAULT_VARIABLE_SPACE_MIN;
 	
 	/**
 	 * This dob is used as a trigger for fully grounded rules
@@ -110,43 +104,9 @@ public abstract class StratifiedProver {
 	 * @return
 	 */
 	public Set<Dob> expandRule(Rule rule) {	
-		Set<Dob> result = Sets.newHashSet();
-			
 		// Prepare the domains of each positive body in the rule
-		List<Iterable<Dob>> assignments = Terra.getBodySpace(rule, cachet);
-		int bodySpaceSize = Cartesian.size(assignments);
-		
-		// Decide whether to expand by terms or by variables based on the relative
-		// sizes of the replacements. This test is only triggered for a sufficiently 
-		// large body size because it costs more time to generate the variable space.
-		boolean useVariables = (variableSpaceMin <= 0);
-		if (useVariables || bodySpaceSize > variableSpaceMin) {
-			List<Iterable<Dob>> variables = Terra.getVariableSpace(rule, cachet);
-			useVariables |= bodySpaceSize > Cartesian.size(variables);
-			if (useVariables) assignments = variables;
-		}
-		
-		// Iterate through the Cartesian product of possibilities
-		List<List<Dob>> space = Lists.newArrayListWithCapacity(assignments.size());
-		for (Iterable<Dob> iterable : assignments) { space.add(Lists.newArrayList(iterable)); }
-		
-		for (List<Dob> assignment : Cartesian.asIterable(space)) {
-			Map<Dob, Dob> success = null;
-
-			if (!useVariables) success = Terra.applyBodies(rule, assignment, pool, truths);
-			else success = Terra.applyVariables(rule, assignment, pool, truths);
-						
-			// If we manage to unify against all bodies, apply the substitution
-			// to the head and render it. If the generated head still has variables
-			// in it, then do not add it to the result.
-			if (success != null && rule.vars.size() == success.size()
-				&& rule.evaluateDistinct(success)) {
-				Dob generated = this.pool.submerge(Unifier.replace(rule.head.dob, success));
-				result.add(generated);
-			}
-		}
-				
-		return result;
+		ListMultimap<Atom, Dob> assignments = Terra.getBodySpace(rule, cachet);
+		return Terra.applyBodyExpansion(rule, assignments, pool, truths);
 	}
 	
 	public static interface Factory { StratifiedProver create(Collection<Rule> rules); }
