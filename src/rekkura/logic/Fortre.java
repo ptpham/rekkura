@@ -215,7 +215,9 @@ public class Fortre {
 	
 	public Iterable<Dob> getSpine(Dob dob) {
 		List<Dob> trunk = getTrunk(dob);
-		return Iterables.concat(trunk, getSubtree(trunk));
+		Iterable<Dob> subtree = getSubtree(trunk);
+		Colut.removeEnd(trunk);
+		return Iterables.concat(trunk, subtree);
 	}
 	
 	public Iterable<Dob> getSpine(List<Dob> trunk) {
