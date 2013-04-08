@@ -14,8 +14,8 @@ import com.google.common.collect.Lists;
  */
 public class Cartesian {
 	
-	public static <U> CartesianIterator<U> asIterator(List<List<U>> candidates) {
-		return new CartesianIterator<U>(candidates);
+	public static <U> AdvancingIterator<U> asIterator(List<List<U>> candidates) {
+		return new AdvancingIterator<U>(candidates);
 	}
 	
 	public static <U> Iterable<List<U>> asIterable(final List<List<U>> candidates) {
@@ -37,16 +37,25 @@ public class Cartesian {
 		return product;
 	}
 	
-	public static class CartesianIterator<U> implements Iterator<List<U>> {
+	/**
+	 * Allows skipping over an element in a given dimension.
+	 * @author ptpham
+	 *
+	 * @param <U>
+	 */
+	public static class AdvancingIterator<U> implements Iterator<List<U>> {
 		private int current;
 		
 		private final int spaceSize, candidateSize;
 		private final List<List<U>> candidates;
 
-		@SuppressWarnings("unchecked")
-		private CartesianIterator(List<List<U>> candidates) {
+		private AdvancingIterator(List<List<U>> candidates) {
 			this.candidates = candidates;
-			if (this.candidates.size() == 0) this.candidates.add(Lists.<U>newArrayList((U)null));
+			if (this.candidates.size() == 0) {
+				List<U> single = Lists.newArrayList();
+				single.add(null);
+				this.candidates.add(single);
+			}
 			
 			int size = 1;
 			for (List<U> slice : candidates) { size *= slice.size(); }
@@ -70,6 +79,20 @@ public class Cartesian {
 			}
 			this.current++;
 			return result;
+		}
+		
+		public int dimensions() { return this.candidates.size(); }
+		
+		/**
+		 * This forces a move forward in the given dimension. There 
+		 * may be no next after an advance so hasNext should be 
+		 * called to verify.
+		 * @param dim
+		 */
+		public void advance(int dim) {
+			int subspace = 1;
+			for (int i = 0; i < dim; i++) { subspace *= this.candidates.get(i).size(); }
+			this.current += subspace;
 		}
 	
 		@Override public void remove() 

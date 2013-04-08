@@ -10,28 +10,31 @@ import rekkura.model.Dob;
 import rekkura.util.Colut;
 import rekkura.util.Synchron;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
 
 public class MatchRunnable implements Runnable {
-	public final Vector<Game.Record> history = Colut.newVector();
-	public final Vector<Player> players = Colut.newVector();
+	public final Vector<Game.Record> history = Synchron.newVector();
+	public final Vector<Player> players = Synchron.newVector();
 	
-	public final Multimap<Integer, Player> timeouts 
-		= Multimaps.synchronizedSetMultimap(HashMultimap.<Integer,Player>create());
+	public final Multimap<Integer, Player> timeouts = Synchron.newHashMultimap();
+	public final Multiset<Dob> goals = Synchron.newHashMultiset();
 	public final Game.Config config;
 	
-	public MatchRunnable(List<Player> players, Game.Config config) {
+	public MatchRunnable(Game.Config config, List<Player> players) {
 		if (players == null) players = Lists.newArrayList();
 		this.players.addAll(players);
 		this.config = config;
 	}
 	
+	public MatchRunnable(Game.Config config, Player... players) {
+		this(config, Lists.newArrayList(players));
+	}
+	
 	public MatchRunnable(Game.Config config) {
-		this(null, config);
+		this(config, (List<Player>)null);
 	}
 	
 	@Override
@@ -90,5 +93,8 @@ public class MatchRunnable implements Runnable {
 			state = machine.nextState(state, actions);
 			turn++;
 		}
+		
+		// Compute the goals for the players
+		this.goals.addAll(machine.getGoals(state));
 	}
 }

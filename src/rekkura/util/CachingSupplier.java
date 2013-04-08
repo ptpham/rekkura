@@ -1,5 +1,6 @@
 package rekkura.util;
 
+import java.util.Collection;
 import java.util.Set;
 
 import com.google.common.base.Supplier;
@@ -14,5 +15,10 @@ public abstract class CachingSupplier<T> implements Supplier<T> {
 		T result = create();
 		created.add(result);
 		return result;
+	}
+	
+	public void deposit(Collection<T> receiver) {
+		receiver.addAll(created);
+		created.clear();
 	}
 }

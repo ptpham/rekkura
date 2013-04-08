@@ -11,8 +11,8 @@ import rekkura.logic.prover.StratifiedBackward;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
 /**
@@ -45,7 +45,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	}
 
 	@Override
-	public Multimap<Dob, Dob> getActions(Set<Dob> state) {
+	public ListMultimap<Dob, Dob> getActions(Set<Dob> state) {
 		return extractActions(proverPass(state, LEGAL_QUERY, LEGAL_UNIFY));
 	}
 

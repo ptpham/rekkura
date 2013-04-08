@@ -15,8 +15,8 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
@@ -41,7 +41,7 @@ public class ProverStateMachine extends GameLogicContext implements GgpStateMach
 	}
 	
 	@Override
-	public Multimap<Dob, Dob> getActions(Set<Dob> state) {
+	public ListMultimap<Dob, Dob> getActions(Set<Dob> state) {
 		return extractActions(proverPass(state, LEGAL_UNIFY));
 	}
 

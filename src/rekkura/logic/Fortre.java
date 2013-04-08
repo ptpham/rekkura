@@ -24,10 +24,7 @@ public class Fortre {
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
-	private CachingSupplier<Dob> vargen = new CachingSupplier<Dob>() {
-		private int current = 0;
-		@Override public Dob create() { return new Dob("[FTV" + current++ + "]"); }
-	};
+	private CachingSupplier<Dob> vargen = new Dob.PrefixedGenerator("FTV");
 
 	private static final String ROOT_VAR_NAME = "[ROOT]";
 	
@@ -42,8 +39,89 @@ public class Fortre {
 		this.root = new Dob(ROOT_VAR_NAME);
 		this.allVars.add(root);
 		this.pool = pool;
+
+		construct(Lists.newArrayList(allForms), pool);
+	}
+	
+	private void construct(List<Dob> allForms, Pool pool) {
 		
-		for (Dob form : allForms) addForm(form);
+		// Find cognates (forms that unify against each other)
+		Multimap<Dob, Dob> cognateEdges = HashMultimap.create();
+		for (Dob first : allForms) {
+			for (Dob second : allForms) {
+				if (first == second) continue;
+				if (Unifier.unifyVars(first, second, allVars) != null) {
+					cognateEdges.put(first, second);
+				}
+			}
+		}
+		List<Set<Dob>> cognateComponents = Topper.stronglyConnected(cognateEdges);
+		
+		// Store cognates from strongly connected components
+		for (Set<Dob> component : cognateComponents) {
+			Dob representative = Colut.any(component);
+			for (Dob other : component) {
+				if (representative == other) continue;
+				this.cognates.put(representative, other);
+				allForms.remove(other);
+			}
+		}
+		
+		// Find the symmetrizing components
+		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
+		for (Dob first : allForms) {
+			for (Dob second : allForms) {
+				if (first == second) continue;
+				if (Unifier.isSymmetricPair(first, second, allVars)) { 
+					symmetricEdges.put(first, second); 
+					symmetricEdges.put(second, first);
+				}
+			}
+		}
+		
+		List<Set<Dob>> symmetrizingComponents = Topper.stronglyConnected(symmetricEdges);
+		
+		// Create the generalization forms by compressing each component
+		List<Dob> symmetrized = Lists.newArrayList(allForms);
+		for (Set<Dob> component : symmetrizingComponents) {
+			if (component.size() == 0) continue;
+			Stack<Dob> remaining = new Stack<Dob>();
+			Dob generalization = Colut.popAny(component);
+			remaining.addAll(symmetricEdges.get(generalization));
+			
+			while (remaining.size() > 0) {
+				Dob next = remaining.pop();
+				generalization = Unifier.computeSymmetricGeneralization(generalization, next, allVars, vargen);
+				vargen.deposit(allVars);
+				remaining.addAll(symmetricEdges.get(next));
+				symmetricEdges.removeAll(next);
+			}
+			
+			generalization = pool.submerge(generalization);
+			// Make sure the generalization is not a cognate of 
+			// something that we already have.
+			boolean cognate = false;
+			for (Dob form : allForms) { cognate |= Unifier.equivalent(form, generalization, allVars); }
+			if (!cognate) symmetrized.add(generalization);
+		}
+		
+		// Find subset relationships
+		for (Dob child : symmetrized) {
+			List<Dob> parents = Lists.newArrayList();
+			
+			for (Dob parent : symmetrized) {
+				if (parent == child) continue;
+				if (Unifier.unifyVars(parent, child, allVars) != null) {
+					parents.add(parent);
+				}
+			}
+			
+			if (parents.size() == 1) {
+				this.allChildren.put(parents.get(0), child);
+			} else if (parents.size() == 0) {
+				this.allChildren.put(root, child);
+			}
+		}
 	}
 	
 	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }
@@ -162,102 +240,6 @@ public class Fortre {
 				return new CognateIterator(dobs.iterator());
 			}
 		};
-	}
-	
-	/**
-	 * The dob is added at the lowest level such that all of its 
-	 * ancestors unify with it. If there is a non-trivial subset of
-	 * its siblings that unify with it and it does not unify with any
-	 * of its siblings, then the siblings will be added as children 
-	 * of the new dob. 
-	 * @param dob
-	 */
-	protected void addForm(Dob dob) {
-		dob = this.pool.submerge(dob);
-		
-		List<Dob> trunk = getTrunk(dob);
-		Dob end = Colut.end(trunk);
-		Set<Dob> endChildren = this.allChildren.get(end);
-		
-		// Handle cognates
-		if (Unifier.unifyVars(dob, end, allVars) != null) {
-			this.cognates.put(end, dob);
-			return;
-		}
-		
-		if (Colut.empty(endChildren)) {
-			this.allChildren.put(end, dob);
-			return;
-		}
-		
-		Set<Dob> up = Sets.newHashSet();
-
-		// Figure out if any children should definitely go under the given dob.
-		for (Dob endChild : endChildren) {
-			if (Unifier.unifyVars(dob, endChild, allVars) != null) {
-				up.add(endChild);
-			}
-		}
-		endChildren.removeAll(up);
-		this.allChildren.putAll(dob, up);
-		
-		// If there is a symmetric unification, generate the dob that represents. 
-		// The connected component of forms under the symmetric unification relation.
-		// Place all symmetrics under the generalization and the rest under the form to be added.
-		Dob symmetrized = null;
-		Set<Dob> subsumed = Sets.newHashSet(dob);
-		while (true) {
-			Dob base = symmetrized == null ? dob : symmetrized;
-			Dob generalized = findSymmetrization(base, endChildren, subsumed);
-			if (generalized != null) symmetrized = generalized;
-			else break;
-		}
-		
-		if (Unifier.equivalent(end, symmetrized, allVars)) symmetrized = null;
-				
-		// Apply the subsumption over children or just append to the end. This involves
-		// moving children of the subsumed as direct children of the generalization.
-		if (symmetrized != null) applySubsumption(symmetrized, end, subsumed);
-		else this.allChildren.put(end, dob);
-	}
-
-	private Dob findSymmetrization(Dob base, Set<Dob> endChildren, Set<Dob> subsumed) {
-		for (Dob child : endChildren) {
-			if (subsumed.contains(child)) continue;
-			Dob generalized = Unifier.getSymmetricGeneralization(base, child, allVars, vargen);
-			this.allVars.addAll(vargen.created);
-			vargen.created.clear();
-			
-			if (generalized != null) {
-				subsumed.add(child);
-				return this.pool.submerge(generalized);
-			}
-		}
-		return null;
-	}
-
-	private void applySubsumption(Dob symmetrized, Dob subsumedParent, Set<Dob> allSubsumed) {
-		this.generated.add(symmetrized);
-		for (Dob subsumed : allSubsumed) {
-			subsume(symmetrized, subsumedParent, subsumed);
-		}
-		this.allChildren.put(subsumedParent, symmetrized);
-	}
-
-	/**
-	 * Keeps the subsumed if it was not generated. Otherwise, the
-	 * subsumed is removed and it's children are added to the generalization.
-	 * @param symmetrized
-	 * @param subsumedParent
-	 * @param subsumed
-	 */
-	private void subsume(Dob symmetrized, Dob subsumedParent, Dob subsumed) {
-		this.allChildren.remove(subsumedParent, subsumed);
-		if (this.generated.contains(subsumed)) {
-			Set<Dob> subsumedChildren = this.allChildren.get(subsumed);
-			this.allChildren.putAll(symmetrized, subsumedChildren);
-			this.allChildren.removeAll(subsumed);
-		} else this.allChildren.put(symmetrized, subsumed);
 	}
 	
 	/**

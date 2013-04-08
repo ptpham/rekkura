@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import rekkura.fmt.StandardFormat;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
@@ -44,12 +45,12 @@ public class Game {
 		}
 	}
 	
-	public static class Move {
+	public static class Decision {
 		public int turn;
-		public Dob dob;
-		public Move(int turn, Dob dob) { 
+		public Dob action;
+		public Decision(int turn, Dob action) { 
 			this.turn = turn; 
-			this.dob = dob; 
+			this.action = action; 
 		}
 	}
 	
@@ -102,7 +103,27 @@ public class Game {
 		return result;
 	}
 	
+	// TODO: make these nicer
 	public static Dob convertActionToMove(Dob action) {
 		return action.at(2);
 	}
+
+	public static Dob getRoleForAction(Dob action) {
+		return action.at(1);
+	}
+	
+	public static Decision asDecisionsFromStandardFormat(int turn, String stdDob) {
+		return new Decision(turn, StandardFormat.inst.dobFromString(stdDob));
+	}
+	
+	public static List<Decision> asDecisionsFromStandardFormat(Iterable<String> stdMoves) {
+		int i = 0;
+		List<Decision> result = Lists.newArrayList();
+		for (String raw : stdMoves) {
+			result.add(asDecisionsFromStandardFormat(i, raw));
+			i++;
+		}
+		return result;
+	}
+
 }

@@ -36,6 +36,11 @@ public class Logimos {
 			this.form = form;
 			this.replacements = HashMultimap.create();
 		}
+		
+		@Override
+		public String toString() {
+			return "[" + this.form + ", " + replacements + "]";
+		}
 	}
 	
 	

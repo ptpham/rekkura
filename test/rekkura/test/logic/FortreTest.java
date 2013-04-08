@@ -25,7 +25,7 @@ public class FortreTest {
 			"(X)", "(Y)", "((P)(X)(a))", "((P)(X)(b))"
 		};
 
-		LogicFormat fmt = new StandardFormat();
+		LogicFormat fmt = StandardFormat.inst;
 		Pool pool = new Pool();
 		List<Dob> dobs = stringsToDobs(rawDobs, fmt, pool);
 		Set<Dob> vars = Sets.newHashSet(dobs.get(0), dobs.get(1));
@@ -136,6 +136,26 @@ public class FortreTest {
 		List<Dob> queryList = stringsToDobs(queryDobs, fmt, pool);
 		
 		Assert.assertNull(Fortre.downwardUnify(queryList.get(0), bodyList, Sets.newHashSet(varList)));
+	}
+	
+	@Test
+	public void cognates() {
+		String[] rawDobs = {
+				"(X)", "(Y)", "((P)(X))", "((P)(Y))"
+			};
+
+			LogicFormat fmt = new StandardFormat();
+			Pool pool = new Pool();
+			List<Dob> dobs = stringsToDobs(rawDobs, fmt, pool);
+			Set<Dob> vars = Sets.newHashSet(dobs.get(0), dobs.get(1));
+			
+			Dob first = dobs.get(3);
+			Dob second = dobs.get(2);
+			
+			Fortre fortre = new Fortre(vars, Lists.newArrayList(first, second), pool);
+			
+			Assert.assertEquals(2, fortre.getTrunk(first).size());
+			Assert.assertEquals(2, fortre.getTrunk(second).size());
 	}
 	
 	// TODO: Write tests for cognates 

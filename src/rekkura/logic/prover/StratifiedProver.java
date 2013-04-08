@@ -17,7 +17,6 @@ import rekkura.util.Cartesian;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public abstract class StratifiedProver {
@@ -128,8 +127,6 @@ public abstract class StratifiedProver {
 		}
 		
 		// Iterate through the Cartesian product of possibilities
-		Map<Dob, Dob> unify = Maps.newHashMap();
-		
 		List<List<Dob>> space = Lists.newArrayListWithCapacity(assignments.size());
 		for (Iterable<Dob> iterable : assignments) { space.add(Lists.newArrayList(iterable)); }
 		
@@ -138,7 +135,7 @@ public abstract class StratifiedProver {
 
 			if (!useVariables) success = Terra.applyBodies(rule, assignment, pool, truths);
 			else success = Terra.applyVariables(rule, assignment, pool, truths);
-			
+						
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
 			// in it, then do not add it to the result.
@@ -147,10 +144,8 @@ public abstract class StratifiedProver {
 				Dob generated = this.pool.submerge(Unifier.replace(rule.head.dob, success));
 				result.add(generated);
 			}
-			
-			unify.clear();
 		}
-		
+				
 		return result;
 	}
 	

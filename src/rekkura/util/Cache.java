@@ -29,4 +29,8 @@ public class Cache<U, V> {
 	public static <U, V> Cache<U, V> create(Function<U, V> fn) {
 		return new Cache<U, V>(fn);
 	}
+	
+	public String toString() {
+		return "[" + stored.toString() + " with fn " + fn.toString() + "]";
+	}
 }

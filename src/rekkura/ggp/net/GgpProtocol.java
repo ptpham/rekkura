@@ -19,6 +19,13 @@ public class GgpProtocol {
 
 	public static enum PlayerState { READY, BUSY, DONE }
 	
+	/**
+	 * A PlayerHandler is responsible for handling the logical
+	 * essence of the GGP protocol. See DefaultPlayerHandler for
+	 * an example.
+	 * @author ptpham
+	 *
+	 */
 	public static interface PlayerHandler {
 		PlayerState handleStart(String match, Dob role, Game.Config config);
 		Dob handlePlay(String match, List<Dob> moves);
@@ -29,6 +36,15 @@ public class GgpProtocol {
 		return config.startclock - config.playclock;
 	}
 	
+	/**
+	 * The DefaultPlayerHandler handles conversions between 
+	 * actions (the internal representation) and moves (the GGP 
+	 * protocol standard). It also manages time for the player.
+	 * The assumption here is that the Player passed in is running
+	 * on a different thread. Sad times will ensue otherwise.
+	 * @author ptpham
+	 *
+	 */
 	private static class DefaultPlayerHandler implements PlayerHandler {
 		public final Player player;
 		
@@ -37,7 +53,7 @@ public class GgpProtocol {
 		private int turn, ggpPlayClock, ggpStartClock;
 		
 		private DefaultPlayerHandler(Player player) { this.player = player; }
-		private static final int EPSILON = 500;
+		private static final int EPSILON = 300;
 		
 		@Override
 		public PlayerState handleStart(String match, Dob role, Config config) {
@@ -58,6 +74,9 @@ public class GgpProtocol {
 		public Dob handlePlay(String match, List<Dob> moves) {
 			if (!validMatch(match)) return new Dob("");
 			
+			// This condition is necessary because the first
+			// play move in the GGP protocol doesn't have any moves.
+			// Thus, we don't want to advance the state.
 			if (moves.size() == roles.size()) {
 				Map<Dob, Dob> actions = Game.convertMovesToActionMap(roles, moves);
 				player.advance(turn++, actions);
@@ -83,10 +102,25 @@ public class GgpProtocol {
 		}
 	}
 		
+	/**
+	 * A PlayerDemuxer is responsible for handling GGP messages in general.
+	 * The DefaultPlayerDemuxer will delegate the logic to a PlayerHandler.
+	 * @author ptpham
+	 *
+	 */
 	public static interface PlayerDemuxer { 
 		String handleMessage(String message);
 	}
 	
+	/**
+	 * The DefaultPlayerDemuxer acts as a layer been a PlayerHandler and 
+	 * the outside world. It converts the raw string it receives to logic 
+	 * that can be passed down to the PlayerHandler. The PlayerHandler will 
+	 * pass back some kind of logic. The demux converts the logic back into 
+	 * a String and passes it back to the outside world.
+	 * @author ptpham
+	 *
+	 */
 	private static class DefaultPlayerDemuxer implements PlayerDemuxer {
 		private final KifFormat fmt = new KifFormat();
 		private PlayerHandler handler;
@@ -123,7 +157,7 @@ public class GgpProtocol {
 		private String stop(Dob dob) {
 			String result;
 			String match = stringAt(dob, 1);
-			List<Dob> moves = dob.at(2).childCopy();
+			List<Dob> moves = Colut.slice(dob.childCopy(), 2, dob.size());
 			PlayerState state = handler.handleStop(match, moves);
 			result = fmt.toString(PLAYER_STATE_DOBS.get(state));
 			return result;
@@ -135,7 +169,8 @@ public class GgpProtocol {
 			Dob role = dob.at(2);
 			
 			// Vacuous rules are generated for dobs that carry a string that 
-			// does not properly parse as a rule
+			// does not properly parse as a rule. This is kind of a gross
+			// special case for KIF because it is a poorly designed format. =P
 			List<Dob> rawRules = dob.at(3).childCopy();
 			List<Rule> rules = Lists.newArrayList();
 			for (Dob rawRule : rawRules) { 

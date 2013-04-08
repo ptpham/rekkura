@@ -147,6 +147,11 @@ public class Topper {
 		return result;
 	}
 	
+
+	public static <U> List<Set<U>> stronglyConnected(Multimap<U, U> edges) {
+		return stronglyConnected(edges, edges.keySet());
+	}
+	
 	private static <U> int stronglyConnectedFrom(U node, Multimap<U, U> edges, 
 			Map<U, Integer> seen, UnionFind<U> ufind) {
 		if (seen.containsKey(node)) return seen.get(node);
