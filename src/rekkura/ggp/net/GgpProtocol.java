@@ -92,6 +92,7 @@ public class GgpProtocol {
 			if (!validMatch(match)) return PlayerState.BUSY;
 			current = null;
 
+			System.out.println(roles + " " + moves);
 			Map<Dob, Dob> actions = Game.convertMovesToActionMap(roles, moves);
 			player.advance(turn, actions);
 			return PlayerState.DONE;
@@ -147,9 +148,11 @@ public class GgpProtocol {
 			String name = stringAt(dob, 0);
 			
 			String result = "";
-			if (name.equals(PLAY_NAME)) result = play(dob);
-			else if (name.equals(START_NAME)) result = start(dob);
-			else if (name.equals(STOP_NAME)) result = stop(dob);
+			try {
+				if (name.equals(PLAY_NAME)) result = play(dob);
+				else if (name.equals(START_NAME)) result = start(dob);
+				else if (name.equals(STOP_NAME)) result = stop(dob);
+			} catch (Throwable t) { t.printStackTrace(); }
 			
 			return result;
 		}
@@ -157,7 +160,7 @@ public class GgpProtocol {
 		private String stop(Dob dob) {
 			String result;
 			String match = stringAt(dob, 1);
-			List<Dob> moves = Colut.slice(dob.childCopy(), 2, dob.size());
+			List<Dob> moves = dob.at(2).childCopy();
 			PlayerState state = handler.handleStop(match, moves);
 			result = fmt.toString(PLAYER_STATE_DOBS.get(state));
 			return result;
@@ -191,12 +194,8 @@ public class GgpProtocol {
 		
 		private String play(Dob dob) {
 			String result = "";
-			try {
-				List<Dob> moves = dob.at(2).childCopy();
-				result = fmt.toString(handler.handlePlay(stringAt(dob, 1), moves));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			List<Dob> moves = dob.at(2).childCopy();
+			result = fmt.toString(handler.handlePlay(stringAt(dob, 1), moves));
 			return result;
 		}
 		
