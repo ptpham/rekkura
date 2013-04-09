@@ -9,7 +9,7 @@ import org.junit.Test;
 
 import rekkura.fmt.StandardFormat;
 import rekkura.ggp.milleu.Game;
-import rekkura.ggp.milleu.MonteCarloPlayer;
+import rekkura.ggp.players.MonteCarloPlayer;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.util.Synchron;
@@ -56,7 +56,7 @@ public class MonteCarloPlayerTest {
 		
 		while (player.getWavesComputed() < 1) { Synchron.lightSleep(100); }
 		
-		String taken = StandardFormat.inst.toString(player.getAction(1));
+		String taken = StandardFormat.inst.toString(player.getDecision(1));
 		Assert.assertEquals("((does)(o)((mark)(2)(2)))", taken);
 	}
 }

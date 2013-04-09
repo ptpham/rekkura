@@ -80,10 +80,10 @@ public class Dob {
 	
 	@Override public String toString() { return StandardFormat.inst.toString(this); }
 	
-	public static class PrefixedGenerator extends CachingSupplier<Dob> {
+	public static class PrefixedSupplier extends CachingSupplier<Dob> {
 		private int current = 0;
 		public final String prefix;
-		public PrefixedGenerator(String prefix) { this.prefix = prefix; }
+		public PrefixedSupplier(String prefix) { this.prefix = prefix; }
 		@Override public Dob create() { return new Dob("[" + prefix + current++ + "]"); }
 	};
 }

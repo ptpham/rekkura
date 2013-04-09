@@ -83,7 +83,7 @@ public class GgpProtocol {
 			}
 			Synchron.lightSleep(ggpPlayClock - EPSILON);
 			
-			Dob action = player.getAction(turn);
+			Dob action = player.getDecision(turn);
 			return Game.convertActionToMove(action);
 		}
 

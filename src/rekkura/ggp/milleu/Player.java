@@ -50,10 +50,10 @@ public abstract class Player implements Runnable {
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
 	protected final synchronized Map<Dob, Dob> getMemory(int turn) { return Colut.get(history, turn); }
 	
-	public final synchronized boolean hasAction(int turn) { return Colut.get(moves, turn) != null; }
-	public final synchronized Dob getAction(int turn) { return Colut.get(moves, turn); }
-	protected final synchronized void setAction(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
-	protected final synchronized void setAction(Game.Decision decision) { this.setAction(decision.turn, decision.action); }
+	public final synchronized boolean hasDecision(int turn) { return Colut.get(moves, turn) != null; }
+	public final synchronized Dob getDecision(int turn) { return Colut.get(moves, turn); }
+	protected final synchronized void setDecision(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
+	protected final synchronized void setDecision(Game.Decision decision) { this.setDecision(decision.turn, decision.action); }
 	
 	/**
 	 * This represents a player that needs to update the state of the game using a state 
@@ -143,8 +143,6 @@ public abstract class Player implements Runnable {
 		@Override protected void move() { makeAnyMove(); }
 		@Override protected void reflect() { }
 		
-		private void makeAnyMove() {
-			setAction(anyDecision());
-		}
+		private void makeAnyMove() { setDecision(anyDecision()); }
 	}
 }

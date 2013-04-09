@@ -51,7 +51,8 @@ public class SimpleGames {
 		      "{(R)(X)|<((win)(R)),true>:-<((line)(R)(X)),true>}",
 		      "{(R)|<((win)(R)),true>:-<((diag)(R)),true>}",
 		      "{(R)|<((goal)(R)(100)),true>:-<((win)(R)),true>}",
-		      "{(R)|<((goal)(R)(0)),true>:-<((role)(R)),true><(terminal),true><((win)(R)),false>}",
+		      "{(R)(Q)|<((goal)(R)(0)),true>:-<((role)(R)),true><((win)(Q)),true><((win)(R)),false>}",
+		      "{(R)|<((goal)(R)(50)),true>:-<((role)(R)),true><((win)(x)),false><((win)(o)),false>}",
 		      "{(R)|<(terminal),true>:-<((win)(R)),true>}",
 		      "{(X)(Y)|<(empty),true>:-<((true)((cell)(empty)(X)(Y))),true>}",
 		      "{|<(terminal),true>:-<(empty),false>}"

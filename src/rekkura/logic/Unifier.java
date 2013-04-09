@@ -9,7 +9,6 @@ import rekkura.model.Dob;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
 /**
  * This class describes how to transform one dob to match another dob.
@@ -130,27 +129,17 @@ public class Unifier {
 		if (unify == null) return null;
 		Map<Dob, Dob> result = Maps.newHashMap();
 		
-		Set<Dob> targets = Sets.newHashSet();
 		for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
 			Dob key = entry.getKey(), value = entry.getValue();
-			if (variables.contains(key)) continue;
-			if (variables.contains(value)) {
-				result.put(key, vargen.get());
-				
-				// It should not be the case that a
-				// variable in the unification target
-				// has to map to different grounds in the 
-				// unification base.
-				if (!targets.add(value)) return null;
-			}
-			else return null;
+			if (!variables.contains(key) && !variables.contains(value)) return null;
+			result.put(key, vargen.get());
 		}
 		
 		return result;
 	}
 	
 	public static boolean isSymmetricPair(Dob first, Dob second, Set<Dob> vars) {
-		Dob.PrefixedGenerator vargen = new Dob.PrefixedGenerator("tmp");
+		Dob.PrefixedSupplier vargen = new Dob.PrefixedSupplier("tmp");
 		Map<Dob, Dob> symmetrizer = oneSidedSymmetrizer(first, second, vars, vargen);
 		return symmetrizer != null;
 	}

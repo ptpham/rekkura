@@ -18,13 +18,11 @@ import com.google.common.collect.*;
 public class Fortre {
 	public final Dob root;
 	public final Pool pool;
-	
 	public final Set<Dob> allVars;
-	public final Set<Dob> generated;
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
-	private CachingSupplier<Dob> vargen = new Dob.PrefixedGenerator("FTV");
+	private CachingSupplier<Dob> vargen = new Dob.PrefixedSupplier("FTV");
 
 	private static final String ROOT_VAR_NAME = "[ROOT]";
 	
@@ -35,7 +33,6 @@ public class Fortre {
 	 */
 	public Fortre(Collection<Dob> allVars, Iterable<Dob> allForms, Pool pool) {
 		this.allVars = Sets.newHashSet(allVars);
-		this.generated = Sets.newHashSet();
 		this.root = new Dob(ROOT_VAR_NAME);
 		this.allVars.add(root);
 		this.pool = pool;
@@ -44,17 +41,8 @@ public class Fortre {
 	}
 	
 	private void construct(List<Dob> allForms, Pool pool) {
-		
 		// Find cognates (forms that unify against each other)
-		Multimap<Dob, Dob> cognateEdges = HashMultimap.create();
-		for (Dob first : allForms) {
-			for (Dob second : allForms) {
-				if (first == second) continue;
-				if (Unifier.unifyVars(first, second, allVars) != null) {
-					cognateEdges.put(first, second);
-				}
-			}
-		}
+		Multimap<Dob, Dob> cognateEdges = computeCognateEdges(allForms, allVars);
 		List<Set<Dob>> cognateComponents = Topper.stronglyConnected(cognateEdges);
 		
 		// Store cognates from strongly connected components
@@ -68,35 +56,15 @@ public class Fortre {
 		}
 		
 		// Find the symmetrizing components
-		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
-		for (Dob first : allForms) {
-			for (Dob second : allForms) {
-				if (first == second) continue;
-				if (Unifier.isSymmetricPair(first, second, allVars)) { 
-					symmetricEdges.put(first, second); 
-					symmetricEdges.put(second, first);
-				}
-			}
-		}
-		
+		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(allForms, allVars);
 		List<Set<Dob>> symmetrizingComponents = Topper.stronglyConnected(symmetricEdges);
 		
 		// Create the generalization forms by compressing each component
 		List<Dob> symmetrized = Lists.newArrayList(allForms);
 		for (Set<Dob> component : symmetrizingComponents) {
 			if (component.size() < 2) continue;
-			Stack<Dob> remaining = new Stack<Dob>();
-			Dob generalization = Colut.popAny(component);
-			remaining.addAll(symmetricEdges.get(generalization));
-			
-			while (remaining.size() > 0) {
-				Dob next = remaining.pop();
-				generalization = Unifier.computeSymmetricGeneralization(generalization, next, allVars, vargen);
-				vargen.deposit(allVars);
-				remaining.addAll(symmetricEdges.get(next));
-				symmetricEdges.removeAll(next);
-			}
-			
+			Dob generalization = computeGeneralization(component, symmetricEdges, allVars, vargen);
+
 			generalization = pool.submerge(generalization);
 			// Make sure the generalization is not a cognate of 
 			// something that we already have.
@@ -122,6 +90,59 @@ public class Fortre {
 				this.allChildren.put(root, child);
 			}
 		}
+	}
+
+	public static Dob computeGeneralization(Collection<Dob> component, Multimap<Dob, Dob> edges, 
+			Set<Dob> allVars, CachingSupplier<Dob> vargen) {
+		
+		// Copy things to avoid modifying them
+		component = Sets.newHashSet(component);
+		edges = HashMultimap.create(edges);
+		
+		Stack<Dob> remaining = new Stack<Dob>();
+		Dob generalization = Colut.popAny(component);
+		remaining.addAll(edges.get(generalization));
+		
+		while (remaining.size() > 0) {
+			Dob next = remaining.pop();
+			generalization = Unifier.computeSymmetricGeneralization(generalization, next, allVars, vargen);
+			vargen.deposit(allVars);
+			
+			Collection<Dob> adjacent = edges.get(next);
+			remaining.addAll(adjacent);
+			component.removeAll(adjacent);
+			edges.removeAll(next);
+		}
+		
+		if (component.size() > 0) return null;
+		return generalization;
+	}
+
+	public static Multimap<Dob, Dob> computeCognateEdges(List<Dob> allForms, Set<Dob> allVars) {
+		Multimap<Dob, Dob> cognateEdges = HashMultimap.create();
+		for (Dob first : allForms) {
+			for (Dob second : allForms) {
+				if (first == second) continue;
+				if (Unifier.unifyVars(first, second, allVars) != null) {
+					cognateEdges.put(first, second);
+				}
+			}
+		}
+		return cognateEdges;
+	}
+
+	public static Multimap<Dob, Dob> computeSymmetrizingEdges(List<Dob> allForms, Set<Dob> allVars) {
+		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
+		for (Dob first : allForms) {
+			for (Dob second : allForms) {
+				if (first == second) continue;
+				if (Unifier.isSymmetricPair(first, second, allVars)) { 
+					symmetricEdges.put(first, second); 
+					symmetricEdges.put(second, first);
+				}
+			}
+		}
+		return symmetricEdges;
 	}
 	
 	public boolean contains(Dob dob) { return this.allChildren.containsKey(dob); }

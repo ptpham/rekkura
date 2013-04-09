@@ -50,8 +50,7 @@ public class StateMachineTest {
 		}
 		
 		Set<Dob> next = machine.nextState(initial, actions);
-		System.out.println(next);
 		Assert.assertEquals(10, next.size());
 	}
-
+	
 }
