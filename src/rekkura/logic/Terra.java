@@ -219,7 +219,6 @@ public class Terra {
 				result.add(generated);
 			} else iterator.advance(application.failurePoint);
 		}
-		
 		return result;
 	}
 	

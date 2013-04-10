@@ -65,7 +65,7 @@ public class StratifiedBackward extends StratifiedProver {
 		for (Rule parent : this.rta.ruleToGenRule.get(rule)) {
 			ask(parent, result);
 		}
-		
+
 		Set<Dob> generated = expandRule(rule);
 		this.known.putAll(rule, generated);
 		for (Dob dob : generated) this.storeTruth(dob);

@@ -97,7 +97,6 @@ public class Cachet {
 	
 	public void storeGroundAt(Dob ground, Dob body) {
 		unisuccess.put(body, ground);
-		storeVariableReplacements(ground, body);
 	}
 
 	public void storeVariableReplacements(Dob ground, Dob body) {

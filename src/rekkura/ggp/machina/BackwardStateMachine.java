@@ -99,6 +99,8 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		if (state != last) {
 			prover.clear();
 			prover.storeTruths(state);
+			prover.storeTruths(this.knownStatic.values());
+			prover.known.putAll(this.knownStatic);
 			last = state;
 		}
 	}	
