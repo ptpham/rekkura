@@ -106,12 +106,20 @@ public class Cartesian {
 		 * counts as looking into the subspace.
 		 */
 		public void advance(int dim) {
-			boolean zeroed = false;
+			boolean nonZeroes = false;
 			for (int i = dim + 1; i < this.positions.length; i++) {
-				if (positions[i] > 0) zeroed = true;
-				this.positions[i] = 0;
+				if (positions[i] > 0) {
+					nonZeroes = true;
+					break;
+				}
 			}
-			if (zeroed) this.positions[dim]++;
+			
+			if (!nonZeroes) return;
+			
+			for (int i = dim + 1; i < this.positions.length; i++) {
+				this.positions[i] = this.candidates.get(i).size() - 1;
+			}
+			this.increment();
 		}
 	
 		@Override public void remove() 
