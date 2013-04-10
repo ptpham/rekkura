@@ -120,23 +120,6 @@ public class Terra {
 	}
 	
 	
-	private static class ApplyBodiesResult {
-		public final Map<Dob, Dob> unification;
-		public final int failurePoint;
-		
-		public ApplyBodiesResult(Map<Dob, Dob> unification) {
-			this.unification = unification;
-			this.failurePoint = -1;
-		}
-		
-		public ApplyBodiesResult(int failurePoint) {
-			this.unification = null;
-			this.failurePoint = failurePoint;
-		}
-		
-		public boolean wasSuccessful() { return this.unification != null; }
-	}
-	
 	/**
 	 * This method attempts to apply the candidates in order along the 
 	 * body of the rule. If the application is successful, then a unification
@@ -147,35 +130,45 @@ public class Terra {
 	 * @param truths
 	 * @return
 	 */
-	private static ApplyBodiesResult applyBodies(Rule rule, List<Dob> candidates, 
+	public static Map<Dob, Dob> applyBodies(Rule rule, List<Dob> candidates, 
 			Pool pool, Set<Dob> truths) {
 		
 		Map<Dob, Dob> unify = Maps.newHashMap();
 		List<Dob> vars = rule.vars;
 		List<Atom> body = rule.body;
 		
-		Integer failurePoint = null;
-		for (int i = 0; i < body.size() && failurePoint == null; i++) {
+		for (int i = 0; i < body.size(); i++) {
 			Atom atom = body.get(i);
 
-			// If the atom must be true, use the possibility provided
-			// in the full assignment.
 			Dob base = atom.dob;
-			if (atom.truth) {
-				Dob target = candidates.get(i);
-				if (!Unifier.unifyAssignment(base, target, unify) 
-						|| !vars.containsAll(unify.keySet())) failurePoint = i;
-			// If the atom must be false, check that the state 
-			// substitution applied to the dob does not yield 
-			// something that is true.
-			} else {
-				Dob generated = pool.submerge(Unifier.replace(base, unify));
-				if (truths.contains(generated)) failurePoint = i;
-			}
+			Dob target = candidates.get(i);
+			Map<Dob, Dob> current = Unifier.unify(base, target);
+			if (!applyTermUnification(atom, current, unify, pool, truths)) return null;
 		}
 		
-		if (failurePoint != null) return new ApplyBodiesResult(failurePoint);
-		return new ApplyBodiesResult(unify);
+		if (!vars.containsAll(unify.keySet())) return null;
+		return unify;
+	}
+	
+	public static boolean applyTermUnification(Atom atom, Map<Dob, Dob> candidate, 
+			Map<Dob, Dob> existing, Pool pool, Set<Dob> truths) {
+		
+		// If the atom must be true, use the possibility provided
+		// in the full assignment.
+		Dob base = atom.dob;
+		if (atom.truth) {
+			if (!Unifier.mergeUnifications(existing, candidate)) {
+				return false;
+			}
+		// If the atom must be false, check that the state 
+		// substitution applied to the dob does not yield 
+		// something that is true.
+		} else {
+			Dob generated = pool.submerge(Unifier.replace(base, existing));
+			if (truths.contains(generated) != atom.truth) return false;
+		}
+		
+		return true;
 	}
 	
 	public static Set<Dob> applyBodyExpansion(Rule rule, final ListMultimap<Atom, Dob> support, 
@@ -198,27 +191,41 @@ public class Terra {
 		reordered.body.addAll(negatives);
 		
 		// Construct the space
-		List<List<Dob>> space = Lists.newArrayList();
-		for (Atom atom : positives) { space.add(support.get(atom)); }
-		for (int i = 0; i < negatives.size(); i++) { 
-			space.add(Lists.<Dob>newArrayList((Dob)null)); 
+		List<List<Map<Dob, Dob>>> space = Lists.newArrayList();
+		for (Atom atom : positives) {
+			List<Dob> grounds = support.get(atom);
+			List<Map<Dob, Dob>> unifies = Lists.newArrayList();
+			for (Dob ground : grounds) { unifies.add(Unifier.unify(atom.dob, ground)); }
+			space.add(unifies);
 		}
 		
-		Cartesian.AdvancingIterator<Dob> iterator = Cartesian.asIterator(space);
+		for (int i = 0; i < negatives.size(); i++) { 
+			space.add(Colut.<Map<Dob, Dob>>newArrayListOfNulls(1)); 
+		}
+		
+		Map<Dob, Dob> unify = Maps.newHashMap();
+		Cartesian.AdvancingIterator<Map<Dob, Dob>> iterator = Cartesian.asIterator(space);
 		while (iterator.hasNext()) {
-			List<Dob> assignment = iterator.next();
-			ApplyBodiesResult application = Terra.applyBodies(reordered, assignment, pool, truths);
+			unify.clear();
+			int failure = -1;
+			List<Map<Dob, Dob>> assignment = iterator.next();
+			for (int i = 0; i < assignment.size(); i++) {
+				if (!Terra.applyTermUnification(rule.body.get(i), assignment.get(i), unify, pool, truths)) {
+					failure = i;
+					break;
+				}
+			}
 			
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
 			// in it, then do not add it to the result.
-			Map<Dob, Dob> unify = application.unification;
-			if (application.wasSuccessful() && rule.vars.size() == unify.size() 
+			if (failure == -1 && rule.vars.containsAll(unify.keySet()) && 
+					rule.vars.size() == unify.size() 
 					&& rule.evaluateDistinct(unify)) {
 				Dob generated = pool.submerge(Unifier.replace(rule.head.dob, unify));
 				result.add(generated);
-			} else if (application.failurePoint >= 0) {
-				iterator.advance(application.failurePoint);
+			} else if (failure >= 0) {
+				iterator.advance(failure);
 			}
 		}
 		return result;

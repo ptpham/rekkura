@@ -162,4 +162,16 @@ public class Unifier {
 		Map<Dob, Dob> symmetrizer = oneSidedSymmetrizer(first, second, vars, vargen);
 		return replace(first, symmetrizer);
 	}
+
+	public static boolean mergeUnifications(Map<Dob, Dob> dst, Map<Dob, Dob> src) {
+		if (src == null) return false;
+		for (Map.Entry<Dob, Dob> pair : src.entrySet()) {
+			Dob key = pair.getKey();
+			Dob value = pair.getValue();
+			
+			if (dst.containsKey(key) && dst.get(key) != value) return false;
+			dst.put(key, value);
+		}
+		return true;
+	}
 }

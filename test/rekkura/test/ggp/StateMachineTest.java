@@ -53,4 +53,12 @@ public class StateMachineTest {
 		Assert.assertEquals(10, next.size());
 	}
 	
+	@Test
+	public void connectFour() {
+		StateMachine<Set<Dob>, Dob> machine = factory.create(SimpleGames.getConnectFour());
+		Set<Dob> initial = machine.getInitial();
+		Assert.assertEquals(43, initial.size());
+		
+		// TODO: flesh out this test
+	}
 }
