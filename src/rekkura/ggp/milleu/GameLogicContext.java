@@ -10,6 +10,7 @@ import rekkura.logic.Ruletta;
 import rekkura.logic.Unifier;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
 
@@ -22,6 +23,7 @@ public class GameLogicContext {
 	// Data structures for doing GGP manipulations
 	public final Dob ROLE_VAR, GENERIC_VAR;
 	public final Dob GOAL_QUERY, INIT_QUERY, NEXT_QUERY, LEGAL_QUERY;
+	public final Dob DOES_QUERY, TRUE_QUERY;
 	public final Map<Dob, Dob> NEXT_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> INIT_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> LEGAL_UNIFY = Maps.newHashMap();
@@ -32,8 +34,16 @@ public class GameLogicContext {
 	public final Pool pool;
 	public final Ruletta rta;
 	
+	/**
+	 * This holds the set of rules whose expansion never 
+	 * relies on the current state or what the players do.
+	 */
+	public final Set<Rule> staticRules = Sets.newHashSet();
+	
+	public final Set<Rule> mutableRules = Sets.newHashSet();
+	
 	public GameLogicContext() {
-		this(new Pool(), new Ruletta());
+		this(new Pool(), Ruletta.createEmpty());
 	}
 	
 	public GameLogicContext(Pool pool, Ruletta rta) {
@@ -57,11 +67,25 @@ public class GameLogicContext {
 		this.LEGAL_QUERY = pool.submerge(new Dob(LEGAL, ROLE_VAR, GENERIC_VAR));
 		this.INIT_QUERY = pool.submerge(new Dob(INIT, GENERIC_VAR));
 		this.NEXT_QUERY = pool.submerge(new Dob(NEXT, GENERIC_VAR));
+		this.DOES_QUERY = pool.submerge(new Dob(DOES, ROLE_VAR, GENERIC_VAR));
+		this.TRUE_QUERY = pool.submerge(new Dob(TRUE, GENERIC_VAR));
 
 		this.NEXT_UNIFY.put(this.NEXT, this.TRUE);
 		this.INIT_UNIFY.put(this.INIT, this.TRUE);
 		this.LEGAL_UNIFY.put(this.LEGAL, this.DOES);
+		
+		Multimap<Rule, Rule> ruleToDepRule = HashMultimap.create();
+		Multimaps.invertFrom(this.rta.ruleToGenRule, ruleToDepRule);
+		
+		Set<Rule> roots = Sets.newHashSet();
+		roots.addAll(rta.getAffectedRules(DOES_QUERY));
+		roots.addAll(rta.getAffectedRules(TRUE_QUERY));
+
+		mutableRules.addAll(OtmUtil.flood(ruleToDepRule, roots));
+		this.staticRules.addAll(this.rta.allRules);
+		this.staticRules.removeAll(mutableRules);
 	}
+	
 
 	private Dob getTerminalDob(String name) {
 		return this.pool.submerge(new Dob(name));
@@ -107,12 +131,18 @@ public class GameLogicContext {
 		return result;
 	}
 	
+	/**
+	 * Use this method to generate a set of rules that represent forms 
+	 * with which you may want to make queries.
+	 * @return
+	 */
 	public static List<Rule> getVacuousQueryRules() {
 		List<Rule> result = Lists.newArrayList();
 		
 		GameLogicContext context = new GameLogicContext();
 		List<Dob> queries = Lists.newArrayList(context.INIT_QUERY,
-			context.NEXT_QUERY, context.GOAL_QUERY, context.LEGAL_QUERY);
+			context.NEXT_QUERY, context.GOAL_QUERY, context.LEGAL_QUERY,
+			context.TRUE_QUERY, context.DOES_QUERY);
 		
 		List<Dob> vars = Lists.newArrayList(context.ROLE_VAR, context.GENERIC_VAR);
 		for (Dob dob : queries) result.add(Rule.asVacuousRule(dob, vars));

@@ -11,13 +11,7 @@ import rekkura.model.Rule;
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * result class maintains mappings and sets that are important for 
@@ -61,7 +55,7 @@ public class Ruletta {
 	 */
 	public Multiset<Rule> ruleOrder;
 	
-	public Ruletta() {
+	private Ruletta() {
 		allRules = Sets.newHashSet();
 		
 		allVars = Sets.newHashSet();
@@ -70,8 +64,11 @@ public class Ruletta {
 
 		bodyToRule = HashMultimap.create();
 		headToRule = HashMultimap.create();
+		ruleToGenRule = HashMultimap.create();
 		
 		ruleRoots = Sets.newHashSet();
+		
+		fortre = new Fortre(allVars, Lists.<Dob>newArrayList(), new Pool());
 	}
 	
 	public static Ruletta create(Collection<Rule> rules, Pool pool) {
@@ -162,7 +159,7 @@ public class Ruletta {
 	 */
 	public Set<Rule> getAffectedRules(Dob dob) {
 		Set<Dob> subtree = Sets.newHashSet();
-		Iterables.addAll(subtree, fortre.getCognateSplay(dob));
+		Iterables.addAll(subtree, fortre.getSpine(dob));
 		return Sets.newHashSet(ruleIterableFromBodyDobs(subtree));
 	}
 
@@ -177,4 +174,6 @@ public class Ruletta {
 	public Iterable<Rule> ruleIterableFromBodyDobs(final Iterable<Dob> dobs) {
 		return OtmUtil.valueIterable(bodyToRule, dobs);
 	}
+
+	public static Ruletta createEmpty() { return new Ruletta(); }
 }

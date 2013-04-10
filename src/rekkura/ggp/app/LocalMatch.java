@@ -12,7 +12,7 @@ import rekkura.test.ggp.SimpleGames;
 public class LocalMatch {
 
 	public static void main(String args[]) {
-		int startclock = 30000, playclock = 30000;
+		int startclock = 10000, playclock = 10000;
 		List<Rule> rules = SimpleGames.getConnectFour();
 		Game.Config config = new Game.Config(startclock, playclock, rules);
 		MatchRunnable runner = new MatchRunnable(config, new ConsolePlayer(), new MonteCarloPlayer());

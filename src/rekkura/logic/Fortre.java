@@ -245,7 +245,7 @@ public class Fortre {
 		return Iterables.concat(trunk, getSubtree(trunk));
 	}
 
-	public Iterable<? extends Dob> getCognateSplay(Dob dob) {
+	public Iterable<? extends Dob> getCognateSpine(Dob dob) {
 		return getCognateSpine(getTrunk(dob));
 	}
 	
