@@ -92,7 +92,6 @@ public class GgpProtocol {
 			if (!validMatch(match)) return PlayerState.BUSY;
 			current = null;
 
-			System.out.println(roles + " " + moves);
 			Map<Dob, Dob> actions = Game.convertMovesToActionMap(roles, moves);
 			player.advance(turn, actions);
 			return PlayerState.DONE;

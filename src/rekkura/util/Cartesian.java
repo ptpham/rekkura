@@ -1,6 +1,5 @@
 package rekkura.util;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -45,57 +44,74 @@ public class Cartesian {
 	 * @param <U>
 	 */
 	public static class AdvancingIterator<U> implements Iterator<List<U>> {
-		private int current;
+		public final int spaceSize;
 		
-		private final int spaceSize, candidateSize;
+		private final int[] positions;
 		private final List<List<U>> candidates;
+		private List<U> next;
 
 		private AdvancingIterator(List<List<U>> candidates) {
 			this.candidates = candidates;
-			if (this.candidates.size() == 0) {
-				List<U> single = Lists.newArrayList();
-				single.add(null);
-				this.candidates.add(single);
-			}
 			
 			int size = 1;
 			for (List<U> slice : candidates) { size *= slice.size(); }
 			
 			this.spaceSize = size;
-			this.candidateSize = this.candidates.size();
+			this.positions = new int[this.candidates.size()];
 		}
 	
-		@Override public boolean hasNext() { return this.current < this.spaceSize; }
-	
+		@Override public boolean hasNext() {
+			prepareNext();
+			return this.next != null; 
+		}
+
 		@Override
 		public List<U> next() {
 			if (!hasNext()) throw new NoSuchElementException();
-			List<U> result = Lists.newArrayListWithCapacity(candidateSize);
-			int descender = this.current;
-			for (int i = candidateSize - 1; i >= 0; i--) {
-				int sliceSize = this.candidates.get(i).size();
-				int index = descender % sliceSize;
-				result.add(this.candidates.get(i).get(index));
-				descender /= sliceSize;
-			}
-			this.current++;
-			Collections.reverse(result);
+			List<U> result = next;
+			next = null;
 			return result;
+		}
+		
+		private void increment() {
+			for (int i = positions.length - 1; i >= 0; i--) {
+				this.positions[i]++;
+				if (this.positions[i] < this.candidates.get(i).size()) break;
+				if (i > 0) this.positions[i] = 0;
+			}
+		}
+		
+		private void prepareNext() {
+			if (next != null) return;
+			
+			List<U> result = Lists.newArrayList();
+			for (int i = 0; i < candidates.size(); i++) {
+				List<U> slice = candidates.get(i);
+				if (positions[i] >= slice.size()) break;
+				result.add(slice.get(positions[i]));
+			}
+			
+			if (result.size() == this.candidates.size()) {
+				this.next = result;
+				increment();
+			}
 		}
 		
 		public int dimensions() { return this.candidates.size(); }
 		
 		/**
-		 * This forces a move forward in the given dimension. If next
-		 * has not been called in the current dimension, this method
-		 * will do nothing.
-		 * @param dim
+		 * This forces a move forward in the given dimension. If
+		 * the subspace based at the given dimension has not been
+		 * explored, no change will occur. Calling {@code hasNext()}
+		 * counts as looking into the subspace.
 		 */
 		public void advance(int dim) {
-			int subspace = 1;
-			for (int i = dim + 1; i < candidateSize; i++) { subspace *= this.candidates.get(i).size(); }
-			if (this.current % subspace == 0) return;
-			this.current = subspace*((current/subspace) + 1);
+			boolean zeroed = false;
+			for (int i = dim + 1; i < this.positions.length; i++) {
+				if (positions[i] > 0) zeroed = true;
+				this.positions[i] = 0;
+			}
+			if (zeroed) this.positions[dim]++;
 		}
 	
 		@Override public void remove() 

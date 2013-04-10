@@ -50,7 +50,6 @@ public class MonteCarloPlayer extends ProverBased {
 				int value = goals.count(action);
 				if (best.consider(value, action)) setDecision(current.turn, best.getCarry());
 			}
-			
 			wavesComputed.addAndGet(1);
 		}
 	}

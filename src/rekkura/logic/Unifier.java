@@ -96,9 +96,8 @@ public class Unifier {
 	 * @param assignment will be modified
 	 * @return
 	 */
-	public static Map<Dob, Dob> unifyAssignment(Dob base, Dob target, Map<Dob, Dob> assignment) {
-		if (!unify(base, target, assignment)) return null;
-		return assignment;
+	public static boolean unifyAssignment(Dob base, Dob target, Map<Dob, Dob> assignment) {
+		return unify(base, target, assignment);
 	}
 	
 	/**

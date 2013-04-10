@@ -163,8 +163,8 @@ public class Terra {
 			Dob base = atom.dob;
 			if (atom.truth) {
 				Dob target = candidates.get(i);
-				Map<Dob, Dob> unifyResult = Unifier.unifyAssignment(base, target, unify);
-				if (unifyResult == null || !vars.containsAll(unify.keySet())) failurePoint = i;
+				if (!Unifier.unifyAssignment(base, target, unify) 
+						|| !vars.containsAll(unify.keySet())) failurePoint = i;
 			// If the atom must be false, check that the state 
 			// substitution applied to the dob does not yield 
 			// something that is true.
@@ -203,7 +203,7 @@ public class Terra {
 		for (int i = 0; i < negatives.size(); i++) { 
 			space.add(Lists.<Dob>newArrayList((Dob)null)); 
 		}
-
+		
 		Cartesian.AdvancingIterator<Dob> iterator = Cartesian.asIterator(space);
 		while (iterator.hasNext()) {
 			List<Dob> assignment = iterator.next();
@@ -217,7 +217,9 @@ public class Terra {
 					&& rule.evaluateDistinct(unify)) {
 				Dob generated = pool.submerge(Unifier.replace(rule.head.dob, unify));
 				result.add(generated);
-			} else iterator.advance(application.failurePoint);
+			} else if (application.failurePoint >= 0) {
+				iterator.advance(application.failurePoint);
+			}
 		}
 		return result;
 	}
