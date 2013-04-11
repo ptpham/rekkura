@@ -5,6 +5,7 @@ import java.util.*;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.model.Unification;
 import rekkura.util.Cartesian;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
@@ -127,25 +128,25 @@ public class Terra {
 		List<Atom> positives = getSortedPositives(rule, support);
 		
 		List<Atom> negatives = rule.getNegatives();
-		List<List<Dob[]>> space = constructUnificationSpace(rule, support, positives);
+		List<List<Unification>> space = constructUnificationSpace(rule, support, positives);
 		
-		Cartesian.AdvancingIterator<Dob[]> iterator = Cartesian.asIterator(space);
+		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		while (iterator.hasNext()) {
-			Dob[] unify = new Dob[rule.vars.size()];
+			Unification unify = new Unification(rule.vars);
 			
 			// All positives must contribute in a non-conflicting way
 			// to the unification
 			int failure = -1;
-			List<Dob[]> assignment = iterator.next();
+			List<Unification> assignment = iterator.next();
 			for (int i = 0; i < assignment.size() && failure < 0; i++) {
-				Dob[] current = assignment.get(i);
-				if (!Unifier.mergeUnifications(unify, current)) failure = i;
+				Unification current = assignment.get(i);
+				if (!unify.dirtyMergeWith(current)) failure = i;
 			}
 			
 			// All negatives grounded with the constructed unification
 			// should not exist.
 			if (failure == -1 && negatives.size() > 0) {
-				Map<Dob, Dob> converted = Unifier.fromArray(unify, rule.vars);
+				Map<Dob, Dob> converted = unify.toMap();
 				boolean failed = false;
 				for (Atom atom : negatives) {
 					Dob generated = pool.submerge(Unifier.replace(atom.dob, converted));
@@ -157,8 +158,8 @@ public class Terra {
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
 			// in it, then do not add it to the result.
-			if (failure == -1 && Colut.noNulls(unify)) {
-				Map<Dob, Dob> converted = Unifier.fromArray(unify, rule.vars);
+			if (failure == -1 && unify.isValid()) {
+				Map<Dob, Dob> converted = unify.toMap();
 				if (rule.evaluateDistinct(converted)) {
 					Dob generated = pool.submerge(Unifier.replace(rule.head.dob, converted));
 					result.add(generated);
@@ -168,15 +169,16 @@ public class Terra {
 		return result;
 	}
 
-	private static List<List<Dob[]>> constructUnificationSpace(Rule rule,
+	private static List<List<Unification>> constructUnificationSpace(Rule rule,
 			final ListMultimap<Atom, Dob> support, List<Atom> positives) {
-		List<List<Dob[]>> space = Lists.newArrayList();
+		List<List<Unification>> space = Lists.newArrayList();
 		for (Atom atom : positives) {
 			List<Dob> grounds = support.get(atom);
-			List<Dob[]> unifies = Lists.newArrayList();
+			List<Unification> unifies = Lists.newArrayList();
 			for (Dob ground : grounds) {
 				Map<Dob, Dob> unify = Unifier.unifyVars(atom.dob, ground, rule.vars);
-				unifies.add(Unifier.toArray(unify, rule.vars)); 
+				Unification wrapped = unify == null ? null : new Unification(unify, rule.vars);
+				unifies.add(wrapped); 
 			}
 			space.add(unifies);
 		}

@@ -176,37 +176,4 @@ public class Unifier {
 		return true;
 	}
 	
-	public static Dob[] toArray(Map<Dob, Dob> unification, List<Dob> vars) {
-		if (unification == null) return null;
-		Dob[] result = new Dob[vars.size()];
-		for (int i = 0; i < vars.size(); i++) {
-			result[i] = unification.get(vars.get(i));
-		}
-		return result;
-	}
-	
-	public static Map<Dob, Dob> fromArray(Dob[] array, List<Dob> vars) {
-		Map<Dob, Dob> result = Maps.newHashMap();
-		for (int i = 0; i < vars.size(); i++) {
-			if (array[i] == null) continue;
-			Dob var = vars.get(i);
-			result.put(var, array[i]);
-		}
-		return result;
-	}
-	
-	/**
-	 * This is intended to be a high performance merge mechanism.
-	 * @param dst
-	 * @param src
-	 * @return
-	 */
-	public static boolean mergeUnifications(Dob[] dst, Dob[] src) {
-		if (src == null) return false;
-		for (int i = 0; i < dst.length; i++) {
-			if (dst[i] == null) dst[i] = src[i];
-			else if (src[i] != null && dst[i] != src[i]) return false;
-		}
-		return true;
-	}
 }
