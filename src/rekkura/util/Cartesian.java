@@ -46,7 +46,7 @@ public class Cartesian {
 	public static class AdvancingIterator<U> implements Iterator<List<U>> {
 		public final int spaceSize;
 		
-		private final int[] positions;
+		private final int[] positions, sliceSizes;
 		private final List<List<U>> candidates;
 		private List<U> next;
 
@@ -58,6 +58,10 @@ public class Cartesian {
 			
 			this.spaceSize = size;
 			this.positions = new int[this.candidates.size()];
+			this.sliceSizes = new int[this.candidates.size()];
+			for (int i = 0; i < this.candidates.size(); i++) {
+				this.sliceSizes[i] = this.candidates.get(i).size();
+			}
 		}
 	
 		@Override public boolean hasNext() {
@@ -76,25 +80,22 @@ public class Cartesian {
 		private void increment() {
 			for (int i = positions.length - 1; i >= 0; i--) {
 				this.positions[i]++;
-				if (this.positions[i] < this.candidates.get(i).size()) break;
+				if (this.positions[i] < this.sliceSizes[i]) break;
 				if (i > 0) this.positions[i] = 0;
 			}
 		}
 		
 		private void prepareNext() {
-			if (next != null) return;
+			if (next != null || this.candidates.size() == 0) return;
+			if (this.positions[0] >= this.sliceSizes[0]) return;
 			
-			List<U> result = Lists.newArrayList();
-			for (int i = 0; i < candidates.size(); i++) {
-				List<U> slice = candidates.get(i);
-				if (positions[i] >= slice.size()) break;
-				result.add(slice.get(positions[i]));
+			List<U> result = Lists.newArrayListWithCapacity(this.positions.length);
+			for (int i = 0; i < this.sliceSizes.length; i++) {
+				result.add(candidates.get(i).get(positions[i]));
 			}
 			
-			if (result.size() == this.candidates.size()) {
-				this.next = result;
-				increment();
-			}
+			this.next = result;
+			increment();
 		}
 		
 		public int dimensions() { return this.candidates.size(); }
@@ -117,7 +118,7 @@ public class Cartesian {
 			if (!nonZeroes) return;
 			
 			for (int i = dim + 1; i < this.positions.length; i++) {
-				this.positions[i] = this.candidates.get(i).size() - 1;
+				this.positions[i] = this.sliceSizes[i] - 1;
 			}
 			this.increment();
 		}

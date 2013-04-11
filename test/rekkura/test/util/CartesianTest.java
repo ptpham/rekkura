@@ -13,9 +13,16 @@ import com.google.common.collect.Lists;
 public class CartesianTest {
 	
 	@Test
-	public void advancingEmpty() {
+	public void advancingInnerEmpty() {
 		List<Integer> base = Lists.newArrayList();
 		int seen = runAdvancingIterator(constructIterator(base, 2));
+		Assert.assertEquals(0, seen);
+	}
+	
+	@Test(timeout=100)
+	public void advancingOuterEmpty() {
+		List<Integer> base = Lists.newArrayList();
+		int seen = runAdvancingIterator(constructIterator(base, 0));
 		Assert.assertEquals(0, seen);
 	}
 	

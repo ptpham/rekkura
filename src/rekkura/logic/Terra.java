@@ -119,116 +119,79 @@ public class Terra {
 		return candidates;
 	}
 	
-	
-	/**
-	 * This method attempts to apply the candidates in order along the 
-	 * body of the rule. If the application is successful, then a unification
-	 * for the head of the rule is returned.
-	 * @param rule
-	 * @param candidates
-	 * @param pool
-	 * @param truths
-	 * @return
-	 */
-	public static Map<Dob, Dob> applyBodies(Rule rule, List<Dob> candidates, 
-			Pool pool, Set<Dob> truths) {
-		
-		Map<Dob, Dob> unify = Maps.newHashMap();
-		List<Dob> vars = rule.vars;
-		List<Atom> body = rule.body;
-		
-		for (int i = 0; i < body.size(); i++) {
-			Atom atom = body.get(i);
-
-			Dob base = atom.dob;
-			Dob target = candidates.get(i);
-			Map<Dob, Dob> current = Unifier.unify(base, target);
-			if (!applyTermUnification(atom, current, unify, pool, truths)) return null;
-		}
-		
-		if (!vars.containsAll(unify.keySet())) return null;
-		return unify;
-	}
-	
-	public static boolean applyTermUnification(Atom atom, Map<Dob, Dob> candidate, 
-			Map<Dob, Dob> existing, Pool pool, Set<Dob> truths) {
-		
-		// If the atom must be true, use the possibility provided
-		// in the full assignment.
-		Dob base = atom.dob;
-		if (atom.truth) {
-			if (!Unifier.mergeUnifications(existing, candidate)) {
-				return false;
-			}
-		// If the atom must be false, check that the state 
-		// substitution applied to the dob does not yield 
-		// something that is true.
-		} else {
-			Dob generated = pool.submerge(Unifier.replace(base, existing));
-			if (truths.contains(generated) != atom.truth) return false;
-		}
-		
-		return true;
-	}
-	
 	public static Set<Dob> applyBodyExpansion(Rule rule, final ListMultimap<Atom, Dob> support, 
 			Pool pool, Set<Dob> truths) {
 		Set<Dob> result = Sets.newHashSet();
-		
+
 		// Sort the dimensions of the space so that the smallest ones come first.
+		List<Atom> positives = getSortedPositives(rule, support);
+		
+		List<Atom> negatives = rule.getNegatives();
+		List<List<Dob[]>> space = constructUnificationSpace(rule, support, positives);
+		
+		Cartesian.AdvancingIterator<Dob[]> iterator = Cartesian.asIterator(space);
+		while (iterator.hasNext()) {
+			Dob[] unify = new Dob[rule.vars.size()];
+			
+			// All positives must contribute in a non-conflicting way
+			// to the unification
+			int failure = -1;
+			List<Dob[]> assignment = iterator.next();
+			for (int i = 0; i < assignment.size() && failure < 0; i++) {
+				Dob[] current = assignment.get(i);
+				if (!Unifier.mergeUnifications(unify, current)) failure = i;
+			}
+			
+			// All negatives grounded with the constructed unification
+			// should not exist.
+			if (failure == -1 && negatives.size() > 0) {
+				Map<Dob, Dob> converted = Unifier.fromArray(unify, rule.vars);
+				boolean failed = false;
+				for (Atom atom : negatives) {
+					Dob generated = pool.submerge(Unifier.replace(atom.dob, converted));
+					if (truths.contains(generated)) failed = true;
+				}
+				if (failed) continue;
+			}
+			
+			// If we manage to unify against all bodies, apply the substitution
+			// to the head and render it. If the generated head still has variables
+			// in it, then do not add it to the result.
+			if (failure == -1 && Colut.noNulls(unify)) {
+				Map<Dob, Dob> converted = Unifier.fromArray(unify, rule.vars);
+				if (rule.evaluateDistinct(converted)) {
+					Dob generated = pool.submerge(Unifier.replace(rule.head.dob, converted));
+					result.add(generated);
+				}
+			} else if (failure >= 0) iterator.advance(failure);
+		}
+		return result;
+	}
+
+	private static List<List<Dob[]>> constructUnificationSpace(Rule rule,
+			final ListMultimap<Atom, Dob> support, List<Atom> positives) {
+		List<List<Dob[]>> space = Lists.newArrayList();
+		for (Atom atom : positives) {
+			List<Dob> grounds = support.get(atom);
+			List<Dob[]> unifies = Lists.newArrayList();
+			for (Dob ground : grounds) {
+				Map<Dob, Dob> unify = Unifier.unifyVars(atom.dob, ground, rule.vars);
+				unifies.add(Unifier.toArray(unify, rule.vars)); 
+			}
+			space.add(unifies);
+		}
+		return space;
+	}
+
+	private static List<Atom> getSortedPositives(Rule rule,
+			final ListMultimap<Atom, Dob> support) {
 		List<Atom> positives = rule.getPositives();
 		Collections.sort(positives, new Comparator<Atom>() {
 			@Override public int compare(Atom first, Atom second) {
 				return support.get(first).size() - support.get(second).size();
 			}
 		});
-		
-		// Construct a reordered rule for our use.
-		List<Atom> negatives = rule.getNegatives();
-		Rule reordered = new Rule(rule);
-		reordered.body.clear();
-		reordered.body.addAll(positives);
-		reordered.body.addAll(negatives);
-		
-		// Construct the space
-		List<List<Map<Dob, Dob>>> space = Lists.newArrayList();
-		for (Atom atom : positives) {
-			List<Dob> grounds = support.get(atom);
-			List<Map<Dob, Dob>> unifies = Lists.newArrayList();
-			for (Dob ground : grounds) { unifies.add(Unifier.unify(atom.dob, ground)); }
-			space.add(unifies);
-		}
-		
-		for (int i = 0; i < negatives.size(); i++) { 
-			space.add(Colut.<Map<Dob, Dob>>newArrayListOfNulls(1)); 
-		}
-		
-		Map<Dob, Dob> unify = Maps.newHashMap();
-		Cartesian.AdvancingIterator<Map<Dob, Dob>> iterator = Cartesian.asIterator(space);
-		while (iterator.hasNext()) {
-			unify.clear();
-			int failure = -1;
-			List<Map<Dob, Dob>> assignment = iterator.next();
-			for (int i = 0; i < assignment.size(); i++) {
-				if (!Terra.applyTermUnification(rule.body.get(i), assignment.get(i), unify, pool, truths)) {
-					failure = i;
-					break;
-				}
-			}
-			
-			// If we manage to unify against all bodies, apply the substitution
-			// to the head and render it. If the generated head still has variables
-			// in it, then do not add it to the result.
-			if (failure == -1 && rule.vars.containsAll(unify.keySet()) && 
-					rule.vars.size() == unify.size() 
-					&& rule.evaluateDistinct(unify)) {
-				Dob generated = pool.submerge(Unifier.replace(rule.head.dob, unify));
-				result.add(generated);
-			} else if (failure >= 0) {
-				iterator.advance(failure);
-			}
-		}
-		return result;
+		return positives;
 	}
 	
 	/**

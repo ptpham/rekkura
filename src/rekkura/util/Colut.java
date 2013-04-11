@@ -157,4 +157,9 @@ public class Colut {
 		for (int i = 0; i < num; i++) { result.add(null); }
 		return result;
 	}
+	
+	public static <U> boolean noNulls(U[] arr) {
+		for (U u : arr) if (u == null) return false;
+		return true;
+	}
 }
