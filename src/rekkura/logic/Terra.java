@@ -130,9 +130,8 @@ public class Terra {
 		List<Atom> negatives = rule.getNegatives();
 		List<List<Unification>> space = constructUnificationSpace(rule, support, positives);
 		
-		ImmutableList<Dob> vars = ImmutableList.copyOf(rule.vars);
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
-		Unification unify = Unification.from(vars);
+		Unification unify = Unification.from(rule.vars);
 		while (iterator.hasNext()) {
 			unify.clear();
 
@@ -173,14 +172,13 @@ public class Terra {
 	
 	private static List<List<Unification>> constructUnificationSpace(Rule rule,
 			final ListMultimap<Atom, Dob> support, List<Atom> positives) {
-		ImmutableList<Dob> vars = ImmutableList.copyOf(rule.vars);
 		List<List<Unification>> space = Lists.newArrayList();
 		for (Atom atom : positives) {
 			List<Dob> grounds = support.get(atom);
 			List<Unification> unifies = Lists.newArrayList();
 			for (Dob ground : grounds) {
 				Map<Dob, Dob> unify = Unifier.unifyVars(atom.dob, ground, rule.vars);
-				Unification wrapped = unify == null ? null : Unification.from(unify, vars);
+				Unification wrapped = unify == null ? null : Unification.from(unify, rule.vars);
 				unifies.add(wrapped); 
 			}
 			space.add(unifies);

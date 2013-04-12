@@ -198,11 +198,12 @@ public class StandardFormat extends LogicFormat {
 		}
 		
 		String constraints = parts[2].replace("}", "");
-		Rule rule = new Rule();
-		rule.head = atomFromString(parts[1]);
-		rule.body = atomListFromString(constraints);
-		rule.vars = dobListFromString(parts[0].replace("{", ""));
-		rule.distinct = distinctListFromString(constraints);
+		
+		Atom head = atomFromString(parts[1]);
+		List<Atom> body = atomListFromString(constraints);
+		List<Dob> vars = dobListFromString(parts[0].replace("{", ""));
+		List<Rule.Distinct> distinct = distinctListFromString(constraints);
+		Rule rule = new Rule(head, body, vars, distinct);
 		
 		return rule;
 	}

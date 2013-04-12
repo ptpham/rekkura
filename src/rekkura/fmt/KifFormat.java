@@ -133,33 +133,37 @@ public class KifFormat extends LogicFormat {
 		Preconditions.checkArgument(raw.at(0).isTerminal());
 		Preconditions.checkArgument(raw.at(0).name.equals("<="));
 		
-		Rule result = new Rule();
-		result.head = new Atom(raw.at(1), true);
+		Atom head = new Atom(raw.at(1), true);
 		
-		List<Dob> body = Colut.slice(raw.childCopy(), 2, raw.size());
-		for (Dob elem : body) {
+		List<Dob> bodyDobs = Colut.slice(raw.childCopy(), 2, raw.size());
+		List<Atom> body = Lists.newArrayList();
+		List<Rule.Distinct> distincts = Lists.newArrayList();
+		for (Dob elem : bodyDobs) {
 			if (elem.size() == 3 && elem.at(0).name.equals(DISTINCT_NAME)) {
-				result.distinct.add(new Rule.Distinct(elem.at(1), elem.at(2)));
+				distincts.add(new Rule.Distinct(elem.at(1), elem.at(2)));
 				continue;
 			}
 			
 			Atom converted = atomFromString(toString(elem));
-			result.body.add(converted); 
+			body.add(converted); 
 		}
 		
-		Iterable<Dob> terms = Rule.dobIterableFromRule(result);
+		List<Dob> terms = Lists.newArrayList(bodyDobs);
+		terms.add(head.dob);
+		
 		Set<String> seen = Sets.newHashSet();
+		List<Dob> vars = Lists.newArrayList();
 		for (Dob value : Dob.fullIterable(terms)) {
 			String name = value.name;
 			if (!value.isTerminal()) continue;
 			if (name.length() < 2) continue;
 			if (name.charAt(0) != '?') continue;
 			if (seen.contains(name)) continue;
-			result.vars.add(value);
+			vars.add(value);
 			seen.add(name);
 		}
 		
-		return result;
+		return new Rule(head, body, vars, distincts);
 	}
 
 	public List<Rule> deor(Rule rule) {
@@ -180,8 +184,7 @@ public class KifFormat extends LogicFormat {
 
 		List<Rule> result = Lists.newArrayList();
 		for (List<Atom> body : Cartesian.asIterable(termLists)) {
-			Rule flattened = new Rule(rule);
-			flattened.body = body;
+			Rule flattened = new Rule(rule.head, body, rule.vars, rule.distinct);
 			result.add(flattened);
 		}
 		

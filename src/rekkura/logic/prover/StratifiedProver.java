@@ -13,6 +13,7 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 
@@ -70,11 +71,8 @@ public abstract class StratifiedProver {
 				positives.add(new Atom(vacuous, true));
 			}
 			
-			rule.body.clear();
-			rule.body.addAll(positives);
-			rule.body.addAll(negatives);
-			
-			result.add(rule);
+			result.add(new Rule(rule.head, 
+				Iterables.concat(positives, negatives), rule.vars, rule.distinct));
 		}
 		
 		return result;

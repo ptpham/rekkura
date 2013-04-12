@@ -9,11 +9,12 @@ import rekkura.fmt.StandardFormat;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterator;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
 /**
- * Unlike the other logical objects, rules are mutable.
+ * Like the other logical objects, rules are immutable.
  * 
  * There is also a lot of code here for the sake of avoiding
  * double for loops. O__O
@@ -21,27 +22,42 @@ import com.google.common.collect.Lists;
  *
  */
 public class Rule {
-	public Atom head;
-	public List<Atom> body = Lists.newArrayList();
-	public List<Dob> vars = Lists.newArrayList();
-	public List<Distinct> distinct = Lists.newArrayList();
+	public final Atom head;
+	public final ImmutableList<Atom> body;
+	public final ImmutableList<Distinct> distinct;
+	public final ImmutableList<Dob> vars;
 	
-	public Rule() { }
+	public static class Builder {
+		public Atom head;
+		public final List<Atom> body = Lists.newArrayList();
+		public final List<Distinct> distinct = Lists.newArrayList();
+		public final List<Dob> vars = Lists.newArrayList();
+	}
 	
-	public Rule(Atom head, Collection<Atom> body, Collection<Dob> variables) {
+	public Rule(Atom head, Iterable<Atom> body, Iterable<Dob> variables) {
 		this(head, body, variables, Lists.<Distinct>newArrayList());
 	}
 	
-	public Rule(Atom head, Collection<Atom> body, 
-			Collection<Dob> variables, Collection<Distinct> distinct) {
+	public Rule(Atom head, Iterable<Atom> body, 
+			Iterable<Dob> variables, Iterable<Distinct> distinct) {
 		this.head = head;
-		this.body = Lists.newArrayList(body);
-		this.vars = Lists.newArrayList(variables);
-		this.distinct = Lists.newArrayList(distinct);
+		this.body = ImmutableList.copyOf(body);
+		this.vars = ImmutableList.copyOf(variables);
+		this.distinct = ImmutableList.copyOf(distinct);
 	}
 	
-	public Rule(Rule other) {
-		this(other.head, other.body, other.vars, other.distinct);
+	public Rule(Rule.Builder builder) {
+		this(builder.head, builder.body, builder.vars, builder.distinct);
+	}
+	
+	public Rule.Builder toBuilder() {
+		Rule.Builder builder = new Rule.Builder();
+		builder.head = this.head;
+		builder.body.addAll(this.body);
+		builder.vars.addAll(this.vars);
+		builder.distinct.addAll(this.distinct);
+		
+		return builder;
 	}
 	
 	public boolean isGrounded(Dob dob) {
@@ -100,10 +116,8 @@ public class Rule {
 	}
 	
 	public static Rule asVacuousRule(Dob dob, Collection<Dob> vars) {
-		Rule result = new Rule();
-		result.head = new Atom(dob, true);
-		result.vars.addAll(vars);
-		return result;
+		return new Rule(new Atom(dob, true), 
+			Lists.<Atom>newArrayList(), vars);
 	}
 	
 	public static Iterator<Atom> atomIteratorFromRule(final Rule rule) {
