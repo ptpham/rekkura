@@ -84,6 +84,7 @@ public class Unifier {
 		if (isVariableUnify(result, vars)) return null;
 		return result;
 	}
+	
 
 	public static boolean isVariableUnify(Map<Dob, Dob> unify, Collection<Dob> vars) {
 		return unify == null || !vars.containsAll(unify.keySet());

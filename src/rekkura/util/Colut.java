@@ -162,4 +162,8 @@ public class Colut {
 		for (U u : arr) if (u == null) return false;
 		return true;
 	}
+	
+	public static <U> void nullOut(U[] arr) {
+		for (int i = 0; i < arr.length; i++) arr[i] = null;
+	}
 }

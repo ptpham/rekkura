@@ -59,8 +59,10 @@ public class Unification {
 	}
 	
 	public boolean isValid() { return Colut.noNulls(this.bay); }
-	
+	public void clear() { Colut.nullOut(this.bay); }
+
 	@Override public String toString() { return Arrays.toString(bay); }
 	
 	public static final ImmutableMap<Dob, Dob> EMPTY_MAP = ImmutableMap.of();
+
 }

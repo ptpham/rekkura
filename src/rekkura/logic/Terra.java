@@ -132,8 +132,9 @@ public class Terra {
 		
 		ImmutableList<Dob> vars = ImmutableList.copyOf(rule.vars);
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
+		Unification unify = Unification.from(vars);
 		while (iterator.hasNext()) {
-			Unification unify = Unification.from(vars);
+			unify.clear();
 
 			// All positives must contribute in a non-conflicting way
 			// to the unification
@@ -169,7 +170,7 @@ public class Terra {
 		}
 		return result;
 	}
-
+	
 	private static List<List<Unification>> constructUnificationSpace(Rule rule,
 			final ListMultimap<Atom, Dob> support, List<Atom> positives) {
 		ImmutableList<Dob> vars = ImmutableList.copyOf(rule.vars);
