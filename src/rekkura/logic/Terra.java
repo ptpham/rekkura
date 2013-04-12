@@ -130,14 +130,16 @@ public class Terra {
 		List<Atom> negatives = rule.getNegatives();
 		List<List<Unification>> space = constructUnificationSpace(rule, support, positives);
 		
+		ImmutableList<Dob> vars = ImmutableList.copyOf(rule.vars);
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		while (iterator.hasNext()) {
-			Unification unify = new Unification(rule.vars);
-			
+			Unification unify = Unification.from(vars);
+
 			// All positives must contribute in a non-conflicting way
 			// to the unification
 			int failure = -1;
 			List<Unification> assignment = iterator.next();
+			
 			for (int i = 0; i < assignment.size() && failure < 0; i++) {
 				Unification current = assignment.get(i);
 				if (!unify.dirtyMergeWith(current)) failure = i;
@@ -145,8 +147,8 @@ public class Terra {
 			
 			// All negatives grounded with the constructed unification
 			// should not exist.
-			if (failure == -1 && negatives.size() > 0) {
-				Map<Dob, Dob> converted = unify.toMap();
+			Map<Dob, Dob> converted = failure == -1 ? unify.toMap() : null;
+			if (converted != null && negatives.size() > 0) {
 				boolean failed = false;
 				for (Atom atom : negatives) {
 					Dob generated = pool.submerge(Unifier.replace(atom.dob, converted));
@@ -158,8 +160,7 @@ public class Terra {
 			// If we manage to unify against all bodies, apply the substitution
 			// to the head and render it. If the generated head still has variables
 			// in it, then do not add it to the result.
-			if (failure == -1 && unify.isValid()) {
-				Map<Dob, Dob> converted = unify.toMap();
+			if (converted != null && unify.isValid()) {
 				if (rule.evaluateDistinct(converted)) {
 					Dob generated = pool.submerge(Unifier.replace(rule.head.dob, converted));
 					result.add(generated);
@@ -171,13 +172,14 @@ public class Terra {
 
 	private static List<List<Unification>> constructUnificationSpace(Rule rule,
 			final ListMultimap<Atom, Dob> support, List<Atom> positives) {
+		ImmutableList<Dob> vars = ImmutableList.copyOf(rule.vars);
 		List<List<Unification>> space = Lists.newArrayList();
 		for (Atom atom : positives) {
 			List<Dob> grounds = support.get(atom);
 			List<Unification> unifies = Lists.newArrayList();
 			for (Dob ground : grounds) {
 				Map<Dob, Dob> unify = Unifier.unifyVars(atom.dob, ground, rule.vars);
-				Unification wrapped = unify == null ? null : new Unification(unify, rule.vars);
+				Unification wrapped = unify == null ? null : Unification.from(unify, vars);
 				unifies.add(wrapped); 
 			}
 			space.add(unifies);

@@ -39,6 +39,10 @@ public class Cartesian {
 	
 	/**
 	 * Allows skipping over an element in a given dimension.
+	 * This class in intended for efficiency so it doesn't 
+	 * construct a new list for every next. Please wrap 
+	 * if you need to make a copy or consider Guava's Cartesian
+	 * utilities.
 	 * @author ptpham
 	 *
 	 * @param <U>
@@ -48,7 +52,7 @@ public class Cartesian {
 		
 		private final int[] positions, sliceSizes;
 		private final List<List<U>> candidates;
-		private List<U> next;
+		private List<U> prepared;
 
 		private AdvancingIterator(List<List<U>> candidates) {
 			this.candidates = candidates;
@@ -62,18 +66,24 @@ public class Cartesian {
 			for (int i = 0; i < this.candidates.size(); i++) {
 				this.sliceSizes[i] = this.candidates.get(i).size();
 			}
+			this.prepared = Lists.newArrayList();
 		}
 	
 		@Override public boolean hasNext() {
+			if (this.candidates.size() == 0) return false;
 			prepareNext();
-			return this.next != null; 
+			return isPrepared();
+		}
+
+		private boolean isPrepared() {
+			return this.prepared.size() > 0;
 		}
 
 		@Override
 		public List<U> next() {
 			if (!hasNext()) throw new NoSuchElementException();
-			List<U> result = next;
-			next = null;
+			List<U> result = Lists.newArrayList(prepared);
+			prepared.clear();
 			return result;
 		}
 		
@@ -86,15 +96,13 @@ public class Cartesian {
 		}
 		
 		private void prepareNext() {
-			if (next != null || this.candidates.size() == 0) return;
+			if (isPrepared()) return;
 			if (this.positions[0] >= this.sliceSizes[0]) return;
 			
-			List<U> result = Lists.newArrayListWithCapacity(this.positions.length);
 			for (int i = 0; i < this.sliceSizes.length; i++) {
-				result.add(candidates.get(i).get(positions[i]));
+				prepared.add(candidates.get(i).get(positions[i]));
 			}
 			
-			this.next = result;
 			increment();
 		}
 		

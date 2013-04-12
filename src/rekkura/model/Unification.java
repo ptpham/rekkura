@@ -1,6 +1,6 @@
 package rekkura.model;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 
 import rekkura.util.Colut;
@@ -14,21 +14,28 @@ public class Unification {
 	
 	private Dob[] bay;
 	
-	public Unification(Map<Dob, Dob> source, List<Dob> ordering) {
-		this.vars = ImmutableList.copyOf(ordering);
-		
+	private Unification(Map<Dob, Dob> source, ImmutableList<Dob> ordering) {
+		this.vars = ordering;
 		bay = new Dob[ordering.size()];
 		for (int i = 0; i < ordering.size(); i++) {
 			bay[i] = source.get(ordering.get(i));
 		}
 	}
 	
-	public Unification(List<Dob> vars) {
+	private Unification(ImmutableList<Dob> vars) {
 		this(EMPTY_MAP, vars);
+	}
+	
+	public static Unification from(Map<Dob, Dob> source, ImmutableList<Dob> ordering) {
+		return new Unification(source, ordering);
+	}
+	
+	public static Unification from(ImmutableList<Dob> vars) {
+		return new Unification(vars);
 	}
 
 	/**
-	 * This merge may alter the state of the current unification on failure.
+	 * This merge may alter the state of this unification even on failure.
 	 * @param other
 	 * @return
 	 */
@@ -52,6 +59,8 @@ public class Unification {
 	}
 	
 	public boolean isValid() { return Colut.noNulls(this.bay); }
+	
+	@Override public String toString() { return Arrays.toString(bay); }
 	
 	public static final ImmutableMap<Dob, Dob> EMPTY_MAP = ImmutableMap.of();
 }
