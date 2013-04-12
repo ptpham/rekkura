@@ -67,7 +67,7 @@ public class Cartesian {
 			for (int i = 0; i < this.candidates.size(); i++) {
 				this.sliceSizes[i] = this.candidates.get(i).size();
 			}
-			this.prepared = Lists.newArrayList();
+			this.prepared = Colut.newArrayListOfNulls(this.candidates.size());
 		}
 	
 		@Override public boolean hasNext() {
@@ -102,9 +102,8 @@ public class Cartesian {
 			if (this.positions[0] >= this.sliceSizes[0]) return;
 			
 			this.hasPrepared = true;
-			prepared.clear();
 			for (int i = 0; i < this.sliceSizes.length; i++) {
-				prepared.add(candidates.get(i).get(positions[i]));
+				prepared.set(i, candidates.get(i).get(positions[i]));
 			}
 			
 			increment();
