@@ -53,6 +53,7 @@ public class Cartesian {
 		private final int[] positions, sliceSizes;
 		private final List<List<U>> candidates;
 		private List<U> prepared;
+		private boolean hasPrepared;
 
 		private AdvancingIterator(List<List<U>> candidates) {
 			this.candidates = candidates;
@@ -76,14 +77,14 @@ public class Cartesian {
 		}
 
 		private boolean isPrepared() {
-			return this.prepared.size() > 0;
+			return this.hasPrepared;
 		}
 
 		@Override
 		public List<U> next() {
 			if (!hasNext()) throw new NoSuchElementException();
 			List<U> result = Lists.newArrayList(prepared);
-			prepared.clear();
+			this.hasPrepared = false;
 			return result;
 		}
 		
@@ -97,8 +98,11 @@ public class Cartesian {
 		
 		private void prepareNext() {
 			if (isPrepared()) return;
+			if (this.positions.length == 0) return;
 			if (this.positions[0] >= this.sliceSizes[0]) return;
 			
+			this.hasPrepared = true;
+			prepared.clear();
 			for (int i = 0; i < this.sliceSizes.length; i++) {
 				prepared.add(candidates.get(i).get(positions[i]));
 			}
@@ -110,7 +114,7 @@ public class Cartesian {
 		
 		/**
 		 * This forces a move forward in the given dimension. If
-		 * the subspace based at the given dimension has not been
+		 * the subspace based at the given dimension hasPrepared not been
 		 * explored, no change will occur. Calling {@code hasNext()}
 		 * counts as looking into the subspace.
 		 */
