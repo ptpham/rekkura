@@ -105,10 +105,12 @@ public class Game {
 	
 	// TODO: make these nicer
 	public static Dob convertActionToMove(Dob action) {
+		if (action == null) return null;
 		return action.at(2);
 	}
 
 	public static Dob getRoleForAction(Dob action) {
+		if (action == null) return null;
 		return action.at(1);
 	}
 	

@@ -68,7 +68,7 @@ public class GgpProtocol {
 		
 		public boolean isExpired() {
 			long interval = System.currentTimeMillis() - this.touch;
-			long target = turn == 0 ? ggpStartClock : ggpPlayClock;
+			long target = Math.max(ggpStartClock, ggpPlayClock);
 			return interval > 2*target;
 		}
 	}
@@ -135,6 +135,7 @@ public class GgpProtocol {
 			Synchron.lightSleep(state.ggpPlayClock - PLAY_EPSILON);
 			
 			Dob action = state.player.getDecision(state.turn);
+			if (action == null) return new Dob("[No Move]");
 			return Game.convertActionToMove(action);
 		}
 
@@ -147,6 +148,8 @@ public class GgpProtocol {
 
 			Map<Dob, Dob> actions = Game.convertMovesToActionMap(state.roles, moves);
 			state.player.advance(state.turn, actions);
+			
+			state.thread.interrupt();
 			this.players.remove(match);
 			
 			return PlayerState.DONE;

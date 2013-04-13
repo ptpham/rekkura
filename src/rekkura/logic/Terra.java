@@ -132,6 +132,7 @@ public class Terra {
 		
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		Unification unify = Unification.from(rule.vars);
+
 		while (iterator.hasNext()) {
 			unify.clear();
 

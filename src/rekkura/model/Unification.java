@@ -64,5 +64,5 @@ public class Unification {
 	@Override public String toString() { return Arrays.toString(bay); }
 	
 	public static final ImmutableMap<Dob, Dob> EMPTY_MAP = ImmutableMap.of();
-
+	public static final Unification EMPTY_UNIFICATION = new Unification(ImmutableList.<Dob>of());
 }

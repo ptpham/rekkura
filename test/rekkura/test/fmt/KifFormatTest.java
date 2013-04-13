@@ -44,5 +44,17 @@ public class KifFormatTest {
 		Assert.assertEquals(raw, fmt.toString(rule));
 	}
 	
+	@Test
+	public void atomCompression() {
+		String raw = "((proposition))";
+		Atom proposition = fmt.atomFromString(raw);
+		Assert.assertTrue(proposition.dob.isTerminal());
+	}
 	
+	@Test
+	public void dobCompression() {
+		String raw = "(proposition)";
+		Dob proposition = fmt.dobFromString(raw);
+		Assert.assertEquals(raw, proposition.toString());
+	}
 }

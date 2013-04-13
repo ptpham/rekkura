@@ -75,6 +75,7 @@ public class KifFormat extends LogicFormat {
 			}
 		}
 		
+		if (children.size() == 1) return children.get(0);
 		return new Dob(children);
 	}
 
