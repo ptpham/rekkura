@@ -1,11 +1,6 @@
 package rekkura.ggp.net;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 
 import rekkura.ggp.milleu.Player;
 
@@ -22,7 +17,7 @@ public class ServerHarness implements HttpHandler {
 
 	public final GgpProtocol.PlayerDemuxer demuxer;
 	
-	public ServerHarness(Player player) { 
+	public <U extends Player> ServerHarness(Class<U> player) { 
 		this(GgpProtocol.createDefaultPlayerDemuxer(player)); 
 	}
 	public ServerHarness(GgpProtocol.PlayerDemuxer demuxer) {

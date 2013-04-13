@@ -39,7 +39,7 @@ public class Unification {
 	 * @param other
 	 * @return
 	 */
-	public boolean dirtyMergeWith(Unification other) {
+	public boolean sloppyDirtyMergeWith(Unification other) {
 		if (other == null || other.bay.length != this.bay.length) return false;
 		for (int i = 0; i < this.bay.length; i++) {
 			if (this.bay[i] == null) this.bay[i] = other.bay[i];

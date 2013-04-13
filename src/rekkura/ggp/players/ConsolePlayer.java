@@ -32,6 +32,7 @@ public class ConsolePlayer extends Player.ProverBased {
 		for (int i = 0; i < available.size(); i++) {
 			System.out.println(i + ") " + available.get(i));
 		}
+		System.out.print("Please enter a move: ");
 		
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));

@@ -142,7 +142,7 @@ public class Terra {
 			
 			for (int i = 0; i < assignment.size() && failure < 0; i++) {
 				Unification current = assignment.get(i);
-				if (!unify.dirtyMergeWith(current)) failure = i;
+				if (!unify.sloppyDirtyMergeWith(current)) failure = i;
 			}
 			
 			// All negatives grounded with the constructed unification

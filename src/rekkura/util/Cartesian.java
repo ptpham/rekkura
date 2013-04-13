@@ -39,10 +39,6 @@ public class Cartesian {
 	
 	/**
 	 * Allows skipping over an element in a given dimension.
-	 * This class in intended for efficiency so it doesn't 
-	 * construct a new list for every next. Please wrap 
-	 * if you need to make a copy or consider Guava's Cartesian
-	 * utilities.
 	 * @author ptpham
 	 *
 	 * @param <U>

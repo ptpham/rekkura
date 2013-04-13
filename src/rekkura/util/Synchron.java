@@ -1,20 +1,18 @@
 package rekkura.util;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
+import com.google.common.collect.*;
 
 public class Synchron {
 	public static boolean lightSleep(long time) {
 		try { Thread.sleep(time); } 
-		catch (InterruptedException e) { return false; }
+		catch (Throwable e) { return false; }
 		return true;
 	}
 	
@@ -24,20 +22,20 @@ public class Synchron {
 	
 	public static boolean lightWait(Object o) {
 		try { o.wait(); } 
-		catch (InterruptedException e) { return false; }
+		catch (Throwable e) { return false; }
 		return true;
 	}
 	
 	public static boolean lightAcquire(Semaphore sema) {
 		try { sema.acquire(); } 
-		catch (InterruptedException e) { return false; }
+		catch (Throwable e) { return false; }
 		return true;
 	}
 
 	public static boolean lightAwait(Lock lock, Condition cond) {
 		lock.lock();
 		try { cond.await(); } 
-		catch (InterruptedException e) { return false; }
+		catch (Throwable e) { return false; }
 		finally { lock.unlock(); }
 		return true;
 	}
@@ -50,6 +48,10 @@ public class Synchron {
 	
 	public static <U, V> Multimap<U, V> newHashMultimap() {
 		return Multimaps.synchronizedSetMultimap(HashMultimap.<U,V>create());
+	}
+	
+	public static <U, V> Map<U, V> newHashmap() {
+		return Collections.synchronizedMap(Maps.<U, V>newHashMap());
 	}
 	
 	/**

@@ -14,6 +14,11 @@ import rekkura.util.Synchron;
 
 import com.google.common.collect.Multimap;
 
+/**
+ * For simplicity, a Player instance can only play one game. 
+ * @author ptpham
+ *
+ */
 public abstract class Player implements Runnable {
 
 	protected Dob role;
@@ -144,5 +149,11 @@ public abstract class Player implements Runnable {
 		@Override protected void reflect() { }
 		
 		private void makeAnyMove() { setDecision(anyDecision()); }
+	}
+	
+	public static Thread start(Player player) {
+		Thread thread = new Thread(player);
+		thread.start();
+		return thread;
 	}
 }
