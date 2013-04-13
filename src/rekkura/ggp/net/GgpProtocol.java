@@ -1,6 +1,7 @@
 package rekkura.ggp.net;
 
 import java.util.EnumMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +59,17 @@ public class GgpProtocol {
 			this.roles = ImmutableList.copyOf(roles);
 			this.player = player;
 			this.thread = thread;
+			touch();
+		}
+
+		public void touch() {
 			this.touch = System.currentTimeMillis();
+		}
+		
+		public boolean isExpired() {
+			long interval = System.currentTimeMillis() - this.touch;
+			long target = turn == 0 ? ggpStartClock : ggpPlayClock;
+			return interval > 2*target;
 		}
 	}
 	
@@ -77,41 +88,43 @@ public class GgpProtocol {
 		public final Map<String, GgpState> players = Synchron.newHashmap();
 		
 		private DefaultPlayerHandler(Reffle.Factory<P> factory) { this.factory = factory; }
-		private static final int EPSILON = 200;
+		private static final int PLAY_EPSILON = 200;
+		private static final int START_EPSILON = 500;
 		
 		@Override
 		public PlayerState handleStart(String match, Dob role, Config config) {
-			System.out.println("Handling start");
+			cleanPlayers();
 			GgpState state = players.get(match);
 			int ggpPlayClock = getGgpPlayClock(config);
 			int ggpStartClock = getGgpStartClock(config);
 			List<Dob> roles = Game.getRoles(config.rules);
 			
-			if (state == null) {
-				try {
-					Player player = factory.create();
-					Thread thread = Player.start(player);
-					state =  new GgpState(ggpPlayClock, ggpStartClock, roles, player, thread);
-					this.players.put(match, state);
-				} catch (Throwable e) {
-					e.printStackTrace();
-					System.err.println("Note: Players must have an empty constructor!");
-					return PlayerState.BUSY;
-				}
+			if (state != null) return PlayerState.BUSY;
+			
+			try {
+				Player player = factory.create();
+				Thread thread = Player.start(player);
+				state =  new GgpState(ggpPlayClock, ggpStartClock, roles, player, thread);
+				this.players.put(match, state);
+			} catch (Throwable e) {
+				e.printStackTrace();
+				System.err.println("Note: Players must have an empty constructor!");
+				return PlayerState.BUSY;
 			}
 			
 			state.player.setMatch(role, config);
 			
-			Synchron.lightSleep(ggpStartClock - EPSILON);
+			Synchron.lightSleep(ggpStartClock - START_EPSILON);
 			return PlayerState.READY;
 		}
 
 		@Override
 		public Dob handlePlay(String match, List<Dob> moves) {
-			System.out.println("Handling play");
+			cleanPlayers();
 			GgpState state = this.players.get(match);
 			if (state == null) return new Dob("Ain't nobody playing that!");
-			
+			state.touch();
+
 			// This condition is necessary because the first
 			// play move in the GGP protocol doesn't have any moves.
 			// Thus, we don't want to advance the state.
@@ -119,7 +132,7 @@ public class GgpProtocol {
 				Map<Dob, Dob> actions = Game.convertMovesToActionMap(state.roles, moves);
 				state.player.advance(state.turn++, actions);
 			}
-			Synchron.lightSleep(state.ggpPlayClock - EPSILON);
+			Synchron.lightSleep(state.ggpPlayClock - PLAY_EPSILON);
 			
 			Dob action = state.player.getDecision(state.turn);
 			return Game.convertActionToMove(action);
@@ -127,15 +140,27 @@ public class GgpProtocol {
 
 		@Override
 		public PlayerState handleStop(String match, List<Dob> moves) {
-			System.out.println("Handling stop");
+			cleanPlayers();
 			GgpState state = this.players.get(match);
 			if (state == null) return PlayerState.BUSY;
+			state.touch();
 
 			Map<Dob, Dob> actions = Game.convertMovesToActionMap(state.roles, moves);
 			state.player.advance(state.turn, actions);
 			this.players.remove(match);
 			
 			return PlayerState.DONE;
+		}
+		
+		/**
+		 * Remove players that have not been touched in a while.
+		 */
+		protected synchronized void cleanPlayers() {
+			Iterator<Map.Entry<String, GgpState>> iterator = this.players.entrySet().iterator();
+			while (iterator.hasNext()) {
+				GgpState state = iterator.next().getValue();
+				if (state.isExpired()) iterator.remove();
+			}
 		}
 	}
 		
@@ -180,7 +205,6 @@ public class GgpProtocol {
 
 		@Override
 		public String handleMessage(String message) {
-			System.out.println(message);
 			Dob dob = fmt.dobFromString(message);
 			String name = stringAt(dob, 0);
 			

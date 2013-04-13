@@ -48,6 +48,10 @@ public abstract class Player implements Runnable {
 		this.notifyAll();
 	}
 	
+	public final synchronized void advance(Map<Dob, Dob> actions) {
+		advance(this.history.size(), actions);
+	}
+	
 	protected final synchronized void waitForInput() {
 		Synchron.lightWait(this);
 	}
@@ -57,6 +61,7 @@ public abstract class Player implements Runnable {
 	
 	public final synchronized boolean hasDecision(int turn) { return Colut.get(moves, turn) != null; }
 	public final synchronized Dob getDecision(int turn) { return Colut.get(moves, turn); }
+	public final synchronized Dob getLatestDecision() { return Colut.end(moves); }
 	protected final synchronized void setDecision(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
 	protected final synchronized void setDecision(Game.Decision decision) { this.setDecision(decision.turn, decision.action); }
 	
