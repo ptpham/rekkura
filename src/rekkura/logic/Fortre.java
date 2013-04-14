@@ -10,8 +10,7 @@ import com.google.common.collect.*;
 
 /**
  * (Form tree) This class is responsible for making it easy to 
- * go from a dob to the set of dobs that unify with it.
- * Don't add the same dob twice, guys.
+ * go from a {@link Dob} to the set of dobs that unify with it.
  * @author ptpham
  *
  */

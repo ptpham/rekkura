@@ -9,6 +9,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
+/**
+ * In general, unifications are best represented as {@code Map<Dob, Dob>}
+ * However, this representation will provide must faster merges. 
+ * @author ptpham
+ *
+ */
 public class Unification {
 	public final ImmutableList<Dob> vars;
 	

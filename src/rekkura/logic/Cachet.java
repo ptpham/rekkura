@@ -16,7 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 /**
- * It's french.
+ * It's french. <br>
  * This class caches a bunch of things that are fun to use in logical manipulation.
  * It started out as a "performance" class, but it's more of a "logical scope" now.
  * @author ptpham

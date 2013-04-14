@@ -6,6 +6,12 @@ import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 
+/**
+ * A classic data structure. ^__^
+ * @author ptpham
+ *
+ * @param <U>
+ */
 public class UnionFind<U> {
 
 	public class Node {

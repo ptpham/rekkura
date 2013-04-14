@@ -15,7 +15,13 @@ import rekkura.util.Synchron;
 import com.google.common.collect.Multimap;
 
 /**
- * For simplicity, a Player instance can only play one game. 
+ * A {@link Player} instance is responsible for playing
+ * exactly one game. A player can make moves using the 
+ * {@code setDecision} method. 
+ * <br><br>
+ * If you are using a {@link StateMachine} in any way,
+ * consider subclassing from {@link Player.StateBased}
+ * or {@link Player.ProverBased}.
  * @author ptpham
  *
  */
@@ -67,7 +73,17 @@ public abstract class Player implements Runnable {
 	
 	/**
 	 * This represents a player that needs to update the state of the game using a state 
-	 * machine. Most players will want to derive from this.
+	 * machine. If you are using a prover state machine, you probably want to 
+	 * subclass from {@link Player.ProverBased}. One finicky thing about the layering right 
+	 * now is that the role {@code Dob} needs to be submerged for provers {@code Player.ProverBased}
+	 * will do this for you.<br>
+	 * <br>
+	 * {@code prepare} gets called at the beginning of the game and the first move should be set here. <br>
+	 * {@code move} gets called on every move afterward the first. <br>
+	 * {@code reflect} gets called once the game is over.<br>
+	 * <br>
+	 * Use the {@code validState} method to check if you need to return from {@code prepare} or
+	 * from {@code move} for this class to handle updating the state properly.
 	 * @author ptpham
 	 *
 	 * @param <M>

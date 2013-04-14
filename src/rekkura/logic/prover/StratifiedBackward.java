@@ -12,12 +12,19 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+/**
+ * This prover tries to do the minimum amount of work to 
+ * prove everything that could possibly be proven from a 
+ * given {@link Rule}.
+ * @author ptpham
+ *
+ */
 public class StratifiedBackward extends StratifiedProver {
 
 	/**
 	 * The prover will not expand any rule that has non-zero entries here.
 	 */
-	public final Multimap<Rule, Dob> known = HashMultimap.create();
+	private final HashMultimap<Rule, Dob> known = HashMultimap.create();
 	
 	public StratifiedBackward(Collection<Rule> rules) {
 		super(rules);
@@ -30,6 +37,13 @@ public class StratifiedBackward extends StratifiedProver {
 		this.known.clear();
 		this.storeTruth(vacuous);
 	}
+	
+	public void putKnown(Multimap<Rule, Dob> addition) {
+		storeTruths(addition.values());
+		known.putAll(addition);
+	}
+	
+	public Set<Dob> getKnown(Rule rule) { return this.known.get(rule); }
 
 	/**
 	 * Returns the set of 

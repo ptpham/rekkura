@@ -4,6 +4,15 @@ import java.util.Comparator;
 
 import com.google.common.collect.Ordering;
 
+/**
+ * This holds some of that gross logic that happens when 
+ * you try to take the max over f(x) and you want "carry"
+ * the value of x with you.
+ * @author ptpham
+ *
+ * @param <U>
+ * @param <V>
+ */
 public class RankedCarry<U extends Comparable<U>, V> {
 	private U u;
 	private V v;

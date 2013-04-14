@@ -20,7 +20,8 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
 /**
- * 
+ * This class may move in the future. It contains very general
+ * graph algorithms.
  * @author ptpham
  */
 public class Topper {

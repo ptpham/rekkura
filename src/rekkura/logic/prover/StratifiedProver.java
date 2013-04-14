@@ -17,6 +17,17 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 
+/**
+ * The set of rules provided to this prover must satisfy the following: <br>
+ * - No negative heads <br>
+ * - Stratified negation: From a rule R and its descendants, it must 
+ * not be possible to generate a grounded dob that unifies with a 
+ * negative term in the body of R.<br>
+ * - Safety: Every variable that appears in a negative term must appear
+ * in a positive body term. <br>
+ * @author ptpham
+ *
+ */
 public abstract class StratifiedProver {
 	public final Ruletta rta;
 	public final Cachet cachet;

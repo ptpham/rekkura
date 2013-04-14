@@ -9,6 +9,12 @@ import java.util.concurrent.locks.Lock;
 
 import com.google.common.collect.*;
 
+/**
+ * This holds some utilties for dealing with synchronization
+ * and some synchronized data structures.
+ * @author ptpham
+ *
+ */
 public class Synchron {
 	public static boolean lightSleep(long time) {
 		try { Thread.sleep(time); } 

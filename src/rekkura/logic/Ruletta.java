@@ -14,8 +14,10 @@ import rekkura.util.OtmUtil;
 import com.google.common.collect.*;
 
 /**
- * result class maintains mappings and sets that are important for 
- * working with a set of rules.
+ * This class maintains mappings and sets that are important for 
+ * working with a set of rules. It also provides a handful of
+ * utility operations like getting the set of rules that are 
+ * affected by a given {@link Dob}.
  * @author ptpham
  *
  */

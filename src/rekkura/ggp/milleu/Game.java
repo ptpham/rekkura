@@ -14,6 +14,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+/**
+ * This class represents a collection of utilities and 
+ * constants for working with GDL games. It is intendend
+ * to be useful at a match/parsing layer and not at the logic
+ * layer. For the latter, take a look at {@link GameLogicContext}.
+ * @author ptpham
+ *
+ */
 public class Game {
 
 	public static final String ROLE_NAME = "role";

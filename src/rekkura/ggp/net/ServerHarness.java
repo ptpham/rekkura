@@ -8,7 +8,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 /**
- * This wrapper will expose a player to the internet as a server
+ * This wrapper will expose a {@link Player} to the internet as a server
  * according to the given logical format.
  * @author "ptpham"
  *

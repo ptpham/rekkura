@@ -4,7 +4,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 /**
- * This holds a collection of "mini models".
+ * This holds a collection of "mini models". These may
+ * not be that necessary and may be deprecated in the future ...
  * @author ptpham
  *
  */

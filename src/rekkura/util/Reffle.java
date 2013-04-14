@@ -4,6 +4,11 @@ import java.lang.reflect.Constructor;
 
 import com.google.common.base.Joiner;
 
+/**
+ * This class holds some super magical reflection.
+ * @author ptpham
+ *
+ */
 public class Reffle {
 
 	/**

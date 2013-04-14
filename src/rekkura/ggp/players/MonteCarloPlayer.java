@@ -19,6 +19,13 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 
+/**
+ * This basic Monte Carlo player will expand and represent 
+ * only its actions in any given turn before resorting to
+ * purely random depth charges.
+ * @author ptpham
+ *
+ */
 public class MonteCarloPlayer extends ProverBased {
 	@Override protected void plan() { explore(); }
 	@Override protected void move() { explore(); }

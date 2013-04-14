@@ -25,6 +25,15 @@ public class DepthCharge {
 		return fire(state, machine, fixed, new Random());
 	}
 	
+	/**
+	 * 
+	 * @param state
+	 * @param machine
+	 * @param fixed This forces a certain set of actions on the first advancement
+	 * in the depth charge.
+	 * @param rand
+	 * @return
+	 */
 	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine, 
 			Map<Dob, A> fixed, Random rand) {
 		List<S> result = Lists.newArrayList();

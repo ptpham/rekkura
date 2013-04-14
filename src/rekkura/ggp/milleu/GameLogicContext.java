@@ -14,6 +14,23 @@ import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
 
+/**
+ * A {@link GameLogicContext} constructs references to all of the 
+ * reserve keywords in GDL, and partitions rules by whether
+ * they are "GDL static" or "GDL mutable". A rule is "GDL static"
+ * if it can never be influenced by the state or player actions.
+ * A rule is GDL mutable if it is not GDL static. <br>
+ * <br>
+ * It also contains {@link Dob}s that represent unification templates 
+ * for important structures in GDL and methods to query for important
+ * GDL structures in a given state such as the goals, actions, and 
+ * trues.<br>
+ * <br>
+ * For utilities at a matchmaking/parsing level, take a look at
+ * {@code Game}.
+ * @author ptpham
+ *
+ */
 public class GameLogicContext {
 
 	// GDL reserve words

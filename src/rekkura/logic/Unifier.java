@@ -13,6 +13,10 @@ import com.google.common.collect.Maps;
 
 /**
  * This class describes how to transform one dob to match another dob.
+ * Such a transformation is called a unification. In general, we 
+ * want to represent unifications as {@code Map<Dob, Dob>} for ease 
+ * of use. However, there is the high merge performance representation 
+ * called {@link Unification}.
  * @author ptpham
  */
 public class Unifier {

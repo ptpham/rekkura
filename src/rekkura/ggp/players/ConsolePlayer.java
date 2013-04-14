@@ -11,6 +11,12 @@ import rekkura.model.Dob;
 
 import com.google.common.collect.ListMultimap;
 
+/**
+ * This super exciting player will allow you (a human!)
+ * to feebly struggle against your mighty GGP overlords.
+ * @author ptpham
+ *
+ */
 public class ConsolePlayer extends Player.ProverBased {
 	@Override protected void plan() { queryHumanMove(); }
 	@Override protected void move() { queryHumanMove(); }

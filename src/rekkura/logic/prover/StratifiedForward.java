@@ -17,13 +17,12 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 
 /**
- * The set of rules provided to this prover must satisfy the following:
- * - No negative heads
- * - Stratified negation: From a rule R and its descendants, it must 
- * not be possible to generate a grounded dob that unifies with a 
- * negative term in the body of R.
- * - Safety: Every variable that appears in a negative term must appear
- * in a positive body term.
+ * This class will attempt to push things that are true
+ * forward in the rule graph. This is generally inefficient 
+ * if you want to know everything that could be derived from
+ * a particular rule. For that use case use {@link StratifiedBackward}. <br>
+ * <br>
+ * This prover is meant for more exploratory searching.
  * @author ptpham
  *
  */

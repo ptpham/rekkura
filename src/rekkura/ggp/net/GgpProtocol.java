@@ -18,13 +18,20 @@ import rekkura.util.Synchron;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+/**
+ * This class holds the two major layers in the GgpProtocol layer.
+ * The top layer communicates purely in strings: {@link PlayerDemuxer}.
+ * The bottom layer communicates in logic: {@link PlayerHandler}. 
+ * @author ptpham
+ *
+ */
 public class GgpProtocol {
 
 	public static enum PlayerState { READY, BUSY, DONE }
 	
 	/**
 	 * A PlayerHandler is responsible for handling the logical
-	 * essence of the GGP protocol. See DefaultPlayerHandler for
+	 * essence of the GGP protocol. See {@link DefaultPlayerHandler} for
 	 * an example.
 	 * @author ptpham
 	 *
@@ -76,8 +83,8 @@ public class GgpProtocol {
 	/**
 	 * The DefaultPlayerHandler handles conversions between 
 	 * actions (the internal representation) and moves (the GGP 
-	 * protocol standard). It also manages time for the player.
-	 * 
+	 * protocol standard). It also manages time for the player. <br>
+	 * <br>
 	 * A new player and a new thread will be created for every 
 	 * new match received.
 	 * @author ptpham
@@ -169,7 +176,7 @@ public class GgpProtocol {
 		
 	/**
 	 * A PlayerDemuxer is responsible for handling GGP messages in general.
-	 * The DefaultPlayerDemuxer will delegate the logic to a PlayerHandler.
+	 * The {@link DefaultPlayerDemuxer} will delegate the logic to a PlayerHandler.
 	 * @author ptpham
 	 *
 	 */

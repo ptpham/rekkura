@@ -15,6 +15,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
+/**
+ * A {@link MatchRunnable} provides the logic for pitting two players
+ * against each other. It will take care of spawning a new thread for
+ * each player and record what happens during the match with synchronized
+ * data structures.
+ * @author ptpham
+ *
+ */
 public class MatchRunnable implements Runnable {
 	public final Vector<Game.Record> history = Synchron.newVector();
 	public final Vector<Player> players = Synchron.newVector();

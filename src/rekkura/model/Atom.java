@@ -4,6 +4,12 @@ import java.util.Iterator;
 
 import rekkura.fmt.StandardFormat;
 
+/**
+ * An {@link Atom} is simply a combination of a
+ * {@link Dob} and a truth value.
+ * @author ptpham
+ *
+ */
 public class Atom {
 	public final Dob dob;
 	public final boolean truth;

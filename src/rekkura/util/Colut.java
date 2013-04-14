@@ -10,7 +10,9 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
 /**
- * (Collection Utilities)
+ * (Collection Utilities) These methods are supposed to be
+ * null tolerant and are supposed to make your code much, much
+ * more succinct. =P
  * @author ptpham
  *
  */
