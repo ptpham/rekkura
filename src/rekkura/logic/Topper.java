@@ -163,7 +163,7 @@ public class Topper {
 		int result = index;
 		for (U adjacent : edges.get(node)) {
 			int lowest = stronglyConnectedFrom(adjacent, edges, seen, ufind);
-			if (lowest < index) {
+			if (lowest <= index) {
 				ufind.union(node, adjacent);
 				result = Math.min(lowest, result);
 			}

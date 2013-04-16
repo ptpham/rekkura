@@ -63,7 +63,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	@Override
 	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
 		applyState(state);
-		prover.storeTruths(actions.values());
+		prover.preserveTruths(actions.values());
 		return extractTrues(proverPass(state, NEXT_QUERY, NEXT_UNIFY));
 	}
 
@@ -98,7 +98,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	private void applyState(Set<Dob> state) {
 		if (state != last) {
 			prover.clear();
-			prover.storeTruths(state);
+			prover.preserveTruths(state);
 			prover.putKnown(knownStatic);
 			last = state;
 		}

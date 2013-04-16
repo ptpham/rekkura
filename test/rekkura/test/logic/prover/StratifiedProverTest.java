@@ -267,6 +267,20 @@ public class StratifiedProverTest {
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
 	
+	@Test
+	public void simpleRecursion() {
+		String[] rawRules = { 
+			"{(X)(Y) | <((P)(Y)),true> :- <((Q)(X)(Y)),true> <((P)(X)),true> }",
+		};
+		
+		String[][] rawDobs = {
+			{"((Q)(1)(2))", "((Q)(2)(3))", "((P)(1))"}, 
+			{"((P)(2))", "((P)(3))" }
+		};
+
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
 	
 	private void overallMatchTest(String[] rules, String[] initial, String[] expected) {
 		Set<Dob> allProven = runProver(rules, initial);

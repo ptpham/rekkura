@@ -20,7 +20,6 @@ import com.google.common.collect.Sets;
 public class TopperTest {
 	
 	@Test
-	@SuppressWarnings("unchecked")
 	public void stronglyConnected() {
 		Multimap<Integer, Integer> edges = HashMultimap.create();
 		Set<Integer> roots = Sets.newHashSet(1);
@@ -34,9 +33,26 @@ public class TopperTest {
 		
 		for (int[] edge : edgesRaw) { edges.put(edge[0], edge[1]); }
 		
-		List<HashSet<Integer>> expected = Lists.newArrayList(Sets.newHashSet(17, 18, 15), 
-				Sets.newHashSet(1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 16),
-				Sets.newHashSet(19, 20));
+		List<HashSet<Integer>> expected = Lists.newArrayList();
+		expected.add(Sets.newHashSet(17, 18, 15));
+		expected.add(Sets.newHashSet(1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 16));
+		expected.add(Sets.newHashSet(19, 20));
+		
+		List<Set<Integer>> actual = Topper.stronglyConnected(edges, roots);
+		Assert.assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void singleNodeStronglyConnected() {
+		Multimap<Integer, Integer> edges = HashMultimap.create();
+		Set<Integer> roots = Sets.newHashSet(0);
+		
+		int[][] edgesRaw = { {0, 0} };
+		for (int[] edge : edgesRaw) { edges.put(edge[0], edge[1]); }
+		
+		List<HashSet<Integer>> expected = Lists.newArrayList();
+		expected.add(Sets.newHashSet(0));
+
 		List<Set<Integer>> actual = Topper.stronglyConnected(edges, roots);
 		Assert.assertEquals(expected, actual);
 	}

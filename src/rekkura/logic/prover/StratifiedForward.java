@@ -66,7 +66,9 @@ public class StratifiedForward extends StratifiedProver {
 	 * @param dob
 	 */
 	protected Dob queueTruth(Dob dob) {
-		dob = storeTruth(dob);
+		dob = this.pool.submerge(dob);
+		boolean added = this.storeTruth(dob);
+		if (!added) return dob;
 		
 		Iterable<Rule> generated = this.cachet.affectedRules.get(dob);
 

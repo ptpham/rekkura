@@ -52,6 +52,7 @@ public class StratifiedBackward extends StratifiedProver {
 	 * as long as new dobs are being generated.
 	 */
 	private final boolean[] rooted;
+	private final Set<Rule> asking = Sets.newHashSet();
 	
 	public StratifiedBackward(Collection<Rule> rules) {
 		super(rules);
@@ -71,10 +72,11 @@ public class StratifiedBackward extends StratifiedProver {
 		this.truths.clear();
 		this.cachet.unisuccess.clear();
 		this.pending.clear();
+		this.asking.clear();
 		this.known.clear();
 		
 		Arrays.fill(rooted, false);
-		this.storeTruth(vacuous);
+		this.preserveTruth(vacuous);
 	}
 	
 	/**
@@ -86,7 +88,7 @@ public class StratifiedBackward extends StratifiedProver {
 	 * @param addition
 	 */
 	public void putKnown(Multimap<Rule, Dob> addition) {
-		storeTruths(addition.values());
+		preserveTruths(addition.values());
 		known.putAll(addition);
 	}
 	
@@ -109,7 +111,7 @@ public class StratifiedBackward extends StratifiedProver {
 	@Override
 	public Set<Dob> proveAll(Iterable<Dob> truths) {
 		this.clear();
-		this.storeTruths(truths);
+		this.preserveTruths(truths);
 		
 		Set<Dob> result = Sets.newHashSet();
 		for (Rule rule : this.rta.allRules) ask(rule, result);
@@ -132,8 +134,14 @@ public class StratifiedBackward extends StratifiedProver {
 
 	private boolean expandComponentRule(Rule rule, Set<Dob> result, int index) {
 		boolean root = !this.rooted[index];
-		if (root) return expandRuleAsRoot(rule, result, index);
-		else return expandRuleToMap(rule, result, this.pending);
+		if (!this.asking.add(rule)) return false;
+		
+		boolean expanded = false;
+		if (root) expanded = expandRuleAsRoot(rule, result, index);
+		else expanded = expandRuleToMap(rule, result, this.pending);
+		
+		this.asking.remove(rule);
+		return expanded;
 	}
 
 	/**
@@ -174,7 +182,7 @@ public class StratifiedBackward extends StratifiedProver {
 
 		Set<Dob> generated = expandRule(rule);
 		map.putAll(rule, generated);
-		for (Dob dob : generated) this.storeTruth(dob);
+		for (Dob dob : generated) this.preserveTruth(dob);
 		expanded |= result.addAll(generated);
 		
 		return expanded;

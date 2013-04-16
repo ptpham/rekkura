@@ -91,20 +91,30 @@ public abstract class StratifiedProver {
 	
 
 	/**
+	 * This stores the given dob after submerging it.
+	 * @param dob submerged version of the dob
+	 * @return
+	 */
+	public Dob preserveTruth(Dob dob) {
+		dob = this.pool.submerge(dob);
+		storeTruth(dob);
+		return dob;
+	}
+
+	/**
 	 * This method makes sure that the given dob is indexable from the 
-	 * last node in the trunk of the fortre.
+	 * last node in the trunk of the fortre. 
 	 * @param dob
 	 * @return
 	 */
-	public Dob storeTruth(Dob dob) {
-		dob = this.pool.submerge(dob);
-		truths.add(dob);
+	public boolean storeTruth(Dob dob) {
+		boolean added = truths.add(dob);
 		this.cachet.storeGround(dob);
-		return dob;
+		return added;
 	}
 	
-	public void storeTruths(Iterable<Dob> truths) {
-		for (Dob dob : truths) storeTruth(dob);
+	public void preserveTruths(Iterable<Dob> truths) {
+		for (Dob dob : truths) preserveTruth(dob);
 	}
 	
 	/**
