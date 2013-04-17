@@ -174,6 +174,15 @@ public class Topper {
 		return result;
 	}
 	
+	public static <U, V> Multimap<V, V> extractGraph(U first, U second, Collection<Map<U, V>> unifications) {
+		Multimap<V, V> result = HashMultimap.create();
+		for (Map<U, V> unification : unifications) {
+			V src = unification.get(first);
+			V dst = unification.get(second);
+			if (src != null && dst != null) result.put(src, dst);
+		}
+		return result;
+	}
 }
 
 

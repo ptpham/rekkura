@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import rekkura.model.Dob;
+import rekkura.model.Unification;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
@@ -180,5 +181,4 @@ public class Unifier {
 		}
 		return true;
 	}
-	
 }
