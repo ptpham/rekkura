@@ -225,7 +225,7 @@ public class Fortre {
 	}
 	
 	public Iterable<Dob> getSubtree(List<Dob> trunk) {
-		if (trunk.size() <= 1) return Lists.newArrayList();
+		if (trunk.size() == 0) return Lists.newArrayList();
 		return this.getSubtreeIterable(Colut.end(trunk));
 	}
 	
