@@ -108,12 +108,10 @@ public class GameLogicContext {
 		this.staticRules.removeAll(mutableRules);
 	}
 	
-
 	private Dob getTerminalDob(String name) {
 		return this.pool.submerge(new Dob(name));
 	}
 	
-
 	public Multiset<Dob> extractGoals(Set<Dob> dobs) {
 		Multiset<Dob> result = HashMultiset.create();
 		for (Dob dob : dobs) {

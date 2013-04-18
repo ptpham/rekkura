@@ -181,4 +181,16 @@ public class Unifier {
 		}
 		return true;
 	}
+	
+	public static List<Dob> retainSuccesses(Dob query, Iterable<Dob> targets, Set<Dob> allVars) {
+		List<Dob> result = Lists.newArrayList();
+		
+		for (Dob target : targets) {
+			if (unifyVars(query, target, allVars) != null) {
+				result.add(target);
+			}
+		}
+		
+		return result;
+	}
 }

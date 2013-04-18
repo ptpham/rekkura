@@ -128,6 +128,21 @@ public class Ruletta {
 		Iterables.addAll(result, Colut.firstK(this.allVars, num)); 
 		return result;
 	}
+	
+	/**
+	 * This returns the list of rules mapped to by forms that unify
+	 * against the given query.
+	 * @param query a dob with variables that you want to unify against
+	 * forms in the form tree.
+	 * @param map the place where you want to look up rules after you 
+	 * have filtered the forms you are interested in.
+	 * @return
+	 */
+	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map) {
+		List<Dob> forms = Unifier.retainSuccesses(query, 
+			this.fortre.getAllCognates(), this.allVars);
+		return OtmUtil.valueIterable(map, forms);
+	}
 
 	/**
 	 * Computes for each target dob the set of source dobs that unify with it.

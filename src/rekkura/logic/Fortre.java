@@ -233,6 +233,10 @@ public class Fortre {
 		return getCognateIterable(getSubtree(trunk));
 	}
 	
+	public Iterable<Dob> getAllCognates() {
+		return getCognateSubtree(Lists.newArrayList(this.root));
+	}
+	
 	public Iterable<Dob> getSpine(Dob dob) {
 		List<Dob> trunk = getTrunk(dob);
 		Iterable<Dob> subtree = getSubtree(trunk);
