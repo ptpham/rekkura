@@ -1,6 +1,10 @@
 package rekkura.util;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
@@ -167,5 +171,9 @@ public class Colut {
 	
 	public static <U> void nullOut(U[] arr) {
 		for (int i = 0; i < arr.length; i++) arr[i] = null;
+	}
+
+	public static <U> U first(List<U> list) {
+		return Colut.get(list, 0);
 	}
 }

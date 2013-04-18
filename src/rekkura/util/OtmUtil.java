@@ -123,6 +123,28 @@ public class OtmUtil {
 		return expandLeft(map, joiner);
 	}
 	
+	public static <U> Multimap<U, U> joinRight(Iterable<Map<U, U>> path) {
+		Multimap<U, U> result = null;
+		for (Map<U, U> node : path) {
+			Multimap<U, U> current = Multimaps.forMap(node);
+			if (result == null) result = current;
+			else result = OtmUtil.joinRight(result, current);
+		}
+		
+		return result;
+	}
+	
+	public static <U> Multimap<U, U> joinLeft(Iterable<Map<U, U>> path) {
+		Multimap<U, U> result = null;
+		for (Map<U, U> node : path) {
+			Multimap<U, U> current = Multimaps.forMap(node);
+			if (result == null) result = current;
+			else result = OtmUtil.joinLeft(result, current);
+		}
+		
+		return result;
+	}
+	
 	public static <U, V> Multimap<U, V> squashRight(Map<U, V> map, Map<V, V> other) {
 		Multimap<U, V> result = joinRight(Multimaps.forMap(map), Multimaps.forMap(other));
 		for (U u : map.keySet()) {
