@@ -2,6 +2,7 @@ package rekkura.logic;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import rekkura.model.Dob;
 import rekkura.model.Logimos.DobSpace;
@@ -74,20 +75,38 @@ public class Cachet {
 	 * are true in any given proving cycle.
 	 */
 	public final Multimap<Dob, Dob> unisuccess = HashMultimap.create();
-	
-	/**
-	 * This holds the mapping from a body form to the sets of replacements
-	 * for its various children.
-	 * Memory is O(FV).
-	 */
-	public final Cache<Dob, DobSpace> unispaces = 
-		Cache.create(new Function<Dob, DobSpace>() {
-			@Override public DobSpace apply(Dob dob) { return new DobSpace(dob); }
-		});
-	
+		
 	public final Ruletta rta;
 
 	public Cachet(Ruletta rta) { this.rta = rta; }
+	
+	public static class VarAux {
+		public final Cache<Dob, List<Dob>> spines;
+		
+		/**
+		 * This holds the mapping from a body form to the sets of replacements
+		 * for its various children.
+		 * Memory is O(FV).
+		 */
+		public final Cache<Dob, DobSpace> unispaces = 
+			Cache.create(new Function<Dob, DobSpace>() {
+				@Override public DobSpace apply(Dob dob) { return new DobSpace(dob); }
+			});	
+		
+		public final Set<Dob> allVars;
+	
+		public VarAux(Cache<Dob, List<Dob>> spines, Set<Dob> allVars) {
+			this.spines = spines;
+			this.allVars = allVars;
+		}
+		
+		public void storeVariableReplacements(Dob ground, Dob body) {
+			Map<Dob, Dob> unify = Unifier.unify(body, ground);
+			DobSpace space = this.unispaces.get(body);
+			OtmUtil.putAll(space.replacements, unify);
+		}
+	}
+	
 	
 	public void storeGround(Dob dob) {
 		// The root of the subtree is the end of the trunk.
@@ -97,11 +116,5 @@ public class Cachet {
 	
 	public void storeGroundAt(Dob ground, Dob body) {
 		unisuccess.put(body, ground);
-	}
-
-	public void storeVariableReplacements(Dob ground, Dob body) {
-		Map<Dob, Dob> unify = Unifier.unify(body, ground);
-		DobSpace space = this.unispaces.get(body);
-		OtmUtil.putAll(space.replacements, unify);
 	}
 }

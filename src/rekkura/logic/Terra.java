@@ -20,67 +20,6 @@ import com.google.common.collect.*;
  *
  */
 public class Terra {
-		/**
-	 * Returns a list of the possible assignments to the variables in the
-	 * given rule assuming that the given dob must be applied at
-	 * the given position.
-	 * @param rule
-	 * @param position
-	 * @param ground
-	 * @return
-	 */
-	public static List<Iterable<Dob>> getVariableSpace(Rule rule, Cachet cachet) {
-		// Add a single null for rules with no variables
-		List<Iterable<Dob>> candidates = Lists.newArrayList();
-		if (rule.vars.size() == 0) {
-			candidates.add(Lists.newArrayList((Dob)null));
-			return candidates;
-		}
-		
-		Multimap<Dob, Dob> variables = HashMultimap.create();
-		
-		for (int i = 0; i < rule.body.size(); i++) {
-			Atom atom = rule.body.get(i);
-			if (!atom.truth) continue;
-			
-			// For each node in the subtree, find the set of replacements
-			// in terms of the root of the subtree. Then join right
-			// to rephrase in terms of variables in the rule.
-			Iterable<Dob> subtree = cachet.spines.get(atom.dob);
-			for (Dob node : subtree) {
-				Multimap<Dob, Dob> raw = cachet.unispaces.get(node).replacements;
-				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
-				Multimap<Dob, Dob> replacements = HashMultimap.create();
-				if (left != null && Colut.nonEmpty(left.keySet())) {
-					replacements = OtmUtil.joinRight(Multimaps.forMap(left), raw);
-				}
-				
-				for (Dob variable : rule.vars) {
-					if (left == null || !left.containsKey(variable)) {
-						replacements.putAll(variable, raw.get(variable));
-					}
-				}
-				
-				for (Dob variable : replacements.keySet()) {
-					variables.putAll(variable, replacements.get(variable));
-				}
-				
-				// Add stuff that was not included in the join but is 
-				// still necessary for a valid unification.
-				if (left == null) continue;
-				for (Map.Entry<Dob, Dob> entry: left.entrySet()) {
-					if (!cachet.rta.fortre.allVars.contains(entry.getValue()))
-						variables.put(entry.getKey(), entry.getValue());
-				}
-			}
-		}
-		
-		for (Dob variable : rule.vars) {
-			candidates.add(variables.get(variable));
-		}
-		
-		return candidates;
-	}
 	
 	/**
 	 * This method returns an iterable over all exhausted ground dobs 
@@ -197,6 +136,69 @@ public class Terra {
 		});
 		return positives;
 	}
+	
+	/**
+	 * Returns a list of the possible assignments to the variables in the
+	 * given rule assuming that the given dob must be applied at
+	 * the given position.
+	 * @param rule
+	 * @param position
+	 * @param ground
+	 * @return
+	 */
+	public static List<Iterable<Dob>> getVariableSpace(Rule rule, Cachet.VarAux cachet) {
+		// Add a single null for rules with no variables
+		List<Iterable<Dob>> candidates = Lists.newArrayList();
+		if (rule.vars.size() == 0) {
+			candidates.add(Lists.newArrayList((Dob)null));
+			return candidates;
+		}
+		
+		Multimap<Dob, Dob> variables = HashMultimap.create();
+		
+		for (int i = 0; i < rule.body.size(); i++) {
+			Atom atom = rule.body.get(i);
+			if (!atom.truth) continue;
+			
+			// For each node in the subtree, find the set of replacements
+			// in terms of the root of the subtree. Then join right
+			// to rephrase in terms of variables in the rule.
+			Iterable<Dob> subtree = cachet.spines.get(atom.dob);
+			for (Dob node : subtree) {
+				Multimap<Dob, Dob> raw = cachet.unispaces.get(node).replacements;
+				Map<Dob, Dob> left = Unifier.unify(atom.dob, node);
+				Multimap<Dob, Dob> replacements = HashMultimap.create();
+				if (left != null && Colut.nonEmpty(left.keySet())) {
+					replacements = OtmUtil.joinRight(Multimaps.forMap(left), raw);
+				}
+				
+				for (Dob variable : rule.vars) {
+					if (left == null || !left.containsKey(variable)) {
+						replacements.putAll(variable, raw.get(variable));
+					}
+				}
+				
+				for (Dob variable : replacements.keySet()) {
+					variables.putAll(variable, replacements.get(variable));
+				}
+				
+				// Add stuff that was not included in the join but is 
+				// still necessary for a valid unification.
+				if (left == null) continue;
+				for (Map.Entry<Dob, Dob> entry: left.entrySet()) {
+					if (!cachet.allVars.contains(entry.getValue()))
+						variables.put(entry.getKey(), entry.getValue());
+				}
+			}
+		}
+		
+		for (Dob variable : rule.vars) {
+			candidates.add(variables.get(variable));
+		}
+		
+		return candidates;
+	}
+	
 	
 	/**
 	 * This method attempts to apply candidates as variables. The order used
