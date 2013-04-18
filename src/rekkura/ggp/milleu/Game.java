@@ -27,6 +27,7 @@ public class Game {
 	public static final String ROLE_NAME = "role";
 	public static final String TERMINAL_NAME = "terminal";
 	public static final String BASE_NAME = "base";
+	public static final String INPUT_NAME = "input";
 	public static final String TRUE_NAME = "true";
 	public static final String DOES_NAME = "does";
 	public static final String INIT_NAME = "init";

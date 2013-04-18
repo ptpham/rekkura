@@ -34,12 +34,14 @@ import com.google.common.collect.*;
 public class GameLogicContext {
 
 	// GDL reserve words
-	public final Dob TERMINAL, INIT, LEGAL, BASE;
+	public final Dob TERMINAL, INIT, LEGAL, BASE, INPUT;
 	public final Dob ROLE, DOES, NEXT, TRUE, GOAL;
 	
 	// Data structures for doing GGP manipulations
 	public final Dob ROLE_VAR, GENERIC_VAR;
-	public final Dob GOAL_QUERY, INIT_QUERY, NEXT_QUERY, LEGAL_QUERY;
+	public final Dob BASE_QUERY, INPUT_QUERY;
+	public final Dob GOAL_QUERY, INIT_QUERY;
+	public final Dob NEXT_QUERY, LEGAL_QUERY;
 	public final Dob DOES_QUERY, TRUE_QUERY;
 	public final Map<Dob, Dob> NEXT_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> INIT_UNIFY = Maps.newHashMap();
@@ -69,6 +71,7 @@ public class GameLogicContext {
 		
 		this.TERMINAL = getTerminalDob(Game.TERMINAL_NAME);
 		this.BASE = getTerminalDob(Game.BASE_NAME);
+		this.INPUT = getTerminalDob(Game.INPUT_NAME);
 		this.TRUE = getTerminalDob(Game.TRUE_NAME);
 		this.DOES = getTerminalDob(Game.DOES_NAME);
 		this.INIT = getTerminalDob(Game.INIT_NAME);
@@ -82,9 +85,11 @@ public class GameLogicContext {
 		this.GENERIC_VAR = var.get(1);
 		this.GOAL_QUERY = pool.submerge(new Dob(GOAL, ROLE_VAR, GENERIC_VAR));
 		this.LEGAL_QUERY = pool.submerge(new Dob(LEGAL, ROLE_VAR, GENERIC_VAR));
+		this.INPUT_QUERY = pool.submerge(new Dob(INPUT, ROLE_VAR, GENERIC_VAR));
+		this.DOES_QUERY = pool.submerge(new Dob(DOES, ROLE_VAR, GENERIC_VAR));
 		this.INIT_QUERY = pool.submerge(new Dob(INIT, GENERIC_VAR));
 		this.NEXT_QUERY = pool.submerge(new Dob(NEXT, GENERIC_VAR));
-		this.DOES_QUERY = pool.submerge(new Dob(DOES, ROLE_VAR, GENERIC_VAR));
+		this.BASE_QUERY = pool.submerge(new Dob(BASE, GENERIC_VAR));
 		this.TRUE_QUERY = pool.submerge(new Dob(TRUE, GENERIC_VAR));
 
 		this.NEXT_UNIFY.put(this.NEXT, this.TRUE);
