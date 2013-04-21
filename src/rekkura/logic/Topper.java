@@ -183,6 +183,66 @@ public class Topper {
 		}
 		return result;
 	}
+	
+	public static <U> Multimap<U, U> dijkstra(U origin, Multimap<U, U> edges) {
+		Multimap<U, U> result = HashMultimap.create();
+		Multiset<U> counts = HashMultiset.create();
+		
+		List<U> toExplore = Lists.newArrayList();
+		toExplore.add(origin);
+		
+		while (toExplore.size() > 0) {
+			toExplore = dijkstraExpansion(edges, counts, toExplore);
+		}
+		
+		return result;
+	}
+
+	private static <U> List<U> dijkstraExpansion(Multimap<U, U> edges,
+			Multiset<U> counts, List<U> toExplore) {
+		List<U> exploreNext = Lists.newArrayList();
+		for (U src : toExplore) {
+			for (U dst : edges.get(src)) {
+				int proposed = counts.count(src) + 1;
+				int current = counts.count(dst);
+				if (current == 0 || current > proposed) {
+					counts.setCount(dst, proposed);
+					exploreNext.add(dst);
+				}
+			}
+		}
+		return exploreNext;
+	}
+	
+	/**
+	 * The edges passed in should be directed acyclic. You probably want
+	 * to use dijkstra to get the edges.
+	 * @param src
+	 * @param dst
+	 * @param edges
+	 * @return
+	 */
+	public static <U> List<List<U>> getPaths(U src, U dst, Multimap<U, U> edges) {
+		List<List<U>> result = Lists.newArrayList();
+		
+		// Base case -- return a list with just the destination
+		if (src == dst) {
+			List<U> inner = Lists.newArrayList();
+			inner.add(dst);
+			result.add(inner);
+			return result;
+		}
+		
+		for (U u : edges.get(src)) {
+			List<List<U>> subpaths = getPaths(u, dst, edges);
+			for (List<U> subpath : subpaths) {
+				subpath.add(0, src);
+				result.add(subpath);
+			}
+		}
+		
+		return result;
+	}
 }
 
 

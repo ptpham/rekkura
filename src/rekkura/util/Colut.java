@@ -176,4 +176,10 @@ public class Colut {
 	public static <U> U first(List<U> list) {
 		return Colut.get(list, 0);
 	}
+
+	public static <U> List<U> filterNulls(List<U> list) {
+		List<U> result = Lists.newArrayListWithCapacity(list.size());
+		for (U u : list) if (u != null) result.add(u);
+		return result;
+	}
 }
