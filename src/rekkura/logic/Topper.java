@@ -209,6 +209,8 @@ public class Topper {
 		List<U> exploreNext = Lists.newArrayList();
 		for (U src : toExplore) {
 			for (U dst : edges.get(src)) {
+				if (dst.equals(src)) continue;
+				
 				int proposed = counts.count(src) + 1;
 				int current = counts.count(dst);
 				if (current == 0 || current > proposed) {
