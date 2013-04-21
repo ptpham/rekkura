@@ -212,8 +212,11 @@ public class Topper {
 				int proposed = counts.count(src) + 1;
 				int current = counts.count(dst);
 				if (current == 0 || current > proposed) {
+					result.removeAll(dst);
 					counts.setCount(dst, proposed);
 					exploreNext.add(dst);
+					result.put(dst, src);
+				} else if (current == proposed) {
 					result.put(dst, src);
 				}
 			}
