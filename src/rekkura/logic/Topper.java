@@ -184,6 +184,12 @@ public class Topper {
 		return result;
 	}
 	
+	/**
+	 * This returns a set of edges pointing toward the origin.
+	 * @param origin
+	 * @param edges
+	 * @return
+	 */
 	public static <U> Multimap<U, U> dijkstra(U origin, Multimap<U, U> edges) {
 		Multimap<U, U> result = HashMultimap.create();
 		Multiset<U> counts = HashMultiset.create();
@@ -192,14 +198,14 @@ public class Topper {
 		toExplore.add(origin);
 		
 		while (toExplore.size() > 0) {
-			toExplore = dijkstraExpansion(edges, counts, toExplore);
+			toExplore = dijkstraExpansion(edges, counts, toExplore, result);
 		}
 		
 		return result;
 	}
 
 	private static <U> List<U> dijkstraExpansion(Multimap<U, U> edges,
-			Multiset<U> counts, List<U> toExplore) {
+			Multiset<U> counts, List<U> toExplore, Multimap<U, U> result) {
 		List<U> exploreNext = Lists.newArrayList();
 		for (U src : toExplore) {
 			for (U dst : edges.get(src)) {
@@ -208,6 +214,7 @@ public class Topper {
 				if (current == 0 || current > proposed) {
 					counts.setCount(dst, proposed);
 					exploreNext.add(dst);
+					result.put(dst, src);
 				}
 			}
 		}
@@ -216,7 +223,7 @@ public class Topper {
 	
 	/**
 	 * The edges passed in should be directed acyclic. You probably want
-	 * to use dijkstra to get the edges.
+	 * to use dijkstra to get the edges that move toward the destination.
 	 * @param src
 	 * @param dst
 	 * @param edges
