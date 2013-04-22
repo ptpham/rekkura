@@ -150,18 +150,28 @@ public class Ruletta {
 		Set<Rule> sources = Sets.newHashSet(OtmUtil.valueIterable(this.bodyToRule, 
 				this.fortre.getCognateSpine(src)));
 
+		return getPathsBetween(targets, sources);
+	}
+
+	public List<List<Rule>> getPathsBetween(Set<Rule> targets, Set<Rule> sources) {
 		List<List<Rule>> result = Lists.newArrayList();
 		for (Rule target : targets) {
-			Multimap<Rule, Rule> edges = Topper.dijkstra(target, this.ruleToGenRule);
-			Set<Rule> reachable = OtmUtil.flood(edges, sources);
-			OtmUtil.retainAll(reachable, edges);
-			
-			Set<Rule> roots = Topper.findRoots(edges);
-			roots.retainAll(sources);
-			for (Rule source : roots) {
-				List<List<Rule>> paths = Topper.getPaths(source, target, edges);
-				result.addAll(paths);
-			}
+			result.addAll(getPathsBetween(sources, target));
+		}
+		return result;
+	}
+
+	public List<List<Rule>> getPathsBetween(Set<Rule> sources, Rule target) {
+		List<List<Rule>> result = Lists.newArrayList();
+		Multimap<Rule, Rule> edges = Topper.dijkstra(target, this.ruleToGenRule);
+		Set<Rule> reachable = OtmUtil.flood(edges, sources);
+		OtmUtil.retainAll(reachable, edges);
+		
+		Set<Rule> roots = Topper.findRoots(edges);
+		roots.retainAll(sources);
+		for (Rule source : roots) {
+			List<List<Rule>> paths = Topper.getPaths(source, target, edges);
+			result.addAll(paths);
 		}
 		return result;
 	}

@@ -87,4 +87,10 @@ public class Pool {
 		if (changed) return new Dob(newChildren);
 		return dob;
 	}
+
+	public List<Rule> submergeRules(Collection<Rule> path) {
+		List<Rule> result = Lists.newArrayList();
+		for (Rule rule : path) { result.add(submerge(rule)); }
+		return result;
+	}
 }

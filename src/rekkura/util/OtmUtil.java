@@ -2,8 +2,6 @@ package rekkura.util;
 
 import java.util.*;
 
-import rekkura.model.Rule;
-
 import com.google.common.base.Function;
 import com.google.common.collect.*;
 

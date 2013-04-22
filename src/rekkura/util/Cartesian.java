@@ -67,7 +67,7 @@ public class Cartesian {
 		}
 	
 		@Override public boolean hasNext() {
-			if (this.candidates.size() == 0) return false;
+			if (spaceSize == 0) return false;
 			prepareNext();
 			return isPrepared();
 		}
