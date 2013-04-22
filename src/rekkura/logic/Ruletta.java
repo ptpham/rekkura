@@ -143,7 +143,29 @@ public class Ruletta {
 			this.fortre.getAllCognates(), this.allVars);
 		return OtmUtil.valueIterable(map, forms);
 	}
+	
+	public List<List<Rule>> getPathsBetween(Dob src, Dob dst) {
+		Set<Rule> targets = Sets.newHashSet(OtmUtil.valueIterable(this.headToRule, 
+				this.fortre.getCognateSpine(dst)));
+		Set<Rule> sources = Sets.newHashSet(OtmUtil.valueIterable(this.bodyToRule, 
+				this.fortre.getCognateSpine(src)));
 
+		List<List<Rule>> result = Lists.newArrayList();
+		for (Rule target : targets) {
+			Multimap<Rule, Rule> edges = Topper.dijkstra(target, this.ruleToGenRule);
+			Set<Rule> reachable = OtmUtil.flood(edges, sources);
+			OtmUtil.retainAll(reachable, edges);
+			
+			Set<Rule> roots = Topper.findRoots(edges);
+			roots.retainAll(sources);
+			for (Rule source : roots) {
+				List<List<Rule>> paths = Topper.getPaths(source, target, edges);
+				result.addAll(paths);
+			}
+		}
+		return result;
+	}
+	
 	/**
 	 * Computes for each target dob the set of source dobs that unify with it.
 	 * @param dobs
@@ -166,7 +188,6 @@ public class Ruletta {
 		return result;
 	}
 	
-
 	/**
 	 * result method takes a dob and returns the rules where
 	 * it can be applied. result set must be a subset of the rules whose bodies are 

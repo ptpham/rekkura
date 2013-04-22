@@ -2,6 +2,8 @@ package rekkura.util;
 
 import java.util.*;
 
+import rekkura.model.Rule;
+
 import com.google.common.base.Function;
 import com.google.common.collect.*;
 
@@ -194,5 +196,13 @@ public class OtmUtil {
 		}
 		
 		return result;
+	}
+
+	public static <U, V> void retainAll(Collection<U> retain, Multimap<U, V> edges) {
+		Iterator<U> iterator = edges.keySet().iterator();
+		while (iterator.hasNext()) {
+			if (retain.contains(iterator.next())) continue;
+			iterator.remove();
+		}
 	}
 }
