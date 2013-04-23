@@ -26,6 +26,15 @@ public class Cache<U, V> {
 		return result;
 	}
 	
+	public V propose(U u, V v) {
+		V result = stored.get(u);
+		if (result == null) {
+			stored.put(u, v);
+			return v;
+		}
+		return result;
+	}
+	
 	public static <U, V> Cache<U, V> create(Function<U, V> fn) {
 		return new Cache<U, V>(fn);
 	}

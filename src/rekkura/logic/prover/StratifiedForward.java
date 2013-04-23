@@ -66,7 +66,7 @@ public class StratifiedForward extends StratifiedProver {
 	 * @param dob
 	 */
 	protected Dob queueTruth(Dob dob) {
-		dob = this.pool.submerge(dob);
+		dob = this.pool.dobs.submerge(dob);
 		boolean added = this.storeTruth(dob);
 		if (!added) return dob;
 		

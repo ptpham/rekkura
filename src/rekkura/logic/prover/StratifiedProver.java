@@ -45,7 +45,7 @@ public abstract class StratifiedProver {
 	public StratifiedProver(Collection<Rule> rules) {
 		Set<Rule> submerged = Sets.newHashSet();
 		
-		for (Rule rule : rules) { submerged.add(pool.submerge(rule)); }
+		for (Rule rule : rules) { submerged.add(pool.rules.submerge(rule)); }
 		submerged = preprocess(submerged, this.vacuous);
 		
 		this.rta = Ruletta.create(submerged, pool);
@@ -96,7 +96,7 @@ public abstract class StratifiedProver {
 	 * @return
 	 */
 	public Dob preserveTruth(Dob dob) {
-		dob = this.pool.submerge(dob);
+		dob = this.pool.dobs.submerge(dob);
 		storeTruth(dob);
 		return dob;
 	}

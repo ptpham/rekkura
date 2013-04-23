@@ -44,5 +44,4 @@ public class Comprender {
 		}
 		return result;
 	}
-	
 }

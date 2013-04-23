@@ -91,7 +91,7 @@ public class Terra {
 			if (converted != null && negatives.size() > 0) {
 				boolean failed = false;
 				for (Atom atom : negatives) {
-					Dob generated = pool.submerge(Unifier.replace(atom.dob, converted));
+					Dob generated = pool.dobs.submerge(Unifier.replace(atom.dob, converted));
 					if (truths.contains(generated)) failed = true;
 				}
 				if (failed) continue;
@@ -102,7 +102,7 @@ public class Terra {
 			// in it, then do not add it to the result.
 			if (converted != null && unify.isValid()) {
 				if (rule.evaluateDistinct(converted)) {
-					Dob generated = pool.submerge(Unifier.replace(rule.head.dob, converted));
+					Dob generated = pool.dobs.submerge(Unifier.replace(rule.head.dob, converted));
 					result.add(generated);
 				}
 			} else if (failure >= 0) iterator.advance(failure);
@@ -225,7 +225,7 @@ public class Terra {
 			Atom atom = body.get(i);
 		
 			// Generate the ground body
-			Dob ground = pool.submerge(Unifier.replace(atom.dob, unify));
+			Dob ground = pool.dobs.submerge(Unifier.replace(atom.dob, unify));
 			boolean truth = truths.contains(ground);
 			if (truth != atom.truth) success = false;
 		}

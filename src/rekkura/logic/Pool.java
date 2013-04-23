@@ -1,18 +1,15 @@
 package rekkura.logic;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.util.Submerger;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -27,59 +24,40 @@ import com.google.common.collect.Sets;
 public class Pool {
 
 	public final LogicFormat fmt = new StandardFormat();
-	Map<String, Dob> dobMap = Maps.newHashMap();
-	Set<Dob> known = Sets.newHashSet();
+	public final Submerger<Dob> dobs = createDobSubmerger();
+	public final Submerger<Atom> atoms = createAtomSubmerger();
+	public final Submerger<Rule> rules = createRuleSubmerger();
 	
-	public Dob submerge(Dob dob) {
-		if (known.contains(dob)) return dob;
-		
-		String stringed = fmt.toString(dob);
-		Dob existing = dobMap.get(stringed);
-		if (existing == null) {
-			existing = handleUnseen(dob);
-			dobMap.put(stringed, existing);
-		}
-		
-		this.known.add(existing);
-		return existing;
+	private Submerger<Dob> createDobSubmerger() {
+		return new Submerger<Dob>() {
+			@Override public Dob fromString(String s) { return fmt.dobFromString(s); }
+			@Override public String toString(Dob u) { return fmt.toString(u); }
+			@Override public Dob process(Dob u) { return handleUnseen(u); }
+		};
 	}
 
-	public Atom submerge(Atom atom) {
-		return new Atom(submerge(atom.dob), atom.truth);
+	private Submerger<Atom> createAtomSubmerger() {
+		return new Submerger<Atom>() {
+			@Override public Atom fromString(String s) { return fmt.atomFromString(s); }
+			@Override public String toString(Atom u) { return fmt.toString(u); }
+			@Override public Atom process(Atom u) { return handleUnseen(u); }
+		};
 	}
 	
-	public List<Dob> submergeDobs(Collection<Dob> source) {
-		List<Dob> result = Lists.newArrayListWithCapacity(source.size());
-		for (Dob dob : source) { result.add(submerge(dob)); }
-		return result;
+	private Submerger<Rule> createRuleSubmerger() {
+		return new Submerger<Rule>() {
+			@Override public Rule fromString(String s) { return fmt.ruleFromString(s); }
+			@Override public String toString(Rule u) { return fmt.toString(u); }
+			@Override public Rule process(Rule u) { return handleUnseen(u); }
+		};
 	}
 	
-	public List<Atom> submergeAtoms(Collection<Atom> source) {
-		List<Atom> result = Lists.newArrayListWithCapacity(source.size());
-		for (Atom atom : source) { result.add(submerge(atom)); }
-		return result;
-	}
-	
-	public Rule submerge(Rule rule) {
-		List<Rule.Distinct> distincts = Lists.newArrayList();
-		for (Rule.Distinct distinct : rule.distinct) {
-			distincts.add(new Rule.Distinct(submerge(distinct.first), 
-					submerge(distinct.second)));
-		}
-		
-		return new Rule(
-			submerge(rule.head),
-			submergeAtoms(rule.body),
-			Sets.newHashSet(submergeDobs(rule.vars)),
-			distincts);
-	}
-
 	private Dob handleUnseen(Dob dob) {
 		boolean changed = false;
 		List<Dob> newChildren = Lists.newArrayListWithCapacity(dob.size());
 		for (int i = 0; i < dob.size(); i++) {
 			Dob child = dob.at(i);
-			Dob submerged = submerge(child);
+			Dob submerged = dobs.submerge(child);
 			if (child != submerged) changed = true;
 			newChildren.add(submerged);
 		}
@@ -87,10 +65,22 @@ public class Pool {
 		if (changed) return new Dob(newChildren);
 		return dob;
 	}
-
-	public List<Rule> submergeRules(Collection<Rule> path) {
-		List<Rule> result = Lists.newArrayList();
-		for (Rule rule : path) { result.add(submerge(rule)); }
-		return result;
+	
+	private Atom handleUnseen(Atom atom) {
+		return new Atom(dobs.submerge(atom.dob), atom.truth);
+	}
+	
+	private Rule handleUnseen(Rule rule) {
+		List<Rule.Distinct> distincts = Lists.newArrayList();
+		for (Rule.Distinct distinct : rule.distinct) {
+			distincts.add(new Rule.Distinct(dobs.submerge(distinct.first), 
+					dobs.submerge(distinct.second)));
+		}
+		
+		return new Rule(
+			atoms.submerge(rule.head),
+			atoms.submerge(rule.body),
+			Sets.newHashSet(dobs.submerge(rule.vars)),
+			distincts);
 	}
 }

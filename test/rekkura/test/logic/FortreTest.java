@@ -163,6 +163,6 @@ public class FortreTest {
 	// - make sure that all cognates are stored
 	
 	private List<Dob> stringsToDobs(String[] rawDobs, LogicFormat fmt, Pool pool) {
-		return pool.submergeDobs(fmt.dobsFromStrings(Arrays.asList(rawDobs)));
+		return pool.dobs.submerge(fmt.dobsFromStrings(Arrays.asList(rawDobs)));
 	}
 }

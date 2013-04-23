@@ -65,7 +65,7 @@ public class ProverStateMachine extends GameLogicContext implements GgpStateMach
 		Set<Dob> advanced = Sets.newHashSetWithExpectedSize(proven.size()); 
 		for (Dob dob : proven) {
 			Dob replaced = Unifier.replace(dob, unify);
-			if (replaced != dob) replaced = pool.submerge(replaced);
+			if (replaced != dob) replaced = pool.dobs.submerge(replaced);
 			advanced.add(replaced);
 		}
 		return advanced;

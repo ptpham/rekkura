@@ -83,14 +83,14 @@ public class GameLogicContext {
 		List<Dob> var = rta.getVariables(2);
 		this.ROLE_VAR = var.get(0);
 		this.GENERIC_VAR = var.get(1);
-		this.GOAL_QUERY = pool.submerge(new Dob(GOAL, ROLE_VAR, GENERIC_VAR));
-		this.LEGAL_QUERY = pool.submerge(new Dob(LEGAL, ROLE_VAR, GENERIC_VAR));
-		this.INPUT_QUERY = pool.submerge(new Dob(INPUT, ROLE_VAR, GENERIC_VAR));
-		this.DOES_QUERY = pool.submerge(new Dob(DOES, ROLE_VAR, GENERIC_VAR));
-		this.INIT_QUERY = pool.submerge(new Dob(INIT, GENERIC_VAR));
-		this.NEXT_QUERY = pool.submerge(new Dob(NEXT, GENERIC_VAR));
-		this.BASE_QUERY = pool.submerge(new Dob(BASE, GENERIC_VAR));
-		this.TRUE_QUERY = pool.submerge(new Dob(TRUE, GENERIC_VAR));
+		this.GOAL_QUERY = pool.dobs.submerge(new Dob(GOAL, ROLE_VAR, GENERIC_VAR));
+		this.LEGAL_QUERY = pool.dobs.submerge(new Dob(LEGAL, ROLE_VAR, GENERIC_VAR));
+		this.INPUT_QUERY = pool.dobs.submerge(new Dob(INPUT, ROLE_VAR, GENERIC_VAR));
+		this.DOES_QUERY = pool.dobs.submerge(new Dob(DOES, ROLE_VAR, GENERIC_VAR));
+		this.INIT_QUERY = pool.dobs.submerge(new Dob(INIT, GENERIC_VAR));
+		this.NEXT_QUERY = pool.dobs.submerge(new Dob(NEXT, GENERIC_VAR));
+		this.BASE_QUERY = pool.dobs.submerge(new Dob(BASE, GENERIC_VAR));
+		this.TRUE_QUERY = pool.dobs.submerge(new Dob(TRUE, GENERIC_VAR));
 
 		this.NEXT_UNIFY.put(this.NEXT, this.TRUE);
 		this.INIT_UNIFY.put(this.INIT, this.TRUE);
@@ -109,7 +109,7 @@ public class GameLogicContext {
 	}
 	
 	private Dob getTerminalDob(String name) {
-		return this.pool.submerge(new Dob(name));
+		return this.pool.dobs.submerge(new Dob(name));
 	}
 	
 	public Multiset<Dob> extractGoals(Set<Dob> dobs) {

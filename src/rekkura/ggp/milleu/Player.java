@@ -151,7 +151,7 @@ public abstract class Player implements Runnable {
 		
 		@Override
 		protected final void prepare() {
-			this.role = machine.prover.pool.submerge(role);
+			this.role = machine.prover.pool.dobs.submerge(role);
 			plan();
 		}
 		

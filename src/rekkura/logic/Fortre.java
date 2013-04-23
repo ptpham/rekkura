@@ -64,7 +64,7 @@ public class Fortre {
 			if (component.size() < 2) continue;
 			Dob generalization = computeGeneralization(component, symmetricEdges, allVars, vargen);
 
-			generalization = pool.submerge(generalization);
+			generalization = pool.dobs.submerge(generalization);
 			// Make sure the generalization is not a cognate of 
 			// something that we already have.
 			boolean cognate = false;
