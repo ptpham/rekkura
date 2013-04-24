@@ -182,4 +182,15 @@ public class Colut {
 		for (U u : list) if (u != null) result.add(u);
 		return result;
 	}
+
+	public static <U> List<U> resize(List<U> list, int size) {
+		return resizeWith(list, size, null);
+	}
+	
+	public static <U> List<U> resizeWith(List<U> list, int size, U elem) {
+		if (list == null) list = Lists.newArrayList();
+		while (list.size() > size) removeEnd(list);
+		while (list.size() < size) list.add(elem);
+		return list;
+	}
 }
