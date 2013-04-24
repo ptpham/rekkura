@@ -22,6 +22,11 @@ public abstract class Submerger<U> {
 	public abstract String toString(U u);
 	public abstract U process(U u);
 	
+	public void clear() {
+		this.cache.stored.clear();
+		this.known.clear();
+	}
+	
 	public U submerge(U original) {
 		if (known.contains(original)) return original;
 

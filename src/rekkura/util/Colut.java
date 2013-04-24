@@ -193,4 +193,11 @@ public class Colut {
 		while (list.size() < size) list.add(elem);
 		return list;
 	}
+	
+	public static <U> boolean containsSame(Collection<U> first, Collection<U> second) {
+		if (first.size() != second.size()) return false;
+		for (U u : first) if (!second.contains(u)) return false;
+		for (U u : second) if (!first.contains(u)) return false;
+		return true;
+	}
 }
