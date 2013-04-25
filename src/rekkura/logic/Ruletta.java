@@ -8,7 +8,6 @@ import java.util.Set;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
@@ -24,7 +23,7 @@ import com.google.common.collect.*;
 public class Ruletta {
 	
 	public Set<Rule> allRules;
-	public Set<Dob> allVars, posDobs, negDobs;
+	public Set<Dob> posDobs, negDobs;
 	public Multimap<Dob, Rule> bodyToRule, headToRule;
 	public Fortre fortre;
 
@@ -60,7 +59,6 @@ public class Ruletta {
 	private Ruletta() {
 		allRules = Sets.newHashSet();
 		
-		allVars = Sets.newHashSet();
 		posDobs = Sets.newHashSet();
 		negDobs = Sets.newHashSet();
 
@@ -70,7 +68,7 @@ public class Ruletta {
 		
 		ruleRoots = Sets.newHashSet();
 		
-		fortre = new Fortre(allVars, Lists.<Dob>newArrayList(), new Pool());
+		fortre = new Fortre(Lists.<Dob>newArrayList(), new Pool());
 	}
 	
 	public static Ruletta create(Collection<Rule> rules, Pool pool) {
@@ -83,12 +81,12 @@ public class Ruletta {
 		}
 		
 		// Extract all variables
-		for (Rule rule : result.allRules) {  result.allVars.addAll(rule.vars); }
+		for (Rule rule : result.allRules) {  pool.allVars.addAll(rule.vars); }
 		
 		// Extract all terms
 		Set<Dob> allTerms = Sets.newHashSet();
 		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) { allTerms.add(atom.dob); }
-		result.fortre = new Fortre(result.allVars, allTerms, pool);
+		result.fortre = new Fortre(allTerms, pool);
 
 		// Prepare data structures to compute dependencies
 		for (Rule rule : result.allRules) { 
@@ -99,7 +97,7 @@ public class Ruletta {
 		}
 		
 		result.bodyToGenHead = dependencies(result.bodyToRule.keySet(), 
-				result.headToRule.keySet(), result.allVars);
+				result.headToRule.keySet(), pool.allVars);
 		
 		result.bodyToGenRule = OtmUtil.joinRight(result.bodyToGenHead, result.headToRule);
 		result.ruleToGenRule = OtmUtil.joinLeft(result.bodyToGenRule, result.bodyToRule);
@@ -117,18 +115,6 @@ public class Ruletta {
 		return result;
 	}
 	
-	public List<Dob> getVariables(int num) {
-		List<Dob> result = Lists.newArrayList();
-		
-		while (this.allVars.size() < num) {
-			Dob generated = new Dob("[RTA" + this.allVars.size() + "]");
-			this.allVars.add(generated);
-		}
-		
-		Iterables.addAll(result, Colut.firstK(this.allVars, num)); 
-		return result;
-	}
-	
 	/**
 	 * This returns the list of rules mapped to by forms that unify
 	 * against the given query.
@@ -138,9 +124,9 @@ public class Ruletta {
 	 * have filtered the forms you are interested in.
 	 * @return
 	 */
-	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map) {
+	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map, Set<Dob> allVars) {
 		List<Dob> forms = Unifier.retainSuccesses(query, 
-			this.fortre.getAllCognates(), this.allVars);
+			this.fortre.getAllCognates(), allVars);
 		return OtmUtil.valueIterable(map, forms);
 	}
 	

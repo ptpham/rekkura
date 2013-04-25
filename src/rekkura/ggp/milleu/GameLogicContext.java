@@ -10,6 +10,8 @@ import rekkura.logic.Ruletta;
 import rekkura.logic.Unifier;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.model.Vars;
+import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
@@ -48,7 +50,7 @@ public class GameLogicContext {
 	public final Map<Dob, Dob> LEGAL_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> EMTPY_UNIFY = Maps.newHashMap();
 	
-	public final Set<Dob> EMPTY_STATE = Sets.newHashSet();
+	public final ImmutableSet<Dob> EMPTY_STATE = ImmutableSet.of();
 	
 	public final Pool pool;
 	public final Ruletta rta;
@@ -80,9 +82,9 @@ public class GameLogicContext {
 		this.GOAL = getTerminalDob(Game.GOAL_NAME);
 		this.ROLE = getTerminalDob(Game.ROLE_NAME);
 
-		List<Dob> var = rta.getVariables(2);
-		this.ROLE_VAR = var.get(0);
-		this.GENERIC_VAR = var.get(1);
+		Set<Dob> var = Vars.request(2, pool.context);
+		this.ROLE_VAR = Colut.popAny(var);
+		this.GENERIC_VAR = Colut.popAny(var);
 		this.GOAL_QUERY = pool.dobs.submerge(new Dob(GOAL, ROLE_VAR, GENERIC_VAR));
 		this.LEGAL_QUERY = pool.dobs.submerge(new Dob(LEGAL, ROLE_VAR, GENERIC_VAR));
 		this.INPUT_QUERY = pool.dobs.submerge(new Dob(INPUT, ROLE_VAR, GENERIC_VAR));
@@ -115,7 +117,7 @@ public class GameLogicContext {
 	public Multiset<Dob> extractGoals(Set<Dob> dobs) {
 		Multiset<Dob> result = HashMultiset.create();
 		for (Dob dob : dobs) {
-			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, rta.allVars);
+			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, pool.context.getAll());
 			if (unify == null) continue;
 			
 			Dob role = unify.get(ROLE_VAR);

@@ -3,7 +3,7 @@ package rekkura.logic;
 import java.util.*;
 
 import rekkura.model.Dob;
-import rekkura.util.CachingSupplier;
+import rekkura.model.Vars;
 import rekkura.util.Colut;
 
 import com.google.common.collect.*;
@@ -17,11 +17,9 @@ import com.google.common.collect.*;
 public class Fortre {
 	public final Dob root;
 	public final Pool pool;
-	public final Set<Dob> allVars;
 	
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
-	private CachingSupplier<Dob> vargen = new Dob.PrefixedSupplier("FTV");
 
 	private static final String ROOT_VAR_NAME = "[ROOT]";
 	
@@ -30,18 +28,17 @@ public class Fortre {
 	 * will potentially be seen during the lifetime of this form tree.
 	 * @param allVars
 	 */
-	public Fortre(Collection<Dob> allVars, Iterable<Dob> allForms, Pool pool) {
-		this.allVars = Sets.newHashSet(allVars);
+	public Fortre(Iterable<Dob> allForms, Pool pool) {
 		this.root = new Dob(ROOT_VAR_NAME);
-		this.allVars.add(root);
 		this.pool = pool;
+		this.pool.allVars.add(root);
 
 		construct(Lists.newArrayList(allForms), pool);
 	}
 	
 	private void construct(List<Dob> allForms, Pool pool) {
 		// Find cognates (forms that unify against each other)
-		Multimap<Dob, Dob> cognateEdges = computeCognateEdges(allForms, allVars);
+		Multimap<Dob, Dob> cognateEdges = computeCognateEdges(allForms, pool.allVars);
 		List<Set<Dob>> cognateComponents = Topper.stronglyConnected(cognateEdges);
 		
 		// Store cognates from strongly connected components
@@ -55,14 +52,15 @@ public class Fortre {
 		}
 		
 		// Find the symmetrizing components
-		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(allForms, allVars);
+		Set<Dob> allVars = pool.allVars;
+		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(allForms, allVars, pool);
 		List<Set<Dob>> symmetrizingComponents = Topper.stronglyConnected(symmetricEdges);
 		
 		// Create the generalization forms by compressing each component
 		List<Dob> symmetrized = Lists.newArrayList(allForms);
 		for (Set<Dob> component : symmetrizingComponents) {
 			if (component.size() < 2) continue;
-			Dob generalization = computeGeneralization(component, symmetricEdges, allVars, vargen);
+			Dob generalization = computeGeneralization(component, symmetricEdges, pool.context);
 
 			generalization = pool.dobs.submerge(generalization);
 			// Make sure the generalization is not a cognate of 
@@ -91,8 +89,8 @@ public class Fortre {
 		}
 	}
 
-	public static Dob computeGeneralization(Collection<Dob> component, Multimap<Dob, Dob> edges, 
-			Set<Dob> allVars, CachingSupplier<Dob> vargen) {
+	public static Dob computeGeneralization(Collection<Dob> component, 
+			Multimap<Dob, Dob> edges, Vars.Context context) {
 		
 		// Copy things to avoid modifying them
 		component = Sets.newHashSet(component);
@@ -104,8 +102,7 @@ public class Fortre {
 		
 		while (remaining.size() > 0) {
 			Dob next = remaining.pop();
-			generalization = Unifier.computeSymmetricGeneralization(generalization, next, allVars, vargen);
-			vargen.deposit(allVars);
+			generalization = Unifier.symmetrizeBothSides(generalization, next, context);
 			
 			Collection<Dob> adjacent = edges.get(next);
 			remaining.addAll(adjacent);
@@ -130,12 +127,14 @@ public class Fortre {
 		return cognateEdges;
 	}
 
-	public static Multimap<Dob, Dob> computeSymmetrizingEdges(List<Dob> allForms, Set<Dob> allVars) {
+	public static Multimap<Dob, Dob> computeSymmetrizingEdges(List<Dob> allForms, Set<Dob> allVars, Pool pool) {
+		Vars.Context context = Vars.copy("tmp", pool.context);
+		
 		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
 		for (Dob first : allForms) {
 			for (Dob second : allForms) {
 				if (first == second) continue;
-				if (Unifier.isSymmetricPair(first, second, allVars)) { 
+				if (Unifier.isSymmetricPair(first, second, context)) { 
 					symmetricEdges.put(first, second); 
 					symmetricEdges.put(second, first);
 				}
@@ -199,6 +198,7 @@ public class Fortre {
 		List<Dob> path = Lists.newArrayList();
 		Dob cur = this.root;
 		
+		Set<Dob> allVars = pool.allVars;
 		while (cur != null) {
 			path.add(cur);
 			if (Unifier.unifyVars(dob, cur, allVars) != null) break;

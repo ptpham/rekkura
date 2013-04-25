@@ -8,6 +8,8 @@ import rekkura.fmt.StandardFormat;
 import rekkura.util.CachingSupplier;
 import rekkura.util.NestedIterable;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 /**
@@ -17,6 +19,9 @@ import com.google.common.collect.Lists;
  *
  */
 public class Dob {
+	public static final ImmutableSet<Dob> EMPTY_SET = ImmutableSet.of();
+	public static final ImmutableList<Dob> EMPTY_LIST = ImmutableList.of();
+	
 	public final String name;
 	private List<Dob> children;
 	
@@ -86,4 +91,5 @@ public class Dob {
 		public PrefixedSupplier(String prefix) { this.prefix = prefix; }
 		@Override public Dob create() { return new Dob("[" + prefix + current++ + "]"); }
 	};
+	
 }

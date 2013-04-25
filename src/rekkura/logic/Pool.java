@@ -1,12 +1,15 @@
 package rekkura.logic;
 
 import java.util.List;
+import java.util.Set;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.model.Vars;
+import rekkura.util.CachingSupplier;
 import rekkura.util.Submerger;
 
 import com.google.common.collect.Lists;
@@ -22,11 +25,14 @@ import com.google.common.collect.Sets;
  *
  */
 public class Pool {
-
+	private CachingSupplier<Dob> vargen = new Dob.PrefixedSupplier("PLG");
+	
 	public final LogicFormat fmt = new StandardFormat();
 	public final Submerger<Dob> dobs = createDobSubmerger();
 	public final Submerger<Atom> atoms = createAtomSubmerger();
 	public final Submerger<Rule> rules = createRuleSubmerger();
+	public final Set<Dob> allVars = Sets.newHashSet();
+	public final Vars.Context context = Vars.asContext(allVars, vargen);
 	
 	private Submerger<Dob> createDobSubmerger() {
 		return new Submerger<Dob>() {
@@ -67,20 +73,32 @@ public class Pool {
 	}
 	
 	private Atom handleUnseen(Atom atom) {
-		return new Atom(dobs.submerge(atom.dob), atom.truth);
+		Dob dob = dobs.submerge(atom.dob);
+		if (dob == atom.dob) return atom;
+		return new Atom(dob, atom.truth);
 	}
 	
 	private Rule handleUnseen(Rule rule) {
-		List<Rule.Distinct> distincts = Lists.newArrayList();
-		for (Rule.Distinct distinct : rule.distinct) {
-			distincts.add(new Rule.Distinct(dobs.submerge(distinct.first), 
-					dobs.submerge(distinct.second)));
-		}
+		Atom head = atoms.submerge(rule.head);
 		
-		return new Rule(
-			atoms.submerge(rule.head),
-			atoms.submerge(rule.body),
-			Sets.newHashSet(dobs.submerge(rule.vars)),
-			distincts);
+		List<Atom> body = Lists.newArrayList();
+		for (Atom term : rule.body) body.add(atoms.submerge(term));
+		
+		List<Rule.Distinct> distincts = Lists.newArrayList();
+		for (Rule.Distinct distinct : rule.distinct) distincts.add(handleUnseen(distinct));
+		
+		List<Dob> vars = Lists.newArrayList();
+		for (Dob var : rule.vars) vars.add(dobs.submerge(var));
+		
+		Rule result = new Rule(head, body, vars, distincts);
+		if (Rule.orderedRefeq(rule, result)) return rule;
+		return result;
+	}
+
+	private Rule.Distinct handleUnseen(Rule.Distinct distinct) {
+		Dob first = dobs.submerge(distinct.first);
+		Dob second = dobs.submerge(distinct.second);
+		if (first == distinct.first && second == distinct.second) return distinct;
+		return new Rule.Distinct(first, second);
 	}
 }

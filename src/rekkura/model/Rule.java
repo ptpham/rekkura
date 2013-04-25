@@ -10,6 +10,7 @@ import rekkura.util.Colut;
 import rekkura.util.NestedIterator;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 
@@ -22,6 +23,9 @@ import com.google.common.collect.Lists;
  *
  */
 public class Rule {
+	public static final ImmutableSet<Rule> EMPTY_SET = ImmutableSet.of();
+	public static final ImmutableList<Rule> EMPTY_LIST = ImmutableList.of();
+
 	public final Atom head;
 	public final ImmutableList<Atom> body;
 	public final ImmutableList<Distinct> distinct;
@@ -97,6 +101,31 @@ public class Rule {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * Reference equality comparison of the logic components of rules.
+	 * @param first
+	 * @param second
+	 * @return
+	 */
+	public static boolean refeq(Rule first, Rule second) {
+		return first.head == second.head && Colut.containsSame(first.body, second.body)
+				&& Colut.containsSame(first.vars, second.vars) 
+				&& Colut.containsSame(first.distinct, second.distinct);
+	}
+	
+	/**
+	 * This also requires that the ordering of the logical componets in the
+	 * rules is the same.
+	 * @param first
+	 * @param second
+	 * @return
+	 */
+	public static boolean orderedRefeq(Rule first, Rule second) {
+		return first.head == second.head && first.body.equals(second.body)
+				&& first.vars.equals(second.vars) 
+				&& first.distinct.equals(second.distinct);
 	}
 	
 	public List<Atom> getPositives() {

@@ -5,10 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.model.Dob;
-import rekkura.model.Unification;
+import rekkura.model.*;
+import rekkura.model.Rule.Distinct;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -38,6 +37,50 @@ public class Unifier {
 		if (changed) return new Dob(newChildren);
 		return base;
 	}
+	
+	public static List<Dob> replaceDobs(Iterable<Dob> dobs, Map<Dob, Dob> substitution) {
+		List<Dob> result = Lists.newArrayList();
+		for(Dob dob : dobs) result.add(replace(dob, substitution));
+		return result;
+	}
+	
+	public static Atom replace(Atom base, Map<Dob, Dob> substitution) {
+		Dob dob = replace(base.dob, substitution);
+		if (dob == base.dob) return base;
+		return new Atom(dob, base.truth);
+	}
+	
+	public static List<Atom> replaceAtoms(Iterable<Atom> terms, Map<Dob, Dob> substitution) {
+		List<Atom> result = Lists.newArrayList();
+		for (Atom term : terms) result.add(replace(term, substitution));
+		return result;
+	}
+	
+	public static Rule replace(Rule base, Map<Dob, Dob> substitution) {
+		Atom head = replace(base.head, substitution);
+		List<Atom> body = replaceAtoms(base.body, substitution);
+		List<Dob> vars = replaceDobs(base.vars, substitution);
+		List<Rule.Distinct> distincts = replaceDistincts(base.distinct, substitution);
+		
+		Rule result = new Rule(head, body, vars, distincts);
+		if (Rule.orderedRefeq(base, result)) return base;
+		return result;
+	}
+	
+	public static Rule.Distinct replace(Rule.Distinct base, Map<Dob, Dob> substitution) {
+		Dob first = replace(base.first, substitution);
+		Dob second = replace(base.second, substitution);
+		if (first == base.first && second == base.second) return base;
+		return new Rule.Distinct(first, second);
+	}
+
+	private static List<Distinct>
+	replaceDistincts(Iterable<Distinct> distincts, Map<Dob, Dob> substitution) {
+		List<Rule.Distinct> result = Lists.newArrayList();
+		for (Rule.Distinct distinct : distincts) result.add(replace(distinct, substitution));
+		return result;
+	}
+
 	
 	/**
 	 * Attempts to unify {@code base} against {@code target}. This method will fail 
@@ -131,44 +174,41 @@ public class Unifier {
 	 * @param vargen supplies new variables for the generalization
 	 * @return
 	 */
-	public static Map<Dob, Dob> symmetrizeUnification(Map<Dob, Dob> unify, Set<Dob> variables, Supplier<Dob> vargen) {
+	public static Map<Dob, Dob> symmetrize(Map<Dob, Dob> unify, Vars.Context context) {
 		if (unify == null) return null;
 		Map<Dob, Dob> result = Maps.newHashMap();
 		
+		Set<Dob> vars = context.getAll();
 		for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
 			Dob key = entry.getKey(), value = entry.getValue();
-			if (!variables.contains(key) && !variables.contains(value)) return null;
-			result.put(key, vargen.get());
+			if (!vars.contains(key) && !vars.contains(value)) return null;
+			result.put(key, context.create());
 		}
 		
 		return result;
 	}
 	
-	public static boolean isSymmetricPair(Dob first, Dob second, Set<Dob> vars) {
-		Dob.PrefixedSupplier vargen = new Dob.PrefixedSupplier("tmp");
-		Map<Dob, Dob> symmetrizer = oneSidedSymmetrizer(first, second, vars, vargen);
-		return symmetrizer != null;
-	}
-
-	private static Map<Dob, Dob> oneSidedSymmetrizer(Dob first, Dob second,
-			Set<Dob> vars, Supplier<Dob> vargen) {
-		Map<Dob, Dob> unification = Unifier.unify(first, second);
-		Map<Dob, Dob> symmetrizer = Unifier.symmetrizeUnification(unification, vars, vargen);
-		return symmetrizer;
+	public static boolean isSymmetricPair(Dob first, Dob second, Vars.Context context) {
+		return getSymmetrizer(first, second, context) != null;
 	}
 	
-	public static Dob computeSymmetricGeneralization(Dob first, Dob second,
-			Set<Dob> vars, Supplier<Dob> vargen) {
-		Dob result = oneSidedSymmetricGeneralization(first, second, vars, vargen);
-		if (result == null) result = oneSidedSymmetricGeneralization(second, first, vars, vargen);
+	public static Dob symmetrizeBothSides(Dob first, Dob second, Vars.Context context) {
+		Dob result = symmetrize(first, second, context);
+		if (result == null) result = symmetrize(second, first, context);
 		return result;
 	}
 	
-	public static Dob oneSidedSymmetricGeneralization(Dob first, Dob second,
-			Set<Dob> vars, Supplier<Dob> vargen) {
-		Map<Dob, Dob> symmetrizer = oneSidedSymmetrizer(first, second, vars, vargen);
+	public static Dob symmetrize(Dob first, Dob second, Vars.Context context) {
+		Map<Dob, Dob> symmetrizer = getSymmetrizer(first, second, context);
 		return replace(first, symmetrizer);
 	}
+	
+	private static Map<Dob, Dob> getSymmetrizer(Dob first, Dob second, Vars.Context context) {
+		Map<Dob, Dob> unification = Unifier.unify(first, second);
+		Map<Dob, Dob> symmetrizer = Unifier.symmetrize(unification, context);
+		return symmetrizer;
+	}
+	
 
 	public static boolean mergeUnifications(Map<Dob, Dob> dst, Map<Dob, Dob> src) {
 		if (src == null) return false;

@@ -2,6 +2,9 @@ package rekkura.model;
 
 import java.util.Iterator;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 import rekkura.fmt.StandardFormat;
 
 /**
@@ -11,6 +14,9 @@ import rekkura.fmt.StandardFormat;
  *
  */
 public class Atom {
+	public static final ImmutableSet<Atom> EMPTY_SET = ImmutableSet.of();
+	public static final ImmutableList<Atom> EMPTY_LIST = ImmutableList.of();
+
 	public final Dob dob;
 	public final boolean truth;
 	

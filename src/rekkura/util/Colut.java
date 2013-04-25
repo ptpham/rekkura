@@ -3,13 +3,11 @@ package rekkura.util;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 
@@ -121,7 +119,7 @@ public class Colut {
 	public static <U> Iterator<U> firstK(final Iterator<U> raw, final int k) {
 		return new Iterator<U>() {
 			int current = 0;
-			@Override public boolean hasNext() { return current < k && raw.hasNext(); }
+			@Override public boolean hasNext() { return current++ < k && raw.hasNext(); }
 			@Override public U next() { return raw.next(); }
 			@Override public void remove() { raw.remove(); }
 		};
@@ -150,12 +148,6 @@ public class Colut {
 	public static <U> U randomSelection(List<U> vals, Random rand) {
 		int index = rand.nextInt(vals.size());
 		return vals.get(index);
-	}
-	
-	public static <U, V> Map<U, V> asMap(U u, V v) {
-		Map<U, V> result = Maps.newHashMap();
-		result.put(u, v);
-		return result;
 	}
 	
 	public static <U> List<U> newArrayListOfNulls(int num) {
