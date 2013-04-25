@@ -5,28 +5,28 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 
-public class List2D<U> {
+public class Matrix<U> {
 	private List<List<U>> values = Lists.newArrayList();
-	private int width, height;
+	private int rows, columns;
 	
-	public List2D(int width, int height) { resize(width, height); }
+	public Matrix(int width, int height) { resize(width, height); }
 	public void resize(int width, int height) { resizeWith(width, height, null); }
 	
-	public void resizeWith(int width, int height, U value) {
-		values = Colut.resize(values, height);
-		for (int i = 0; i < height; i++) {
+	public void resizeWith(int rows, int columns, U value) {
+		values = Colut.resize(values, rows);
+		for (int i = 0; i < rows; i++) {
 			List<U> current = values.get(i);
-			values.set(i, Colut.resizeWith(current, width, value));
+			values.set(i, Colut.resizeWith(current, columns, value));
 		}
-		this.width = width;
-		this.height = height;
+		this.rows = rows;
+		this.columns = columns;
 	}
 	
 	public U get(int i, int j) { return values.get(i).get(j); }
 	public void set(int i, int j, U val) { values.get(i).set(j, val); }
 	
-	public int getWidth() { return width; }
-	public int getHeight() { return height; }
+	public int getNumRows() { return rows; }
+	public int getNumCols() { return columns; }
 	
 	public Iterator<List<U>> rowIterator() { return values.iterator(); }
 	
@@ -63,6 +63,8 @@ public class List2D<U> {
 		};
 	}
 	
-	public static <U> List2D<U> create() { return new List2D<U>(0, 0); }
-	public static <U> List2D<U> create(int width, int height) { return new List2D<U>(width, height); }
+	public Iterable<U> onRow(int row) { return this.values.get(row); }
+	
+	public static <U> Matrix<U> create() { return new Matrix<U>(0, 0); }
+	public static <U> Matrix<U> create(int rows, int columns) { return new Matrix<U>(rows, columns); }
 }
