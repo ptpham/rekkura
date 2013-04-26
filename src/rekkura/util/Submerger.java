@@ -1,21 +1,15 @@
 package rekkura.util;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 public abstract class Submerger<U> {
-
-	private Cache<String, U> cache = new Cache<String, U>(new Function<String, U>() {
-		@Override public U apply(String s) {
-			
-			return fromString(s);
-		}
-	});
-	
+	Map<String, U> cache = Maps.newHashMap();
 	private Set<U> known = Sets.newHashSet();
 
 	public abstract U fromString(String s);
@@ -23,18 +17,23 @@ public abstract class Submerger<U> {
 	public abstract U process(U u);
 	
 	public void clear() {
-		this.cache.stored.clear();
+		this.cache.clear();
 		this.known.clear();
 	}
 	
 	public U submerge(U original) {
 		if (known.contains(original)) return original;
-
 		String stringed = toString(original);
-		U existing = cache.stored.get(stringed);
+		return submerge(original, stringed);
+	}
+	
+	public U submerge(String stringed) { return submerge(null, stringed); }
+	private U submerge(U original, String stringed) {
+		U existing = cache.get(stringed);
 		if (existing == null) {
+			if (original == null) original = fromString(stringed);
 			existing = process(original);
-			cache.stored.put(stringed, existing);
+			cache.put(stringed, existing);
 			this.known.add(existing);
 		}
 		
