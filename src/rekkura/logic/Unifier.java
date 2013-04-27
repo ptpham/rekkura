@@ -56,11 +56,17 @@ public class Unifier {
 		return result;
 	}
 	
-	public static Rule replace(Rule base, Map<Dob, Dob> substitution) {
+	public static Rule replace(Rule base, Map<Dob, Dob> substitution, Collection<Dob> dstVars) {
 		Atom head = replace(base.head, substitution);
 		List<Atom> body = replaceAtoms(base.body, substitution);
-		List<Dob> vars = replaceDobs(base.vars, substitution);
 		List<Rule.Distinct> distincts = replaceDistincts(base.distinct, substitution);
+
+		List<Dob> vars = Lists.newArrayList();
+		for (Dob var : base.vars) {
+			Dob replacement = replace(var, substitution);
+			if (!dstVars.contains(replacement)) continue;
+			vars.add(replacement);
+		}
 		
 		Rule result = new Rule(head, body, vars, distincts);
 		if (Rule.orderedRefeq(base, result)) return base;

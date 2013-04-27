@@ -8,7 +8,6 @@ import org.junit.Test;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.MatchRunnable;
 import rekkura.ggp.milleu.Player;
-import rekkura.util.Colut;
 
 import com.google.common.collect.Lists;
 
