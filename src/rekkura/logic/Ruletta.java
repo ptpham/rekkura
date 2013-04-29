@@ -142,26 +142,12 @@ public class Ruletta {
 	public List<List<Rule>> getPathsBetween(Set<Rule> targets, Set<Rule> sources) {
 		List<List<Rule>> result = Lists.newArrayList();
 		for (Rule target : targets) {
-			result.addAll(getPathsBetween(sources, target));
+			Multimap<Rule, Rule> edges = Topper.dagifyDijkstra(target, this.ruleToGenRule);
+			for (Rule src : sources) result.addAll(Topper.getPaths(src, target, edges));
 		}
 		return result;
 	}
 
-	public List<List<Rule>> getPathsBetween(Set<Rule> sources, Rule target) {
-		List<List<Rule>> result = Lists.newArrayList();
-		Multimap<Rule, Rule> edges = Topper.dijkstra(target, this.ruleToGenRule);
-		Set<Rule> reachable = OtmUtil.flood(edges, sources);
-		OtmUtil.retainAll(reachable, edges);
-		
-		Set<Rule> roots = Topper.findRoots(edges);
-		roots.retainAll(sources);
-		for (Rule source : roots) {
-			List<List<Rule>> paths = Topper.getPaths(source, target, edges);
-			result.addAll(paths);
-		}
-		return result;
-	}
-	
 	/**
 	 * Computes for each target dob the set of source dobs that unify with it.
 	 * @param dobs

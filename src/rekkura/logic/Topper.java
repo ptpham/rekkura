@@ -228,8 +228,7 @@ public class Topper {
 	}
 	
 	/**
-	 * The edges passed in should be directed acyclic. You probably want
-	 * to use dijkstra to get the edges that move toward the destination.
+	 * The edges passed in should be directed acyclic. 
 	 * @param src
 	 * @param dst
 	 * @param edges
@@ -257,6 +256,32 @@ public class Topper {
 		return result;
 	}
 	
+	/**
+	 * Constructs a new graph that only has edges from lower topological
+	 * layers to higher topological layers as defined by the dijkstra's 
+	 * graph from the target.
+	 * 
+	 * TODO: This method's behavior is currently not well-defined because
+	 * topsort is not well-defined.
+	 * @param target
+	 * @param edges
+	 * @return
+	 */
+	public static <U> Multimap<U, U> dagifyDijkstra(U target, Multimap<U, U> edges) {
+		Multimap<U, U> result = HashMultimap.create();
+		Multimap<U, U> dijkstra = Topper.dijkstra(target, edges);
+		
+		Set<U> roots = findRoots(dijkstra);
+		Multiset<U> ordering = Topper.topSort(dijkstra, roots);
+		
+		for (Map.Entry<U, U> edge : edges.entries()) {
+			U src = edge.getKey();
+			U dst = edge.getValue();
+			if (ordering.count(src) < ordering.count(dst)) result.put(src, dst);
+		}
+		return result;
+	}
+
 	
 	/**
 	 * This method indices a subgraph over the given graph such that there are
@@ -291,6 +316,7 @@ public class Topper {
 		for (U u : edges.keySet()) if (edges.get(u).size() == 1) result.add(u);
 		return result;
 	}
+	
 }
 
 
