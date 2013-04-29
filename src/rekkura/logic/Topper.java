@@ -16,6 +16,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
@@ -253,6 +254,41 @@ public class Topper {
 			}
 		}
 		
+		return result;
+	}
+	
+	
+	/**
+	 * This method indices a subgraph over the given graph such that there are
+	 * no degenerate nodes (nodes with exactly one incoming and one outgoing edges).
+	 * @param edges
+	 * @return
+	 */
+	public static <U> Multimap<U, U> reduceDirected(Multimap<U, U> edges) {
+		Multimap<U, U> inverted = HashMultimap.create();
+		Multimaps.invertFrom(edges, inverted);
+		
+		Set<U> degen = degeneratedOuts(edges);
+		degen.retainAll(degeneratedOuts(inverted));
+		
+		Multimap<U, U> result = HashMultimap.create();
+		
+		for (U parent : edges.keySet()) {
+			if (degen.contains(parent)) continue;
+			for (U child : edges.get(parent)) {
+				while (child != null && degen.contains(child)) {
+					child = Colut.any(inverted.get(child));
+				}
+				if (child != null) result.put(parent, child);
+			}
+		}
+		
+		return result;
+	}
+	
+	private static <U> Set<U> degeneratedOuts(Multimap<U, U> edges) {
+		Set<U> result = Sets.newHashSet();
+		for (U u : edges.keySet()) if (edges.get(u).size() == 1) result.add(u);
 		return result;
 	}
 }
