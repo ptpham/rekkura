@@ -33,6 +33,13 @@ public abstract class Submerger<U> {
 		if (existing == null) {
 			if (original == null) original = fromString(stringed);
 			existing = process(original);
+			
+			// This block deals with the possibility that process will
+			// changed the stringed representation of the object
+			stringed = toString(existing);
+			U reattempt = cache.get(stringed);
+			if (reattempt != null) return reattempt;
+			
 			cache.put(stringed, existing);
 			this.known.add(existing);
 		}

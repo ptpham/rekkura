@@ -29,7 +29,7 @@ public class KifFormatTest {
 	
 	@Test
 	public void rule() {
-		String raw = "(<= e f ?g (not (a (b c) d)))";
+		String raw = "(<= e ?g f (not (a (b c) d)))";
 		Rule rule = fmt.ruleFromString(raw);
 		Assert.assertEquals(raw, fmt.toString(rule));
 		Assert.assertEquals(1, rule.vars.size());
