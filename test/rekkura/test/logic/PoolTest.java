@@ -15,8 +15,8 @@ public class PoolTest {
 		String secondRaw = "{(X)(W)(Y)|<((f)(X)(Y)(a)(W)),true>:-<((g)(X)(Y)(W)),true>}";
 		
 		Pool pool = new Pool();
-		Rule first = pool.rules.submerge(firstRaw);
-		Rule second = pool.rules.submerge(secondRaw);
+		Rule first = pool.rules.submergeString(firstRaw);
+		Rule second = pool.rules.submergeString(secondRaw);
 		
 		Assert.assertEquals(first, second);
 	}

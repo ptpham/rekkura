@@ -60,8 +60,12 @@ public class Comprender {
 			if (!compute(pair, pool)) continue;
 			
 			// Apply the unifications to their respective rules
-			Rule srcFixed = pool.rules.submerge(Unifier.replace(src, pair.srcUnify, dst.vars));
-			Rule dstFixed = pool.rules.submerge(Unifier.replace(dst, pair.dstUnify, src.vars));
+			Set<Dob> varUnion = Sets.newHashSet();
+			varUnion.addAll(src.vars);
+			varUnion.addAll(dst.vars);
+			
+			Rule srcFixed = pool.rules.submerge(Unifier.replace(src, pair.srcUnify, varUnion));
+			Rule dstFixed = pool.rules.submerge(Unifier.replace(dst, pair.dstUnify, varUnion));
 			
 			List<Atom> body = Lists.newArrayList();
 			for (int j = 0; j < dstFixed.body.size(); j++) {
@@ -69,6 +73,9 @@ public class Comprender {
 			}
 			body.addAll(srcFixed.body);
 			
+			// Construct the variables for the new rule. This set
+			// should contain all of the vars in the fixed source, 
+			// and all of the vars that were left untouched in the destination.
 			Set<Dob> vars = Sets.newHashSet(dstFixed.vars);
 			vars.removeAll(pair.dstUnify.keySet());
 			vars.addAll(srcFixed.vars);

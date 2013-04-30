@@ -27,7 +27,7 @@ public abstract class Submerger<U> {
 		return submerge(original, stringed);
 	}
 	
-	public U submerge(String stringed) { return submerge(null, stringed); }
+	public U submergeString(String stringed) { return submerge(null, stringed); }
 	private U submerge(U original, String stringed) {
 		U existing = cache.get(stringed);
 		if (existing == null) {
@@ -50,6 +50,12 @@ public abstract class Submerger<U> {
 	public List<U> submerge(Iterable<U> originals) {
 		List<U> result = Lists.newArrayList();
 		for (U original : originals) result.add(submerge(original));
+		return result;
+	}
+	
+	public List<U> submergeStrings(Iterable<String> originals) {
+		List<U> result = Lists.newArrayList();
+		for (String original : originals) result.add(submergeString(original));
 		return result;
 	}
 }
