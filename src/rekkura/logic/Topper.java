@@ -123,13 +123,18 @@ public class Topper {
 		int nextPriority = 1;
 		for (U root : roots) { zeroEdges.push(root); }
 		while (zeroEdges.size() > 0) {
-			U next = zeroEdges.pop();
-			result.add(next, nextPriority++);
-			
-			for (U u : edges.get(next)) { 
-				incoming.remove(u); 
-				if (incoming.count(u) == 0) zeroEdges.push(u);
+			Stack<U> nextZeros = new Stack<U>();
+			while (zeroEdges.size() > 0) {
+				U next = zeroEdges.pop();
+				result.add(next, nextPriority);
+				
+				for (U u : edges.get(next)) { 
+					incoming.remove(u); 
+					if (incoming.count(u) == 0) nextZeros.push(u);
+				}
 			}
+			zeroEdges = nextZeros;
+			nextPriority++;
 		}
 		
 		return result;
@@ -260,9 +265,6 @@ public class Topper {
 	 * Constructs a new graph that only has edges from lower topological
 	 * layers to higher topological layers as defined by the dijkstra's 
 	 * graph from the target.
-	 * 
-	 * TODO: This method's behavior is currently not well-defined because
-	 * topsort is not well-defined.
 	 * @param target
 	 * @param edges
 	 * @return
@@ -271,13 +273,17 @@ public class Topper {
 		Multimap<U, U> result = HashMultimap.create();
 		Multimap<U, U> dijkstra = Topper.dijkstra(target, edges);
 		
-		Set<U> roots = findRoots(dijkstra);
-		Multiset<U> ordering = Topper.topSort(dijkstra, roots);
+		List<U> roots = Lists.newArrayList();
+		roots.add(target);
+		
+		Multimap<U, U> dijkstraInverse = HashMultimap.create();
+		Multimaps.invertFrom(dijkstra, dijkstraInverse);
+		Multiset<U> ordering = Topper.topSort(dijkstraInverse, roots);
 		
 		for (Map.Entry<U, U> edge : edges.entries()) {
 			U src = edge.getKey();
 			U dst = edge.getValue();
-			if (ordering.count(src) < ordering.count(dst)) result.put(src, dst);
+			if (ordering.count(src) > ordering.count(dst)) result.put(src, dst);
 		}
 		return result;
 	}
