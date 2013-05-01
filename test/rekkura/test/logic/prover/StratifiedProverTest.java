@@ -1,16 +1,12 @@
 package rekkura.test.logic.prover;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import rekkura.fmt.LogicFormat;
 import rekkura.fmt.StandardFormat;
@@ -20,21 +16,9 @@ import rekkura.model.Rule;
 
 import com.google.common.collect.Sets;
 
-@RunWith(Parameterized.class)
-public class StratifiedProverTest {
+public abstract class StratifiedProverTest {
 
-	private StratifiedProver.Factory factory;
-	public StratifiedProverTest(StratifiedProver.Factory factory) {
-		this.factory = factory;
-	}
-	
-	@Parameters
-	public static Collection<Object[]> paramters() {
-		return Arrays.asList(new Object[][] {
-			{ StratifiedProver.FORWARD_FACTORY },
-			{ StratifiedProver.BACKWARD_FACTORY }
-		});
-	}
+	protected abstract StratifiedProver.Factory getFactory();
 	
 	@Test
 	public void noVariables() {
@@ -312,7 +296,7 @@ public class StratifiedProverTest {
 		LogicFormat fmt = new StandardFormat();
 		List<Rule> rules = fmt.rulesFromStrings(Arrays.asList(rawRules));
 		List<Dob> initial = fmt.dobsFromStrings(Arrays.asList(rawInitial));
-		StratifiedProver prover = factory.create(rules);
+		StratifiedProver prover = getFactory().create(rules);
 
 		Set<Dob> result = Sets.newHashSet();
 		result.addAll(initial);

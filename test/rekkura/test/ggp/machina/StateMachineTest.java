@@ -1,43 +1,27 @@
-package rekkura.test.ggp;
+package rekkura.test.ggp.machina;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import rekkura.ggp.machina.GgpStateMachine;
 import rekkura.model.Dob;
 import rekkura.model.StateMachine;
+import rekkura.test.ggp.SimpleGames;
 import rekkura.util.Colut;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
-@RunWith(Parameterized.class)
-public class StateMachineTest {
-
-	private GgpStateMachine.Factory<?> factory;
-	public StateMachineTest(GgpStateMachine.Factory<?> factory) { this.factory = factory; }
-	
-	@Parameters
-	public static Collection<Object[]> paramters() {
-		return Arrays.asList(new Object[][] {
-			{ GgpStateMachine.GENERIC_FORWARD_PROVER },
-			{ GgpStateMachine.GENERIC_BACKWARD_PROVER },
-			{ GgpStateMachine.BACKWARD_PROVER }
-		});
-	}
+public abstract class StateMachineTest {
+	protected abstract GgpStateMachine.Factory<?> getFactory();
 	
 	@Test
 	public void ticTacToe() {
-		StateMachine<Set<Dob>, Dob> machine = factory.create(SimpleGames.getTicTacToe());
+		StateMachine<Set<Dob>, Dob> machine = getFactory().create(SimpleGames.getTicTacToe());
 		Set<Dob> initial = machine.getInitial();
 		Assert.assertEquals(10, initial.size());
 		
@@ -55,7 +39,7 @@ public class StateMachineTest {
 	
 	@Test
 	public void connectFour() {
-		StateMachine<Set<Dob>, Dob> machine = factory.create(SimpleGames.getConnectFour());
+		StateMachine<Set<Dob>, Dob> machine = getFactory().create(SimpleGames.getConnectFour());
 		Set<Dob> initial = machine.getInitial();
 		Assert.assertEquals(43, initial.size());
 		
