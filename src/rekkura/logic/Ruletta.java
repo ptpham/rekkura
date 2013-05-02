@@ -143,7 +143,9 @@ public class Ruletta {
 		List<List<Rule>> result = Lists.newArrayList();
 		for (Rule target : targets) {
 			Multimap<Rule, Rule> edges = Topper.dagifyDijkstra(target, this.ruleToGenRule);
-			for (Rule src : sources) result.addAll(Topper.getPaths(src, target, edges));
+			Multimap<Rule, Rule> inverted = HashMultimap.create();
+			Multimaps.invertFrom(edges, inverted);
+			for (Rule src : sources) result.addAll(Topper.getPaths(src, target, inverted));
 		}
 		return result;
 	}

@@ -283,7 +283,7 @@ public class Topper {
 		for (Map.Entry<U, U> edge : edges.entries()) {
 			U src = edge.getKey();
 			U dst = edge.getValue();
-			if (ordering.count(src) > ordering.count(dst)) result.put(src, dst);
+			if (ordering.count(src) < ordering.count(dst)) result.put(src, dst);
 		}
 		return result;
 	}

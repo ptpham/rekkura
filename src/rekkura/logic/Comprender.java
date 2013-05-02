@@ -67,11 +67,13 @@ public class Comprender {
 			Rule srcFixed = pool.rules.submerge(Unifier.replace(src, pair.srcUnify, varUnion));
 			Rule dstFixed = pool.rules.submerge(Unifier.replace(dst, pair.dstUnify, varUnion));
 			
-			List<Atom> body = Lists.newArrayList();
-			for (int j = 0; j < dstFixed.body.size(); j++) {
-				if (j != pair.dstPosition) body.add(dstFixed.body.get(j));
-			}
-			body.addAll(srcFixed.body);
+			// Construct the body separately because the unification replace may have changed
+			// the canonical ordering of the terms in the destination body
+			List<Atom> dstFilteredBody = filterAt(pair.dstPosition, Unifier.replace(dst, pair.dstUnify, varUnion));
+			List<Atom> dstFixedBody = pool.atoms.submerge(dstFilteredBody);
+			
+			boolean pivotTruth = dst.body.get(pair.dstPosition).truth;
+			List<List<Atom>> bodies = generateMergeBodies(srcFixed, dstFixedBody, pivotTruth);
 			
 			// Construct the variables for the new rule. This set
 			// should contain all of the vars in the fixed source, 
@@ -80,11 +82,41 @@ public class Comprender {
 			vars.removeAll(pair.dstUnify.keySet());
 			vars.addAll(srcFixed.vars);
 			
-			Rule merged = new Rule(dstFixed.head, body, vars);
-			result.add(merged);
+			for (List<Atom> body : bodies) {
+				Rule merged = new Rule(dstFixed.head, body, vars);
+				result.add(merged);
+			}
 		}
 		
 		return result;
+	}
+
+	private static List<List<Atom>> generateMergeBodies(Rule src, 
+		List<Atom> dstBody, boolean pivotTruth) {
+		
+		List<List<Atom>> bodies = Lists.newArrayList();
+		if (pivotTruth) {
+			List<Atom> body = Lists.newArrayList(dstBody);
+			body.addAll(src.body);
+			bodies.add(body);
+			return bodies;
+		}
+		
+		// Use de Morgan's rule here
+		for (Atom term : src.body) {
+			List<Atom> body = Lists.newArrayList(dstBody);
+			body.add(new Atom(term.dob, !term.truth));
+			bodies.add(body);
+		}
+		return bodies;
+	}
+
+	private static List<Atom> filterAt(int pivot, Rule dstFixed) {
+		List<Atom> body = Lists.newArrayList();
+		for (int j = 0; j < dstFixed.body.size(); j++) {
+			if (j != pivot) body.add(dstFixed.body.get(j));
+		}
+		return body;
 	}
 	
 	private static class RulePairUnify {
