@@ -175,6 +175,12 @@ public class Colut {
 		return result;
 	}
 
+	public static <U> List<U> filterAt(List<U> list, int position) {
+		List<U> result = Lists.newArrayListWithCapacity(list.size());
+		for (int i = 0; i < list.size(); i++) if (i != position) result.add(list.get(i));
+		return result;
+	}
+
 	public static <U> List<U> resize(List<U> list, int size) {
 		return resizeWith(list, size, null);
 	}
