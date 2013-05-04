@@ -9,6 +9,9 @@ import org.junit.Test;
 
 import rekkura.logic.Comprender;
 import rekkura.logic.Pool;
+import rekkura.logic.merge.DefaultMerge;
+import rekkura.logic.merge.Merge;
+import rekkura.logic.merge.Merges;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
@@ -61,14 +64,15 @@ public class ComprenderTest {
 	}
 	
 	@Test
-	public void mergeNegation() {
+	public void combination() {
 		String firstRaw = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)(Y)),true><((g)(Y)(X)),true>}";
 		String secondRaw = "{(X)(Y)|<((h)(X)(Y)),true>:-<((f)(Y)(X)),false>}";
 		String expectedFirst = "{(X)(Y)|<((h)(X)(Y)),true>:-<((g)(Y)(X)),false>}";
 		String expectedSecond = "{(X)(Y)|<((h)(X)(Y)),true>:-<((g)(X)(Y)),false>}";
 		
+		Merge.Operation op = DefaultMerge.combine(Merges.posSub, Merges.negSplit);
 		runMerge(Lists.newArrayList(firstRaw, secondRaw), 
-			Sets.newHashSet(expectedFirst, expectedSecond));
+			Sets.newHashSet(expectedFirst, expectedSecond), op);
 	}
 	
 	@Test
@@ -82,14 +86,16 @@ public class ComprenderTest {
 	
 	// TODO: Reordering test
 	
-	// TODO: Polish up de Morgan ... right now atoms may lose context when split
-	
 	private void runMerge(List<String> rawRules, Set<String> rawExpected) {
+		runMerge(rawRules, rawExpected, Merges.posSub);
+	}
+	
+	private void runMerge(List<String> rawRules, Set<String> rawExpected, Merge.Operation op) {
 		Pool pool = new Pool();
 		List<Rule> rules = pool.rules.submergeStrings(rawRules);
 		
 		Set<Rule> expected = Sets.newHashSet(pool.rules.submergeStrings(rawExpected));
-		Set<Rule> actual = Sets.newHashSet(pool.rules.submerge(Comprender.mergeAll(rules, pool)));
+		Set<Rule> actual = Sets.newHashSet(pool.rules.submerge(Comprender.mergeAll(rules, pool, op)));
 		Assert.assertEquals(expected, actual);
 	}
 }

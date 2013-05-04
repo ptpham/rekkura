@@ -22,8 +22,8 @@ public class SimpleGames {
 			"{|<((next)(z)),true>:-<((true)(p)),true> <((does)(robot)(sing)),false>}",
 			"{|<(terminal),true>:-<((true)(q)),true>}",
 			"{|<(terminal),true>:-<((true)(z)),true>}",
-			"{|<((goal)(p)(100)),true>:-<((true)(q)),true>}",
-			"{|<((goal)(p)(0)),true>:-<((true)(z)),true>}"
+			"{|<((goal)(robot)(100)),true>:-<((true)(q)),true>}",
+			"{|<((goal)(robot)(10)),true>:-<((true)(z)),true>}"
 		);
 		return StandardFormat.inst.rulesFromStrings(rules);
 	}

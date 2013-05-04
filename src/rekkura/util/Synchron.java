@@ -1,13 +1,17 @@
 package rekkura.util;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ConcurrentHashMultiset;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
 
 /**
  * This holds some utilties for dealing with synchronization
@@ -57,7 +61,7 @@ public class Synchron {
 	}
 	
 	public static <U, V> Map<U, V> newHashmap() {
-		return Collections.synchronizedMap(Maps.<U, V>newHashMap());
+		return new ConcurrentHashMap<U, V>();
 	}
 	
 	/**
@@ -66,7 +70,7 @@ public class Synchron {
 	 * @return
 	 */
 	public static <U> Multiset<U> newHashMultiset() {
-		return HashMultiset.create();
+		return ConcurrentHashMultiset.create();
 	}
 	
 	public static <U> Vector<U> newVector() { return new Vector<U>(); }

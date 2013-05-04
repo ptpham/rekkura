@@ -34,8 +34,8 @@ public class MatchRunnableTest {
 	}
 	
 	@Test
-	public void ticTacToe() {
-		Game.Config config = GgpTestUtil.createBlitzConfig(SimpleGames.getTicTacToe());
+	public void goalsRegistered() {
+		Game.Config config = GgpTestUtil.createBlitzConfig(SimpleGames.getTrivial());
 		MatchRunnable match = new MatchRunnable(config);
 		match.run();
 
