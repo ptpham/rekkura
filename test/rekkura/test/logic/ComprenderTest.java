@@ -64,6 +64,20 @@ public class ComprenderTest {
 	}
 	
 	@Test
+	public void variableConflict() {
+		String firstRaw = "{(X)(Y)|<((f)(X)),true>:-<((g)(X)(Y)),true>}";
+		String secondRaw = "{(X)(Y)|<((h)(X)(Y)),true>:-<((f)(X)),true>}";
+		
+		Pool pool = new Pool();
+		List<Rule> rules = pool.rules.submergeStrings(Lists.newArrayList(firstRaw, secondRaw));
+		List<Rule> generated = Comprender.mergeAll(rules, pool, Merges.posSub);
+		Assert.assertEquals(1, generated.size());
+		
+		Rule rule = generated.get(0);
+		Assert.assertEquals(3, rule.vars.size());
+	}
+	
+	@Test
 	public void combination() {
 		String firstRaw = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)(Y)),true><((g)(Y)(X)),true>}";
 		String secondRaw = "{(X)(Y)|<((h)(X)(Y)),true>:-<((f)(Y)(X)),false>}";

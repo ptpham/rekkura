@@ -9,6 +9,7 @@ import rekkura.logic.Unifier;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
+import rekkura.model.Vars;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -36,6 +37,7 @@ public class Merge {
 	public static class Result {
 		public final Map<Dob, Dob> srcUnify = Maps.newHashMap();
 		public final Map<Dob, Dob> dstUnify = Maps.newHashMap();
+		public final Set<Dob> vars = Sets.newHashSet();
 		public final Request request;
 		
 		public Result(Request request) {
@@ -74,24 +76,45 @@ public class Merge {
 				break;
 			}
 		}
+		
+		renderVars(result, pool);
 		return result;
 	}
 	
 	/**
-	 * Construct the variables for the new rule. This set
-	 * should contain all of the vars in the fixed source, 
-	 * and all of the vars that were left untouched in the destination.
+	 * Construct the variables for the new rule. This set should contain
+	 * all variables in the fixed source, all variables that were left
+	 * untouched in the destination, and new variables for the incoming
+	 * source variables in case there is a conflict.
 	 * @param merge
 	 * @param srcFixed
 	 * @param dstFixed
 	 * @return
 	 */
-	public static Set<Dob> renderVars(Merge.Result merge,
-			Rule srcFixed, Rule dstFixed) {
-		Set<Dob> vars = Sets.newHashSet(dstFixed.vars);
+	private static void renderVars(Merge.Result merge, Pool pool) {
+		if (merge == null) return;
+		Merge.Request req = merge.request;
+		Set<Dob> vars = merge.vars;
+		vars.addAll(req.dst.vars);
+		
+		// The destination unification is guaranteed to map only to 
+		// non-variables by construction.
 		vars.removeAll(merge.dstUnify.keySet());
-		vars.addAll(srcFixed.vars);
-		return vars;
+		Set<Dob> srcHeadFlattened = Sets.newHashSet(req.src.head.dob.fullIterable());
+		
+		// If a variable in the source has not been accounted for in the
+		// source unification, it needs to be disambiguated if the destination
+		// has a copy of that variable.
+		Set<Dob> srcTouched = merge.srcUnify.keySet();
+		for (Dob var : req.src.vars) {
+			if (!srcTouched.contains(var)) {
+				if (vars.contains(var) && !srcHeadFlattened.contains(var)) {
+					Dob safe = Vars.request(vars, pool.context);
+					merge.srcUnify.put(var, safe);
+					vars.add(safe);
+				} else vars.add(var);
+			}
+		}
 	}
 
 }

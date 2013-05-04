@@ -1,17 +1,14 @@
 package rekkura.logic.merge;
 
 import java.util.List;
-import java.util.Set;
 
 import rekkura.logic.Pool;
 import rekkura.logic.Unifier;
 import rekkura.logic.merge.Merge.Result;
 import rekkura.model.Atom;
-import rekkura.model.Dob;
 import rekkura.model.Rule;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  * A default merge will try to merge the head of the source with
@@ -34,8 +31,7 @@ public abstract class DefaultMerge implements Merge.Operation {
 	 * @param vars
 	 * @return
 	 */
-	public abstract List<Rule> generate(Merge.Result merge, 
-			Rule srcFixed, Rule dstFixed, Set<Dob> vars);
+	public abstract List<Rule> generate(Merge.Result merge, Rule srcFixed, Rule dstFixed);
 	
 	@Override
 	public List<Rule> mergeRules(Rule src, Rule dst, Pool pool) {
@@ -47,21 +43,16 @@ public abstract class DefaultMerge implements Merge.Operation {
 			if (merge == null) continue;
 			
 			// Apply the unifications to their respective rules
-			Set<Dob> varUnion = Sets.newHashSet();
-			varUnion.addAll(src.vars);
-			varUnion.addAll(dst.vars);
-			
-			Rule srcFixed = pool.rules.submerge(Unifier.replace(src, merge.srcUnify, varUnion));
-			Rule dstRaw = pool.rules.submerge(Unifier.replace(dst, merge.dstUnify, varUnion));
+			Rule srcFixed = pool.rules.submerge(Unifier.replace(src, merge.srcUnify, merge.vars));
+			Rule dstRaw = pool.rules.submerge(Unifier.replace(dst, merge.dstUnify, merge.vars));
 			
 			// Construct the body separately because the unification replace may have changed
 			// the canonical ordering of the terms in the destination body. This is not ideal.
-			List<Atom> fixedBody = Unifier.replace(dst, merge.dstUnify, varUnion).body;
+			List<Atom> fixedBody = Unifier.replace(dst, merge.dstUnify, merge.vars).body;
 			Rule dstFixed = new Rule(dstRaw.head, fixedBody, dstRaw.vars, dstRaw.distinct);
-			Set<Dob> vars = Merge.renderVars(merge, srcFixed, dstFixed);
 
 			// Generate and submerge results
-			List<Rule> generated = generate(merge, srcFixed, dstFixed, vars);
+			List<Rule> generated = generate(merge, srcFixed, dstFixed);
 			for (Rule rule : generated) {
 				Rule submerged = pool.rules.submerge(rule);
 				result.add(submerged);
@@ -73,12 +64,11 @@ public abstract class DefaultMerge implements Merge.Operation {
 
 	public static DefaultMerge combine(final DefaultMerge... operations) {
 		return new DefaultMerge() {
-			@Override public List<Rule> generate(Result merge, 
-				Rule srcFixed, Rule dstFixed, Set<Dob> vars) {
+			@Override public List<Rule> generate(Result merge, Rule srcFixed, Rule dstFixed) {
 				
 				List<Rule> result = Lists.newArrayList();
 				for (DefaultMerge op : operations) {
-					List<Rule> generated = op.generate(merge, srcFixed, dstFixed, vars);
+					List<Rule> generated = op.generate(merge, srcFixed, dstFixed);
 					result.addAll(generated);
 				}
 				return result;

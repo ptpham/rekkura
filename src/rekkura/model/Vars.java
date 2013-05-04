@@ -35,7 +35,7 @@ public abstract class Vars {
 	 */
 	public static Dob request(Set<Dob> conflicts, Context context) {
 		for (Dob dob : context.getAll()) { if (!conflicts.contains(dob)) return dob; }
-		return null;
+		return context.create();
 	}
 	
 	public static Context asContext(final Set<Dob> dobs, final CachingSupplier<Dob> vargen) {

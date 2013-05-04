@@ -4,12 +4,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * (Collection Utilities) These methods are supposed to be
@@ -114,6 +116,18 @@ public class Colut {
 	public static <U> U get(List<U> list, int i) {
 		if (list == null || i < 0 || i >= list.size()) return null;
 		return list.get(i);
+	}
+	
+	public static <U> Set<U> intersection(Collection<U> first, Collection<U> second) {
+		Set<U> result = Sets.newHashSet(first);
+		result.retainAll(second);
+		return result;
+	}
+	
+	public static <U> Set<U> difference(Collection<U> first, Collection<U> second) {
+		Set<U> result = Sets.newHashSet(first);
+		result.removeAll(second);
+		return result;
 	}
 
 	public static <U> Iterator<U> firstK(final Iterator<U> raw, final int k) {
