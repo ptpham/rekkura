@@ -307,10 +307,8 @@ public class Topper {
 		for (U parent : edges.keySet()) {
 			if (degen.contains(parent)) continue;
 			for (U child : edges.get(parent)) {
-				while (child != null && degen.contains(child)) {
-					child = Colut.any(inverted.get(child));
-				}
-				if (child != null) result.put(parent, child);
+				while (degen.contains(child)) child = Colut.any(edges.get(child));
+				result.put(parent, child);
 			}
 		}
 		

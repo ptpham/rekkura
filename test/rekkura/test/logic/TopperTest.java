@@ -21,17 +21,14 @@ public class TopperTest {
 	
 	@Test
 	public void stronglyConnected() {
-		Multimap<Integer, Integer> edges = HashMultimap.create();
 		Set<Integer> roots = Sets.newHashSet(1);
-		
-		int[][] edgesRaw = { {0, 1}, {1, 2}, {1, 6}, {2, 3}, 
-				{2, 4}, {4, 5}, {5, 2}, {3, 1}, {4, 7}, 
-				{7, 8}, {8, 9}, {9,7}, {9, 10}, {10, 11}, {11, 10},
-				{10, 12}, {12, 13}, {13, 14}, {14, 15}, 
-				{13, 12}, {12, 16}, {16, 12}, {13, 2}, {15, 17},
-				{17, 18}, {18, 15}, {18, 19}, {19, 20}, {20, 19}};
-		
-		for (int[] edge : edgesRaw) { edges.put(edge[0], edge[1]); }
+		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
+			{0, 1}, {1, 2}, {1, 6}, {2, 3}, 
+			{2, 4}, {4, 5}, {5, 2}, {3, 1}, {4, 7}, 
+			{7, 8}, {8, 9}, {9,7}, {9, 10}, {10, 11}, {11, 10},
+			{10, 12}, {12, 13}, {13, 14}, {14, 15}, 
+			{13, 12}, {12, 16}, {16, 12}, {13, 2}, {15, 17},
+			{17, 18}, {18, 15}, {18, 19}, {19, 20}, {20, 19}});
 		
 		List<HashSet<Integer>> expected = Lists.newArrayList();
 		expected.add(Sets.newHashSet(17, 18, 15));
@@ -59,16 +56,13 @@ public class TopperTest {
 	
 	@Test
 	public void generalTopSort() {
-		Multimap<Integer, Integer> edges = HashMultimap.create();
-		
-		int[][] edgesRaw = { {0, 1}, {1, 2}, {1, 6}, {2, 3}, 
-				{2, 4}, {4, 5}, {5, 2}, {3, 1}, {4, 7}, 
-				{7, 8}, {8, 9}, {9,7}, {9, 10}, {10, 11}, {11, 10},
-				{10, 12}, {12, 13}, {13, 14}, {14, 15}, 
-				{13, 12}, {12, 16}, {16, 12}, {13, 2}, {15, 17},
-				{17, 18}, {18, 15}, {18, 19}, {19, 20}, {20, 19}};
-		
-		for (int[] edge : edgesRaw) { edges.put(edge[0], edge[1]); }
+		Multimap<Integer, Integer> edges = toMultimap(new int[][]{ 
+			{0, 1}, {1, 2}, {1, 6}, {2, 3}, 
+			{2, 4}, {4, 5}, {5, 2}, {3, 1}, {4, 7}, 
+			{7, 8}, {8, 9}, {9,7}, {9, 10}, {10, 11}, {11, 10},
+			{10, 12}, {12, 13}, {13, 14}, {14, 15}, 
+			{13, 12}, {12, 16}, {16, 12}, {13, 2}, {15, 17},
+			{17, 18}, {18, 15}, {18, 19}, {19, 20}, {20, 19}});
 		Set<Integer> roots = Topper.findRoots(edges);
 
 		int[][] expectedRaw = { {0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 5}, {5, 6},
@@ -80,5 +74,22 @@ public class TopperTest {
 		for (int[] raw : expectedRaw) expected.add(raw[0], raw[1]);
 		
 		Assert.assertEquals(expected, Topper.generalTopSort(edges, roots));
+	}
+	
+	@Test
+	public void reduceDirected() {
+		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
+				{0, 1}, {1, 2}, {2, 3}, {2, 4}, {3, 5}} );
+		Multimap<Integer, Integer> reduction = Topper.reduceDirected(edges);
+		
+		Multimap<Integer, Integer> expected = toMultimap(new int[][]{
+				{0, 2}, {2, 4}, {2, 5}} );
+		Assert.assertEquals(expected, reduction);
+	}
+
+	private Multimap<Integer, Integer> toMultimap(int[][] edgesRaw) {
+		Multimap<Integer, Integer> edges = HashMultimap.create();
+		for (int[] edge : edgesRaw) { edges.put(edge[0], edge[1]); }
+		return edges;
 	}
 }
