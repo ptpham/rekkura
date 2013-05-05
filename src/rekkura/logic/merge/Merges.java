@@ -1,14 +1,17 @@
 package rekkura.logic.merge;
 
 import java.util.List;
+import java.util.Set;
 
 import rekkura.logic.merge.Merge.Result;
 import rekkura.model.Atom;
+import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.util.Colut;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * This class holds static instances of various merge operations.
@@ -46,8 +49,8 @@ public class Merges {
 	/**
 	 * This merge generates "first order approximation" rules in which
 	 * negations split source bodies into negations of their constituent 
-	 * terms. The rules that are generated using this merge may lead to
-	 * inaccurate conclusions.
+	 * terms. This merge will only generate rules from negated bodies 
+	 * if these bodies contain all variables in the head of the source.
 	 * @author ptpham
 	 *
 	 */
@@ -60,6 +63,9 @@ public class Merges {
 			if (merge.getPivot().truth) return result;
 
 			for (Atom term : srcFixed.body) {
+				Set<Dob> termSet = Sets.newHashSet(term.dob.fullIterable());
+				if (!termSet.containsAll(srcFixed.vars)) continue;
+				
 				List<Atom> body = Colut.filterAt(dstFixed.body, merge.request.dstPosition);
 				body.add(new Atom(term.dob, !term.truth));
 				result.add(new Rule(dstFixed.head, body, merge.vars,
