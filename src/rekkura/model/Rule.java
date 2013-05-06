@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import rekkura.fmt.StandardFormat;
 import rekkura.util.Colut;
@@ -13,6 +14,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 /**
  * Like the other logical objects, rules are immutable.
@@ -138,6 +140,12 @@ public class Rule {
 		List<Atom> negatives = Lists.newArrayList();
 		for (Atom atom : this.body) { if (!atom.truth) negatives.add(atom); }
 		return negatives;
+	}
+	
+	public Set<Dob> getVariablesOf(Dob dob) {
+		Set<Dob> result = Sets.newHashSet(dob.fullIterable());
+		result.retainAll(this.vars);
+		return result;
 	}
 	
 	public static Rule asVacuousRule(Dob dob) {

@@ -11,7 +11,6 @@ import rekkura.util.Colut;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 /**
  * This class holds static instances of various merge operations.
@@ -49,8 +48,9 @@ public class Merges {
 	/**
 	 * This merge generates "first order approximation" rules in which
 	 * negations split source bodies into negations of their constituent 
-	 * terms. This merge will only generate rules from negated bodies 
-	 * if these bodies contain all variables in the head of the source.
+	 * terms. This merge will only generate rules using terms in the
+	 * source rule if all variables in the term are contained in the
+	 * source head.
 	 * @author ptpham
 	 *
 	 */
@@ -62,13 +62,9 @@ public class Merges {
 			List<Rule> result = Lists.newArrayList();
 			if (merge.getPivot().truth) return result;
 
-			Set<Dob> srcHeadVars = Sets.newHashSet();
-			Iterables.addAll(srcHeadVars, srcFixed.head.dob.fullIterable());
-			srcHeadVars.retainAll(srcFixed.vars);
-			
+			Set<Dob> srcHeadVars = srcFixed.getVariablesOf(srcFixed.head.dob);
 			for (Atom term : srcFixed.body) {
-				Set<Dob> termVars = Sets.newHashSet(term.dob.fullIterable());
-				termVars.retainAll(srcFixed.vars);
+				Set<Dob> termVars = srcFixed.getVariablesOf(term.dob);
 				if (!srcHeadVars.containsAll(termVars)) continue;
 				
 				List<Atom> body = Colut.filterAt(dstFixed.body, merge.request.dstPosition);

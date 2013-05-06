@@ -42,12 +42,11 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		this.prover = prover;
 		this.pool = prover.pool;
 		
-		// Store the subset of known that will never change.
+		// Store the subset of known that will never change
 		prover.proveAll(Lists.<Dob>newArrayList());
 		for (Rule rule : this.staticRules) {
 			this.knownStatic.putAll(rule, this.prover.getKnown(rule));
 		}
-		
 	}
 
 	@Override

@@ -43,6 +43,4 @@ public class Logimos {
 			return "[" + this.form + ", " + replacements + "]";
 		}
 	}
-	
-	
 }
