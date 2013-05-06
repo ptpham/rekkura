@@ -62,9 +62,14 @@ public class Merges {
 			List<Rule> result = Lists.newArrayList();
 			if (merge.getPivot().truth) return result;
 
+			Set<Dob> srcHeadVars = Sets.newHashSet();
+			Iterables.addAll(srcHeadVars, srcFixed.head.dob.fullIterable());
+			srcHeadVars.retainAll(srcFixed.vars);
+			
 			for (Atom term : srcFixed.body) {
-				Set<Dob> termSet = Sets.newHashSet(term.dob.fullIterable());
-				if (!termSet.containsAll(srcFixed.vars)) continue;
+				Set<Dob> termVars = Sets.newHashSet(term.dob.fullIterable());
+				termVars.retainAll(srcFixed.vars);
+				if (!srcHeadVars.containsAll(termVars)) continue;
 				
 				List<Atom> body = Colut.filterAt(dstFixed.body, merge.request.dstPosition);
 				body.add(new Atom(term.dob, !term.truth));
