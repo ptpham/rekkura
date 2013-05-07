@@ -10,15 +10,7 @@ import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 import rekkura.util.UnionFind;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This class may move in the future. It contains very general
@@ -177,16 +169,6 @@ public class Topper {
 		
 		seen.put(node, Integer.MAX_VALUE);
 			
-		return result;
-	}
-	
-	public static <U, V> Multimap<V, V> extractGraph(U first, U second, Collection<Map<U, V>> unifications) {
-		Multimap<V, V> result = HashMultimap.create();
-		for (Map<U, V> unification : unifications) {
-			V src = unification.get(first);
-			V dst = unification.get(second);
-			if (src != null && dst != null) result.put(src, dst);
-		}
 		return result;
 	}
 	

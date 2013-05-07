@@ -1,25 +1,41 @@
 package rekkura.logic;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 import rekkura.model.Dob;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.Maps;
 
 public class Latticer {
-
-	public static Multimap<Dob, Dob> detect(Dob first, Dob second, Dob base, Collection<Dob> grounds) {
-		List<Dob> vars = Lists.newArrayList(first, second);
-		List<Map<Dob, Dob>> unifications = Lists.newArrayList();
+	
+	/**
+	 * This extracts a map from the given grounds to submerged dobs
+	 * that represent the assignments to the given variables in the
+	 * given order.
+	 * @param vars
+	 * @param base
+	 * @param grounds
+	 * @param pool
+	 * @return
+	 */
+	public static Map<Dob, Dob> represent(Iterable<Dob> grounds,
+		Dob base, List<Dob> vars, Pool pool) {
+		
+		Map<Dob, Dob> result = Maps.newHashMap();
+		
 		for (Dob ground : grounds) {
-			Map<Dob, Dob> unify = Unifier.unifyVars(base, ground, vars);
-			if (unify != null) unifications.add(unify);
+			Map<Dob, Dob> unify = Unifier.unify(base, ground);
+			if (unify == null) continue;
+			if (!unify.keySet().containsAll(vars)) continue;
+			
+			List<Dob> assign = Lists.newArrayList();
+			for (Dob var : vars) assign.add(unify.get(var));
+			
+			result.put(ground, pool.dobs.submerge(new Dob(assign)));
 		}
 		
-		return Topper.extractGraph(first, second, unifications);
+		return result;
 	}
-	
 }

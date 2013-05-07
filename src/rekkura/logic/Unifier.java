@@ -31,7 +31,7 @@ public class Unifier {
 			Dob child = base.at(i);
 			Dob replaced = replace(child, substitution);
 			if (child != replaced) changed = true;
-			newChildren.add(replaced);
+			if (replaced != null) newChildren.add(replaced);
 		}
 		
 		if (changed) return new Dob(newChildren);

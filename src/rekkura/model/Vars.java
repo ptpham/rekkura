@@ -8,6 +8,17 @@ import rekkura.util.Colut;
 import com.google.common.collect.Sets;
 
 public abstract class Vars {
+	
+	/**
+	 * A context makes it nicer to do a large number of logical
+	 * operations over a set of rules. It makes it unnecessary to 
+	 * recompute the union of variable sets because the context
+	 * represents the union of all variable sets.
+	 * TODO: Think about where/how to deal with conflicts 
+	 * in which rules disagree on whether something is a variable.
+	 * @author ptpham
+	 *
+	 */
 	public static interface Context {
 		/**
 		 * Request a new variable dob that is guaranteed 

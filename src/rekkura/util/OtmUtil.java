@@ -145,6 +145,19 @@ public class OtmUtil {
 		return result;
 	}
 	
+	public static <U, V> Multimap<V, V> joinBase(Map<U, V> first, Map<U, V> second) {
+		Multimap<V, V> result = HashMultimap.create();
+		
+		for (Map.Entry<U, V> pair : first.entrySet()) {
+			U key = pair.getKey();
+			V secondValue = second.get(key);
+			if (secondValue == null) continue;
+			result.put(pair.getValue(), secondValue);
+		}
+		
+		return result;
+	}
+	
 	public static <U, V> Multimap<U, V> squashRight(Map<U, V> map, Map<V, V> other) {
 		Multimap<U, V> result = joinRight(Multimaps.forMap(map), Multimaps.forMap(other));
 		for (U u : map.keySet()) {

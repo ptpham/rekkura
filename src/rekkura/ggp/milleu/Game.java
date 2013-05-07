@@ -112,14 +112,13 @@ public class Game {
 		return result;
 	}
 	
-	// TODO: make these nicer
 	public static Dob convertActionToMove(Dob action) {
-		if (action == null) return null;
+		if (action == null || action.size() < 3) return null;
 		return action.at(2);
 	}
 
 	public static Dob getRoleForAction(Dob action) {
-		if (action == null) return null;
+		if (action == null || action.size() < 3) return null;
 		return action.at(1);
 	}
 	
