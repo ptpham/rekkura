@@ -31,14 +31,17 @@ public class StratifiedForward extends StratifiedProver {
 	private Multimap<Integer, Rule> pendingRules 
 		= TreeMultimap.create(Ordering.natural(), Ordering.arbitrary());
 
+	private List<Rule> bodyless = Lists.newArrayList();
+	
 	public StratifiedForward(Collection<Rule> rules) {
 		super(rules);
+		for (Rule rule : this.rta.allRules) if (rule.body.size() == 0) bodyless.add(rule);
 		clear();
 	}
 
 	public void reset(Iterable<Dob> truths) {
 		clear();
-		this.queueTruth(vacuous);
+		this.queueRules(bodyless);
 		for (Dob truth : truths) if (truth != null) queueTruth(truth);
 	}
 	
@@ -70,15 +73,19 @@ public class StratifiedForward extends StratifiedProver {
 		boolean added = this.storeTruth(dob);
 		if (!added) return dob;
 		
-		Iterable<Rule> generated = this.cachet.affectedRules.get(dob);
+		queueRules(this.cachet.affectedRules.get(dob));
+		return dob;
+	}
 
-		// Add rules with their topological priority
+	/**
+	 * Add rules with their topological priority
+	 * @param generated
+	 */
+	private void queueRules(Iterable<Rule> generated) {
 		for (Rule rule : generated) {
 			int priority = this.rta.ruleOrder.count(rule);
 			this.pendingRules.put(priority, rule);
 		}
-
-		return dob;
 	}
 
 	public boolean hasMore() { return this.pendingRules.size() > 0; }
@@ -93,7 +100,7 @@ public class StratifiedForward extends StratifiedProver {
 		List<Dob> result = Lists.newArrayListWithCapacity(generated.size());
 		for (Dob dob : generated) {
 			Dob submerged = queueTruth(dob);
-			if (submerged != vacuous) result.add(submerged);
+			result.add(submerged);
 		}
 		
 		return result;

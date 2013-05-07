@@ -76,7 +76,6 @@ public class StratifiedBackward extends StratifiedProver {
 		this.known.clear();
 		
 		Arrays.fill(rooted, false);
-		this.preserveTruth(vacuous);
 	}
 	
 	/**

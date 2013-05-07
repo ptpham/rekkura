@@ -29,7 +29,7 @@ public class MonteCarloPlayerTest {
 		MonteCarloPlayer player = new MonteCarloPlayer();
 		List<Rule> game = SimpleGames.getTicTacToe();
 		
-		Game.Config config = GgpTestUtil.createFastConfig(game);
+		Game.Config config = GgpTestUtil.createBlitzConfig(game);
 		Dob role = StandardFormat.inst.dobFromString("(o)");
 		List<String> rawActions = Lists.newArrayList(
 				"((does)(x)((mark)(3)(3)))", 
@@ -54,7 +54,7 @@ public class MonteCarloPlayerTest {
 		Thread thread = new Thread(player);
 		thread.start();
 		
-		while (player.getWavesComputed() < 1) { Synchron.lightSleep(100); }
+		while (player.getWavesComputed() < 1) { Synchron.lightSleep(50); }
 		
 		String taken = StandardFormat.inst.toString(player.getDecision(1));
 		Assert.assertEquals("((does)(o)((mark)(2)(2)))", taken);

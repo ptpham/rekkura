@@ -1,7 +1,6 @@
 package rekkura.logic;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -126,30 +125,21 @@ public class Ruletta {
 	 */
 	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map, Set<Dob> allVars) {
 		List<Dob> forms = Unifier.retainSuccesses(query, 
-			this.fortre.getAllCognates(), allVars);
+			this.fortre.getCognateSpine(query), allVars);
 		return OtmUtil.valueIterable(map, forms);
 	}
 	
-	public List<List<Rule>> getPathsBetween(Dob src, Dob dst) {
-		Set<Rule> targets = Sets.newHashSet(OtmUtil.valueIterable(this.headToRule, 
-				this.fortre.getCognateSpine(dst)));
-		Set<Rule> sources = Sets.newHashSet(OtmUtil.valueIterable(this.bodyToRule, 
-				this.fortre.getCognateSpine(src)));
-
-		return getPathsBetween(targets, sources);
+	/**
+	 * Returns the set of rules that are mapped to by the forms in the
+	 * spine of the given dob.
+	 * @param query
+	 * @param map
+	 * @return
+	 */
+	public Iterable<Rule> getSpineRules(Dob query, Multimap<Dob, Rule> map) {
+		return OtmUtil.valueIterable(map, this.fortre.getCognateSpine(query));
 	}
-
-	public List<List<Rule>> getPathsBetween(Set<Rule> targets, Set<Rule> sources) {
-		List<List<Rule>> result = Lists.newArrayList();
-		for (Rule target : targets) {
-			Multimap<Rule, Rule> edges = Topper.dagifyDijkstra(target, this.ruleToGenRule);
-			Multimap<Rule, Rule> inverted = HashMultimap.create();
-			Multimaps.invertFrom(edges, inverted);
-			for (Rule src : sources) result.addAll(Topper.getPaths(src, target, inverted));
-		}
-		return result;
-	}
-
+	
 	/**
 	 * Computes for each target dob the set of source dobs that unify with it.
 	 * @param dobs
@@ -182,19 +172,11 @@ public class Ruletta {
 	public Set<Rule> getAffectedRules(Dob dob) {
 		Set<Dob> subtree = Sets.newHashSet();
 		Iterables.addAll(subtree, fortre.getSpine(dob));
-		return Sets.newHashSet(ruleIterableFromBodyDobs(subtree));
+		return Sets.newHashSet(OtmUtil.valueIterable(bodyToRule, subtree));
 	}
 
 	public Iterable<Dob> getAllTerms() {
 		return Iterables.concat(this.headToRule.keySet(), this.bodyToRule.keySet()); 
-	}
-	
-	public Iterator<Rule> ruleIteratorFromBodyDobs(Iterator<Dob> dobs) {
-		return OtmUtil.valueIterator(bodyToRule, dobs);
-	}
-	
-	public Iterable<Rule> ruleIterableFromBodyDobs(final Iterable<Dob> dobs) {
-		return OtmUtil.valueIterable(bodyToRule, dobs);
 	}
 
 	public static Ruletta createEmpty() { return new Ruletta(); }

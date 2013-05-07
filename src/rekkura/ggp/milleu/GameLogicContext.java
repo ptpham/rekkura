@@ -10,8 +10,6 @@ import rekkura.logic.Ruletta;
 import rekkura.logic.Unifier;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
-import rekkura.model.Vars;
-import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
@@ -50,6 +48,9 @@ public class GameLogicContext {
 	public final Map<Dob, Dob> LEGAL_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> EMTPY_UNIFY = Maps.newHashMap();
 	
+	public final String ROLE_VAR_NAME = "[GLC_ROLE]";
+	public final String GENERIC_VAR_NAME = "[GLC_GEN]";
+	
 	public final ImmutableSet<Dob> EMPTY_STATE = ImmutableSet.of();
 	
 	public final Pool pool;
@@ -82,9 +83,12 @@ public class GameLogicContext {
 		this.GOAL = getTerminalDob(Game.GOAL_NAME);
 		this.ROLE = getTerminalDob(Game.ROLE_NAME);
 
-		Set<Dob> var = Vars.request(2, pool.context);
-		this.ROLE_VAR = Colut.popAny(var);
-		this.GENERIC_VAR = Colut.popAny(var);
+		this.ROLE_VAR = getTerminalDob(ROLE_VAR_NAME);
+		this.GENERIC_VAR = getTerminalDob(GENERIC_VAR_NAME);
+		
+		pool.allVars.add(ROLE_VAR);
+		pool.allVars.add(GENERIC_VAR);
+		
 		this.GOAL_QUERY = pool.dobs.submerge(new Dob(GOAL, ROLE_VAR, GENERIC_VAR));
 		this.LEGAL_QUERY = pool.dobs.submerge(new Dob(LEGAL, ROLE_VAR, GENERIC_VAR));
 		this.INPUT_QUERY = pool.dobs.submerge(new Dob(INPUT, ROLE_VAR, GENERIC_VAR));
@@ -152,21 +156,22 @@ public class GameLogicContext {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Use this method to generate a set of rules that represent forms 
 	 * with which you may want to make queries.
 	 * @return
 	 */
 	public static List<Rule> getVacuousQueryRules() {
+		return new GameLogicContext().constructQueryRules();
+	}
+	
+	public List<Rule> constructQueryRules() {
+		List<Dob> queries = Lists.newArrayList(INIT_QUERY,
+			NEXT_QUERY, GOAL_QUERY, LEGAL_QUERY, TRUE_QUERY, DOES_QUERY);
+		List<Dob> vars = Lists.newArrayList(ROLE_VAR, GENERIC_VAR);
+		
 		List<Rule> result = Lists.newArrayList();
-		
-		GameLogicContext context = new GameLogicContext();
-		List<Dob> queries = Lists.newArrayList(context.INIT_QUERY,
-			context.NEXT_QUERY, context.GOAL_QUERY, context.LEGAL_QUERY,
-			context.TRUE_QUERY, context.DOES_QUERY);
-		
-		List<Dob> vars = Lists.newArrayList(context.ROLE_VAR, context.GENERIC_VAR);
 		for (Dob dob : queries) result.add(Rule.asVacuousRule(dob, vars));
 		return result;
 	}

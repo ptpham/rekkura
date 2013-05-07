@@ -71,7 +71,14 @@ public class Terra {
 		
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		Unification unify = Unification.from(rule.vars);
-
+		
+		// This block deals with the no variables special case...
+		// Please refactor if you can see a cleaner way to do it.
+		if (rule.vars.size() == 0 && Colut.containsAll(Atom.dobIterableFromAtoms(positives), truths)
+			&& Colut.containsNone(Atom.dobIterableFromAtoms(negatives), truths)) {
+			return Sets.<Dob>newHashSet(rule.head.dob);
+		}
+		
 		while (iterator.hasNext()) {
 			unify.clear();
 

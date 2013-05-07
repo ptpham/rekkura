@@ -44,6 +44,10 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		
 		// Store the subset of known that will never change
 		prover.proveAll(Lists.<Dob>newArrayList());
+		
+		List<Rule> queryRules = constructQueryRules();
+		this.staticRules.addAll(pool.rules.submerge(queryRules));
+		
 		for (Rule rule : this.staticRules) {
 			this.knownStatic.putAll(rule, this.prover.getKnown(rule));
 		}
@@ -75,10 +79,14 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	public Multiset<Dob> getGoals(Set<Dob> state) {
 		return extractGoals(proverPass(state, GOAL_QUERY, EMTPY_UNIFY));
 	}
+	
+	public static StratifiedBackward createProverForRules(Collection<Rule> rules) {
+		List<Rule> augmented = augmentWithQueryRules(rules);
+		return new StratifiedBackward(augmented);
+	}
 
 	public static BackwardStateMachine createForRules(Collection<Rule> rules) {
-		List<Rule> augmented = augmentWithQueryRules(rules);
-		return new BackwardStateMachine(new StratifiedBackward(augmented));
+		return new BackwardStateMachine(createProverForRules(rules));
 	}
 
 	public static List<Rule> augmentWithQueryRules(Collection<Rule> rules) {

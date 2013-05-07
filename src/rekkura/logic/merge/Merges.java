@@ -21,6 +21,8 @@ public class Merges {
 	public static final PositiveSubstitution posSub = new PositiveSubstitution();
 	public static final NegationSplit negSplit = new NegationSplit();
 	
+	public static final DefaultMerge defaultMerge = DefaultMerge.combine(posSub, negSplit);
+	
 	/**
 	 * The truth merge will only expand merges such that the destination
 	 * position is not a negation.

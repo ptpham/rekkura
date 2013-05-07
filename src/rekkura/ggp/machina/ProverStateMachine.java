@@ -8,7 +8,6 @@ import rekkura.ggp.milleu.GameLogicContext;
 import rekkura.logic.Pool;
 import rekkura.logic.Ruletta;
 import rekkura.logic.Unifier;
-import rekkura.logic.prover.StratifiedBackward;
 import rekkura.logic.prover.StratifiedForward;
 import rekkura.logic.prover.StratifiedProver;
 import rekkura.model.Dob;
@@ -76,9 +75,6 @@ public class ProverStateMachine extends GameLogicContext implements GgpStateMach
 	}
 	
 	public static ProverStateMachine createWithStratifiedBackward(Collection<Rule> rules) {
-		StratifiedBackward prover = new StratifiedBackward(BackwardStateMachine.augmentWithQueryRules(rules));
-		return new ProverStateMachine(prover);
+		return new ProverStateMachine(BackwardStateMachine.createProverForRules(rules));
 	}
-	
-	
 }

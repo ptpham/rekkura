@@ -41,5 +41,4 @@ public class MatchRunnableTest {
 
 		Assert.assertTrue(match.goals.size() > 0);
 	}
-	
 }

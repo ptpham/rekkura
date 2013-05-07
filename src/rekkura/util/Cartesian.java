@@ -54,7 +54,7 @@ public class Cartesian {
 		private AdvancingIterator(List<List<U>> candidates) {
 			this.candidates = candidates;
 			
-			int size = 1;
+			int size = candidates.size() > 0 ? 1 : 0;
 			for (List<U> slice : candidates) { size *= slice.size(); }
 			
 			this.spaceSize = size;
