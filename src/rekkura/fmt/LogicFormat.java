@@ -1,8 +1,6 @@
 package rekkura.fmt;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import rekkura.model.Atom;
@@ -23,31 +21,6 @@ public abstract class LogicFormat {
 	public abstract Rule ruleFromString(String s);
 	
 	public abstract String toString(Rule.Distinct distinct);
-	
-	public Rule canonize(Rule rule) {
-		List<Dob> vars = Lists.newArrayList(rule.vars);
-		List<Atom> body = Lists.newArrayList(rule.body);
-		
-		Collections.sort(vars, new Comparator<Dob>() {
-			@Override public int compare(Dob arg0, Dob arg1) {
-				String first = LogicFormat.this.toString(arg0);
-				String second = LogicFormat.this.toString(arg1);
-				return first.compareTo(second);
-			}
-		});
-		
-		Collections.sort(body, new Comparator<Atom>() {
-			@Override public int compare(Atom arg0, Atom arg1) {
-				if (arg0.truth && !arg1.truth) return -1;
-				if (!arg0.truth && arg1.truth) return 1;
-				String first = LogicFormat.this.toString(arg0);
-				String second = LogicFormat.this.toString(arg1);
-				return first.compareTo(second);
-			}
-		});
-		
-		return new Rule(rule.head, body, vars, rule.distinct);
-	}
 	
 	public List<Rule> rulesFromStrings(Collection<String> strings) {
 		List<Rule> result = Lists.newArrayList();

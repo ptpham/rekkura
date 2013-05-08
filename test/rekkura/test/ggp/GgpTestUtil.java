@@ -7,7 +7,7 @@ import rekkura.model.Rule;
 
 public class GgpTestUtil {
 
-	public static final int BLITZ_STARTCLOCK = 40;
+	public static final int BLITZ_STARTCLOCK = 50;
 	public static final int BLITZ_PLAYCLOCK = 10;
 	
 	public static final int FAST_STARTCLOCK = 400;

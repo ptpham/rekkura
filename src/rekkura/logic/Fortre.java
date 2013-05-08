@@ -60,7 +60,7 @@ public class Fortre {
 		List<Dob> symmetrized = Lists.newArrayList(allForms);
 		for (Set<Dob> component : symmetrizingComponents) {
 			if (component.size() < 2) continue;
-			Dob generalization = computeGeneralization(component, symmetricEdges, pool.context);
+			Dob generalization = computeGeneralization(Colut.any(component), symmetricEdges, pool.context);
 
 			generalization = pool.dobs.submerge(generalization);
 			// Make sure the generalization is not a cognate of 
@@ -89,28 +89,22 @@ public class Fortre {
 		}
 	}
 
-	public static Dob computeGeneralization(Collection<Dob> component, 
+	public static Dob computeGeneralization(Dob root, 
 			Multimap<Dob, Dob> edges, Vars.Context context) {
+		Dob generalization = root;
+		Stack<Dob> working = new Stack<Dob>();
+		Set<Dob> seen = Sets.newHashSet(generalization);
+		working.addAll(edges.get(generalization));
 		
-		// Copy things to avoid modifying them
-		component = Sets.newHashSet(component);
-		edges = HashMultimap.create(edges);
-		
-		Stack<Dob> remaining = new Stack<Dob>();
-		Dob generalization = Colut.popAny(component);
-		remaining.addAll(edges.get(generalization));
-		
-		while (remaining.size() > 0) {
-			Dob next = remaining.pop();
-			generalization = Unifier.symmetrizeBothSides(generalization, next, context);
+		while (working.size() > 0) {
+			Dob next = working.pop();
+			if (seen.contains(next)) continue;
+			seen.add(next);
 			
-			Collection<Dob> adjacent = edges.get(next);
-			remaining.addAll(adjacent);
-			component.removeAll(adjacent);
-			edges.removeAll(next);
+			generalization = Unifier.symmetrizeBothSides(generalization, next, context);
+			working.addAll(edges.get(next));
 		}
 		
-		if (component.size() > 0) return null;
 		return generalization;
 	}
 

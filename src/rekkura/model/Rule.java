@@ -1,10 +1,6 @@
 package rekkura.model;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import rekkura.fmt.StandardFormat;
 import rekkura.util.Colut;
@@ -81,6 +77,40 @@ public class Rule {
 		public String toString() {
 			return StandardFormat.inst.toString(this);
 		}
+		
+		/**
+		 * A canonized distinct is one that respects dob ordering between
+		 * its first and second fields.
+		 * @param distinct
+		 * @param vars
+		 * @return
+		 */
+		public static Distinct canonize(Distinct distinct, Collection<Dob> vars) {
+			List<Dob> dobs = Lists.newArrayList(distinct.first, distinct.second);
+			Collections.sort(dobs, Dob.getComparator(vars));
+			if (dobs.get(0) == distinct.first) return distinct;
+			return new Distinct(distinct.second, distinct.first);
+		}
+		
+		public static Comparator<Distinct> getComparator(final Collection<Dob> vars) {
+			return new Comparator<Rule.Distinct>() {
+				@Override public int compare(Distinct arg0, Distinct arg1) {
+					return Distinct.compare(arg0, arg1, vars);
+				}
+			};
+		}
+		
+		public static int compare(Distinct arg0, Distinct arg1,
+				final Collection<Dob> vars) {
+			Distinct left = Distinct.canonize(arg0, vars);
+			Distinct right = Distinct.canonize(arg1, vars);
+			
+			int compare = Dob.compareStructure(left.first, right.first, vars);
+			if (compare != 0) return compare;
+			
+			compare = Dob.compareStructure(left.second, right.second, vars);
+			return compare;
+		}
 	}
 	
 	/**
@@ -128,6 +158,62 @@ public class Rule {
 		return first.head == second.head && first.body.equals(second.body)
 				&& first.vars.equals(second.vars) 
 				&& first.distinct.equals(second.distinct);
+	}
+	
+	/**
+	 * This method checks if the first and second rules are structurally
+	 * equivalent under the union of their variable sets assuming that
+	 * the ordering of atoms and distincts are fixed.
+	 * @param first
+	 * @param second
+	 * @return
+	 */
+	public static boolean orderedStructEq(Rule first, Rule second) {
+		if (first.vars.size() != second.vars.size()) return false;
+		if (first.body.size() != second.body.size()) return false;
+		if (first.distinct.size() != second.distinct.size()) return false;
+		
+		Set<Dob> vars = Sets.newHashSet(first.vars);
+		vars.addAll(second.vars);
+		
+		int compare = Dob.compareStructure(first.head.dob, second.head.dob, vars);
+		if (compare != 0) return false;
+		
+		for (int i = 0; i < first.body.size(); i++) {
+			Atom firstAtom = first.body.get(i);
+			Atom secondAtom = second.body.get(i);
+			compare = Dob.compareStructure(firstAtom.dob, secondAtom.dob, vars);
+			if (compare != 0) return false;
+		}
+		
+		for (int i = 0; i < first.distinct.size(); i++) {
+			Distinct left = first.distinct.get(i);
+			Distinct right = second.distinct.get(i);
+			compare = Distinct.compare(left, right, vars);
+		}
+		
+		return true;
+	}
+	
+
+	/**
+	 * This method creates a new copy of the rule such that the constituent
+	 * components are ordered. After canonization, it is possible to test for
+	 * equality using the ordered structural comparison.
+	 * @param rule
+	 * @return
+	 */
+	public static Rule canonize(final Rule rule) {
+		List<Dob> vars = Lists.newArrayList(rule.vars);
+		List<Atom> body = Lists.newArrayList(rule.body);
+		List<Rule.Distinct> distincts = Lists.newArrayListWithCapacity(rule.distinct.size());
+		for (Distinct distinct : rule.distinct) { distincts.add(Distinct.canonize(distinct, rule.vars)); }
+		
+		Collections.sort(vars, Dob.GENERAL_COMPARATOR);
+		Collections.sort(body, Atom.getComparator(rule.vars));
+		Collections.sort(distincts, Distinct.getComparator(rule.vars));
+		
+		return new Rule(rule.head, body, vars, distincts);
 	}
 	
 	public List<Atom> getPositives() {

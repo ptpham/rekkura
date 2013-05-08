@@ -92,7 +92,7 @@ public class Pool {
 		
 		Rule result = new Rule(head, body, vars, distincts);
 		if (Rule.orderedRefeq(rule, result)) result = rule;
-		return fmt.canonize(result);
+		return Rule.canonize(result);
 	}
 
 	private Rule.Distinct handleUnseen(Rule.Distinct distinct) {

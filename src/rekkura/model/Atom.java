@@ -1,5 +1,7 @@
 package rekkura.model;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 
 import com.google.common.collect.ImmutableList;
@@ -23,6 +25,24 @@ public class Atom {
 	public Atom(Dob dob, boolean truth) {
 		this.dob = dob; 
 		this.truth = truth;
+	}
+	
+	public static Comparator<Atom> getComparator(final Collection<Dob> vars) {
+		return new Comparator<Atom>() {
+			@Override public int compare(Atom arg0, Atom arg1) {
+				return Atom.compare(arg0, arg1, vars);
+			}
+		};
+	}
+
+	public static int compare(Atom arg0, Atom arg1, final Collection<Dob> vars) {
+		if (arg0.truth && !arg1.truth) return -1;
+		if (!arg0.truth && arg1.truth) return 1;
+		
+		int varComp = Dob.compareStructure(arg0.dob, arg1.dob, vars);
+		if (varComp != 0) return varComp;
+
+		return Dob.compare(arg0.dob, arg1.dob);
 	}
 	
 	public static Iterator<Dob> dobIteratorFromAtoms(final Iterable<Atom> atoms) {

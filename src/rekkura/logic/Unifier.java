@@ -8,8 +8,10 @@ import java.util.Set;
 import rekkura.model.*;
 import rekkura.model.Rule.Distinct;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * This class describes how to transform one dob to match another dob.
@@ -176,19 +178,24 @@ public class Unifier {
 	 * unification, will yield a generalization of the base dob and the target dob. If we see
 	 * a variable as a value in the unify map twice, then this is not a valid symmetric unification.
 	 * @param unify
-	 * @param variables
+	 * @param conflicts
 	 * @param vargen supplies new variables for the generalization
 	 * @return
 	 */
-	public static Map<Dob, Dob> symmetrize(Map<Dob, Dob> unify, Vars.Context context) {
+	public static Map<Dob, Dob> symmetrize(Map<Dob, Dob> unify, 
+		Set<Dob> conflicts, Vars.Context context) {
+		
 		if (unify == null) return null;
 		Map<Dob, Dob> result = Maps.newHashMap();
 		
-		Set<Dob> vars = context.getAll();
+		Collection<Dob> vars = context.getAll();
 		for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
 			Dob key = entry.getKey(), value = entry.getValue();
 			if (!vars.contains(key) && !vars.contains(value)) return null;
-			result.put(key, context.create());
+			
+			Dob request = Vars.request(conflicts, context);
+			result.put(key, request);
+			conflicts.add(request);
 		}
 		
 		return result;
@@ -211,7 +218,13 @@ public class Unifier {
 	
 	private static Map<Dob, Dob> getSymmetrizer(Dob first, Dob second, Vars.Context context) {
 		Map<Dob, Dob> unification = Unifier.unify(first, second);
-		Map<Dob, Dob> symmetrizer = Unifier.symmetrize(unification, context);
+		
+		Set<Dob> allVars = context.getAll();
+		Set<Dob> conflicts = Sets.newHashSet(first.fullIterable());
+		Iterables.addAll(conflicts, second.fullIterable());
+		conflicts.retainAll(allVars);
+		
+		Map<Dob, Dob> symmetrizer = Unifier.symmetrize(unification, conflicts, context);
 		return symmetrizer;
 	}
 	

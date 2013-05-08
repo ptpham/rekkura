@@ -13,11 +13,9 @@ import rekkura.fmt.StandardFormat;
 import rekkura.logic.Fortre;
 import rekkura.logic.Pool;
 import rekkura.model.Dob;
+import rekkura.util.Colut;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 public class FortreTest {
 	
@@ -91,6 +89,22 @@ public class FortreTest {
 		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 3, rawDobs[1], 3, rawDobs[2], 3, rawGenerated[0], 2);
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
+	}
+	
+	@Test
+	public void variableNotInUnification() {
+		List<String> raw = Lists.newArrayList("((true)((cell)(S)(X)(Y)))",
+				"((true)((cell)(R)(X)(1)))", "((true)((cell)(X)(X)(Y)))", 
+				"(X)", "(Y)", "(S)");
+		
+		Pool pool = new Pool();
+		List<Dob> dobs = pool.dobs.submergeStrings(raw);
+		pool.allVars.addAll(Colut.slice(dobs, 3, dobs.size()));
+		
+		Multimap<Dob, Dob> edges = HashMultimap.create();
+		for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) edges.put(dobs.get(i), dobs.get(j));
+		Dob generalization = Fortre.computeGeneralization(dobs.get(0), edges, pool.context);
+		Assert.assertNotNull(generalization);
 	}
 	
 	@Test
