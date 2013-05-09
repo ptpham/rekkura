@@ -217,4 +217,19 @@ public class Colut {
 		for (U u : second) if (!first.contains(u)) return false;
 		return true;
 	}
+	
+	public static <U> List<U> filterAdjacentRefeq(List<U> elems) {
+		List<U> result = Lists.newArrayList();
+		
+		U last = null;
+		for (int i = 0; i < elems.size(); i++) {
+			U elem = elems.get(i);
+			if (i == 0 || last != elem) {
+				last = elem;
+				result.add(last);
+			}
+		}
+		
+		return result;
+	}
 }

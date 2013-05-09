@@ -16,8 +16,16 @@ import com.google.common.collect.Sets;
 
 /**
  * Parsing code is the bane of my existence.
+ * This code is not very good for a variety of reasons.
+ * The most important one is that it doesn't implement a one to
+ * one mapping between dob and string: <b>gasp</b>
+ * <br> <br>
+ * If an internal node in a dob has exactly one child, that 
+ * child will be attached to the node's parent. This was
+ * necessary for some shamefully hacky reason. However, I have
+ * little respect for KIF and this class exists for interop
+ * with the outside world. Therefore, I don't care.
  * @author "ptpham"
- *
  */
 public class KifFormat extends LogicFormat {
 

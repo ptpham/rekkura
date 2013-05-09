@@ -24,7 +24,6 @@ import com.google.common.collect.Lists;
 public class Dob {
 	public static final ImmutableSet<Dob> EMPTY_SET = ImmutableSet.of();
 	public static final ImmutableList<Dob> EMPTY_LIST = ImmutableList.of();
-	public static final Comparator<Dob> GENERAL_COMPARATOR = getComparator();
 	
 	public final String name;
 	private List<Dob> children;
@@ -104,7 +103,7 @@ public class Dob {
 		return first.size() - second.size();
 	}
 	
-	private static Comparator<Dob> getComparator() { return getComparator(null); }
+	public static Comparator<Dob> getComparator() { return getComparator(null); }
 	public static Comparator<Dob> getComparator(final Collection<Dob> vars) {
 		return new Comparator<Dob>() {
 			@Override public int compare(Dob arg0, Dob arg1) {

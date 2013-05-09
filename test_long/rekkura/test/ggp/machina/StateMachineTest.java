@@ -13,6 +13,7 @@ import rekkura.model.StateMachine;
 import rekkura.test.ggp.SimpleGames;
 import rekkura.util.Colut;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 
@@ -43,6 +44,7 @@ public abstract class StateMachineTest {
 		Set<Dob> initial = machine.getInitial();
 		Assert.assertEquals(43, initial.size());
 		
-		// TODO: flesh out this test
+		ListMultimap<Dob, Dob> actions = machine.getActions(initial);
+		Assert.assertEquals(8, actions.size());
 	}
 }

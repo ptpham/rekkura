@@ -249,7 +249,7 @@ public class GgpProtocol {
 			List<Rule> rules = Lists.newArrayList();
 			for (Dob rawRule : rawRules) { 
 				try { rules.add(fmt.ruleFromString(fmt.toString(rawRule))); }
-				catch (Exception e) { rules.add(Rule.asVacuousRule(rawRule)); }
+				catch (Exception e) { rules.add(Rule.asVacuous(rawRule)); }
 			}
 			
 			rules = deorPass(rules, fmt);

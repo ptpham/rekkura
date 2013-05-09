@@ -87,7 +87,10 @@ public class Rule {
 		 */
 		public static Distinct canonize(Distinct distinct, Collection<Dob> vars) {
 			List<Dob> dobs = Lists.newArrayList(distinct.first, distinct.second);
-			Collections.sort(dobs, Dob.getComparator(vars));
+			Comparator<Dob> comp = Dob.getComparator(vars);
+			if (comp.compare(distinct.first, distinct.second) == 0) comp = Dob.getComparator();
+			
+			Collections.sort(dobs, comp);
 			if (dobs.get(0) == distinct.first) return distinct;
 			return new Distinct(distinct.second, distinct.first);
 		}
@@ -198,8 +201,9 @@ public class Rule {
 
 	/**
 	 * This method creates a new copy of the rule such that the constituent
-	 * components are ordered. After canonization, it is possible to test for
-	 * equality using the ordered structural comparison.
+	 * components are ordered and referentially duplicate elements are removed.
+	 * After canonization, it is possible to test for equality using the
+	 * ordered structural comparison.
 	 * @param rule
 	 * @return
 	 */
@@ -209,10 +213,13 @@ public class Rule {
 		List<Rule.Distinct> distincts = Lists.newArrayListWithCapacity(rule.distinct.size());
 		for (Distinct distinct : rule.distinct) { distincts.add(Distinct.canonize(distinct, rule.vars)); }
 		
-		Collections.sort(vars, Dob.GENERAL_COMPARATOR);
+		Collections.sort(vars, Dob.getComparator());
 		Collections.sort(body, Atom.getComparator(rule.vars));
 		Collections.sort(distincts, Distinct.getComparator(rule.vars));
 		
+		vars = Colut.filterAdjacentRefeq(vars);
+		body = Colut.filterAdjacentRefeq(body);
+		distincts = Colut.filterAdjacentRefeq(distincts);
 		return new Rule(rule.head, body, vars, distincts);
 	}
 	
@@ -234,11 +241,11 @@ public class Rule {
 		return result;
 	}
 	
-	public static Rule asVacuousRule(Dob dob) {
-		return asVacuousRule(dob, Lists.<Dob>newArrayList());
+	public static Rule asVacuous(Dob dob) {
+		return asVacuous(dob, Lists.<Dob>newArrayList());
 	}
 	
-	public static Rule asVacuousRule(Dob dob, Collection<Dob> vars) {
+	public static Rule asVacuous(Dob dob, Collection<Dob> vars) {
 		return new Rule(new Atom(dob, true), 
 			Lists.<Atom>newArrayList(), vars);
 	}

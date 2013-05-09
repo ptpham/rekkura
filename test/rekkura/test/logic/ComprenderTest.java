@@ -98,8 +98,6 @@ public class ComprenderTest {
 		runMerge(Lists.newArrayList(firstRaw, secondRaw), Sets.newHashSet(expectedRaw));
 	}
 	
-	// TODO: Reordering test
-	
 	private void runMerge(List<String> rawRules, Set<String> rawExpected) {
 		runMerge(rawRules, rawExpected, Merges.posSub);
 	}

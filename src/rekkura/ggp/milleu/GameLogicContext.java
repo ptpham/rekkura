@@ -172,7 +172,7 @@ public class GameLogicContext {
 		List<Dob> vars = Lists.newArrayList(ROLE_VAR, GENERIC_VAR);
 		
 		List<Rule> result = Lists.newArrayList();
-		for (Dob dob : queries) result.add(Rule.asVacuousRule(dob, vars));
+		for (Dob dob : queries) result.add(Rule.asVacuous(dob, vars));
 		return result;
 	}
 }
