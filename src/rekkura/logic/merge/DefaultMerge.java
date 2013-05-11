@@ -25,13 +25,13 @@ public abstract class DefaultMerge implements Merge.Operation {
 	 * has been applied (fixed) to the source and the destination.
 	 * A set of variables will be provided that represents the canonical
 	 * variable merge (as computed in {@link Merge.renderVars}).
-	 * @param merge
 	 * @param srcFixed
 	 * @param dstFixed
+	 * @param merge
 	 * @param vars
 	 * @return
 	 */
-	public abstract List<Rule> generate(Merge.Result merge, Rule srcFixed, Rule dstFixed);
+	public abstract List<Rule> generate(Rule srcFixed, Rule dstFixed, Merge.Result merge);
 	
 	@Override
 	public List<Rule> mergeRules(Rule src, Rule dst, Pool pool) {
@@ -52,7 +52,7 @@ public abstract class DefaultMerge implements Merge.Operation {
 			Rule dstFixed = new Rule(dstRaw.head, fixedBody, dstRaw.vars, dstRaw.distinct);
 
 			// Generate and submerge results
-			List<Rule> generated = generate(merge, srcFixed, dstFixed);
+			List<Rule> generated = generate(srcFixed, dstFixed, merge);
 			for (Rule rule : generated) {
 				Rule submerged = pool.rules.submerge(rule);
 				result.add(submerged);
@@ -64,11 +64,11 @@ public abstract class DefaultMerge implements Merge.Operation {
 
 	public static DefaultMerge combine(final DefaultMerge... operations) {
 		return new DefaultMerge() {
-			@Override public List<Rule> generate(Result merge, Rule srcFixed, Rule dstFixed) {
+			@Override public List<Rule> generate(Rule srcFixed, Rule dstFixed, Result merge) {
 				
 				List<Rule> result = Lists.newArrayList();
 				for (DefaultMerge op : operations) {
-					List<Rule> generated = op.generate(merge, srcFixed, dstFixed);
+					List<Rule> generated = op.generate(srcFixed, dstFixed, merge);
 					result.addAll(generated);
 				}
 				return result;

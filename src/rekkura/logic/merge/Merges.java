@@ -25,7 +25,7 @@ public class Merges {
 	
 	/**
 	 * The truth merge will only expand merges such that the destination
-	 * position is not a negation.
+	 * position is positive.
 	 * @author ptpham
 	 *
 	 */
@@ -33,7 +33,7 @@ public class Merges {
 		private PositiveSubstitution() { }
 
 		@Override
-		public List<Rule> generate(Result merge, Rule srcFixed, Rule dstFixed) {
+		public List<Rule> generate(Rule srcFixed, Rule dstFixed, Result merge) {
 			List<Rule> result = Lists.newArrayList();
 			if (!merge.getPivot().truth) return result;
 			
@@ -60,7 +60,7 @@ public class Merges {
 		private NegationSplit() { }
 
 		@Override
-		public List<Rule> generate(Result merge, Rule srcFixed, Rule dstFixed) {
+		public List<Rule> generate(Rule srcFixed, Rule dstFixed, Result merge) {
 			List<Rule> result = Lists.newArrayList();
 			if (merge.getPivot().truth) return result;
 
