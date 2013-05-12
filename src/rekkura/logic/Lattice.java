@@ -16,12 +16,8 @@ public class Lattice {
 	 * These are edges in the lattice space.
 	 */
 	public final Multimap<Dob, Dob> edges = HashMultimap.create();
-	
 	public final Map<Dob, Dob> firstInto = Maps.newHashMap();
-	public final Multimap<Dob, Dob> firstOut = HashMultimap.create();
-	
 	public final Map<Dob, Dob> secondInto = Maps.newHashMap();
-	public final Multimap<Dob, Dob> secondOut = HashMultimap.create();
 	
 	private Lattice(Request req) { this.req = req; }
 	
@@ -52,10 +48,6 @@ public class Lattice {
 		result.firstInto.putAll(first);
 		result.secondInto.putAll(second);
 		result.edges.putAll(OtmUtil.joinBase(first, second));
-		
-		Multimaps.invertFrom(Multimaps.forMap(first), result.firstOut);
-		Multimaps.invertFrom(Multimaps.forMap(second), result.secondOut);
-		
 		return result;
 	}
 	

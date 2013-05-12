@@ -36,4 +36,20 @@ public class Comprender {
 				
 		return result;
 	}
+	
+	public static Rule lift(Rule src, Rule dst, int dstPosition, Pool pool) {
+		Merge.Result merge = Merge.compute(src, dst, dstPosition, pool);
+		if (merge == null) return null;
+		
+		return Unifier.replace(src, merge.srcUnify, merge.vars);
+	}
+	
+	public static List<Rule> lift(Rule src, Rule dst, Pool pool) {
+		List<Rule> result = Lists.newArrayList();
+		for (int i = 0; i < dst.body.size(); i++) {
+			Rule lifted = lift(src, dst, i, pool);
+			if (lifted != null) result.add(lifted);
+		}
+		return result;
+	}
 }

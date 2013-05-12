@@ -58,6 +58,12 @@ public class Unifier {
 		return result;
 	}
 	
+	/**
+	 * @param base
+	 * @param substitution
+	 * @param dstVars the set of variables to keep after performing the substitution
+	 * @return
+	 */
 	public static Rule replace(Rule base, Map<Dob, Dob> substitution, Collection<Dob> dstVars) {
 		Atom head = replace(base.head, substitution);
 		List<Atom> body = replaceAtoms(base.body, substitution);

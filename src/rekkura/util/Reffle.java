@@ -86,4 +86,15 @@ public class Reffle {
 		};
 	}
 	
+	public static Class<?> lightForName(String name) {
+		try { return Class.forName(name); }
+		catch (ClassNotFoundException e) { return null; }
+	}
+	
+	public static <U> Factory<? extends U> getFactory(String name, Class<U> base) {
+		Class<?> raw = lightForName(name);
+		if (!base.isAssignableFrom(raw)) return null;
+		if (raw == null) return null;
+		return createFactory(raw);
+	}
 }
