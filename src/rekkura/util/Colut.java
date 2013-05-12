@@ -232,4 +232,17 @@ public class Colut {
 		
 		return result;
 	}
+	
+	public static <U> boolean equivalent(Collection<? extends Collection<U>> first,
+		Collection<? extends Collection<U>> second) {
+		Set<Set<U>> firstSets = setify(first);
+		Set<Set<U>> secondSets = setify(second);
+		return Colut.containsSame(firstSets, secondSets);
+	}
+
+	public static <U> Set<Set<U>> setify(Collection<? extends Collection<U>> outer) {
+		Set<Set<U>> setified = Sets.newHashSet();
+		for (Collection<U> inner : outer) setified.add(Sets.newHashSet(inner));
+		return setified;
+	}
 }
