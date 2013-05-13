@@ -201,4 +201,6 @@ public class KifFormat extends LogicFormat {
 		if (result.size() == 0) result.add(rule);
 		return result;
 	}
+	
+	public static final KifFormat inst = new KifFormat();
 }

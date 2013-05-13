@@ -308,9 +308,8 @@ public class SimpleGames {
 	}
 
 	private static List<Rule> kifStringsToRules(String[] raw) {
-		KifFormat fmt = new KifFormat();
-		List<Rule> original = fmt.rulesFromStrings(Arrays.asList(raw));
-		return GgpProtocol.deorPass(original, fmt);
+		List<Rule> original = KifFormat.inst.rulesFromStrings(Arrays.asList(raw));
+		return GgpProtocol.deorPass(original);
 	}
 	
 }

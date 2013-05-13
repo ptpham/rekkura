@@ -245,6 +245,10 @@ public class Rule {
 		return asVacuous(dob, Lists.<Dob>newArrayList());
 	}
 	
+	public static boolean isVacuous(Rule rule) {
+		return rule.body.size() == 0 && rule.distinct.size() == 0;
+	}
+	
 	public static Rule asVacuous(Dob dob, Collection<Dob> vars) {
 		return new Rule(new Atom(dob, true), 
 			Lists.<Atom>newArrayList(), vars);
