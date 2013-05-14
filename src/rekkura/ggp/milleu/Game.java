@@ -112,6 +112,12 @@ public class Game {
 		return result;
 	}
 	
+	public static List<Dob> convertActionMapToMoves(List<Dob> roles, Map<Dob, Dob> actions) {
+		List<Dob> result = Lists.newArrayList();
+		for (Dob role : roles) result.add(actions.get(role));
+		return result;
+	}
+	
 	public static Dob convertActionToMove(Dob action) {
 		if (action == null || action.size() < 3) return null;
 		return action.at(2);

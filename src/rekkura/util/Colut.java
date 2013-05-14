@@ -245,4 +245,14 @@ public class Colut {
 		for (Collection<U> inner : outer) setified.add(Sets.newHashSet(inner));
 		return setified;
 	}
+
+	public static <U> boolean allNulls(List<U> collection) {
+		if (empty(collection)) return true;
+		for (U u : collection) if (u != null) return false;
+		return true;
+	}
+	
+	public static <U> void clear(Collection<U> collection) {
+		if (collection != null) collection.clear();
+	}
 }

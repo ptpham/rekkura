@@ -45,7 +45,7 @@ public class GgpProtocol {
 		public final List<Dob> moves;
 		public Move(String match, List<Dob> moves) {
 			this.match = match;
-			this.moves = moves;
+			this.moves = Lists.newArrayList(moves);
 		}
 	}
 	
@@ -363,7 +363,9 @@ public class GgpProtocol {
 	}
 	
 	public static Dob fromStop(GgpProtocol.Stop stop) {
-		return new Dob(new Dob(STOP_NAME), new Dob(stop.match), new Dob(stop.moves));
+		List<Dob> elems = Lists.newArrayList(new Dob(PLAY_NAME), new Dob(stop.match));
+		elems.addAll(stop.moves);
+		return new Dob(elems);
 	}
 	
 	public static GgpProtocol.Play toPlay(Dob dob) {
@@ -372,7 +374,10 @@ public class GgpProtocol {
 	}
 	
 	public static Dob fromPlay(GgpProtocol.Play play) {
-		return new Dob(new Dob(PLAY_NAME), new Dob(play.match), new Dob(play.moves));
+		List<Dob> elems = Lists.newArrayList(new Dob(PLAY_NAME), new Dob(play.match));
+		if (Colut.allNulls(play.moves)) elems.addAll(play.moves);
+		else elems.add(new Dob("NIL"));
+		return new Dob(elems);
 	}
 
 	private static String stringAt(Dob message, int position) {

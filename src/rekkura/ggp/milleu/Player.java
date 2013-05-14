@@ -54,14 +54,7 @@ public abstract class Player implements Runnable {
 		this.notifyAll();
 	}
 	
-	public final synchronized void advance(Map<Dob, Dob> actions) {
-		advance(this.history.size(), actions);
-	}
-	
-	protected final synchronized void waitForInput() {
-		Synchron.lightWait(this);
-	}
-	
+	protected final synchronized void waitForInput() { Synchron.lightWait(this); }
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
 	protected final synchronized Map<Dob, Dob> getMemory(int turn) { return Colut.get(history, turn); }
 	
