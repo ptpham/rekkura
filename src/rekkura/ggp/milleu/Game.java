@@ -36,9 +36,9 @@ public class Game {
 	public static final String GOAL_NAME = "goal";
 		
 	public static class Config {
-		public int startclock, playclock;
+		public long startclock, playclock;
 		public List<Rule> rules;
-		public Config(int startclock, int playclock, List<Rule> rules) {
+		public Config(long startclock, long playclock, List<Rule> rules) {
 			this.startclock = startclock;
 			this.playclock = playclock;
 			this.rules = rules;

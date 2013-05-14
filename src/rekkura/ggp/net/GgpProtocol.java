@@ -29,12 +29,12 @@ public class GgpProtocol {
 	public static enum PlayerState { READY, BUSY, DONE }
 	
 	public static class Start {
-		public final Game.Config game;
+		public final Game.Config config;
 		public final Dob role;
 		public final String match;
 		
-		public Start(Game.Config game, Dob role, String match) {
-			this.game = game;
+		public Start(Game.Config config, Dob role, String match) {
+			this.config = config;
 			this.role = role;
 			this.match = match;
 		}
@@ -74,24 +74,34 @@ public class GgpProtocol {
 		PlayerState handleStop(String match, List<Dob> moves);
 	}
 	
-	public static int getGgpStartClock(Game.Config config) {
+	/**
+	 * Result in milliseconds.
+	 * @param config
+	 * @return
+	 */
+	public static long getGgpStartClock(Game.Config config) {
 		return config.startclock - config.playclock;
 	}
 
-	public static int getGgpPlayClock(Game.Config config) {
+	/**
+	 * Result in milliseconds.
+	 * @param config
+	 * @return
+	 */
+	public static long getGgpPlayClock(Game.Config config) {
 		return config.playclock;
 	}
 	
 	public static class GgpState {
 		public final Player player;
 		public final ImmutableList<Dob> roles;
-		public final int ggpPlayClock, ggpStartClock;
+		public final long ggpPlayClock, ggpStartClock;
 		public final Thread thread;
 		
 		public long touch;
 		public int turn;
 
-		public GgpState(int ggpPlayClock, int ggpStartClock, 
+		public GgpState(long ggpPlayClock, long ggpStartClock, 
 				Iterable<Dob> roles, Player player, Thread thread) {
 			this.ggpPlayClock = ggpPlayClock;
 			this.ggpStartClock = ggpStartClock;
@@ -134,8 +144,8 @@ public class GgpProtocol {
 		public PlayerState handleStart(String match, Dob role, Game.Config config) {
 			cleanPlayers();
 			GgpState state = players.get(match);
-			int ggpPlayClock = getGgpPlayClock(config);
-			int ggpStartClock = getGgpStartClock(config);
+			long ggpPlayClock = getGgpPlayClock(config);
+			long ggpStartClock = getGgpStartClock(config);
 			List<Dob> roles = Game.getRoles(config.rules);
 			
 			if (state != null) return PlayerState.BUSY;
@@ -264,7 +274,7 @@ public class GgpProtocol {
 
 		private String start(Dob dob) {
 			GgpProtocol.Start config = toStart(dob);
-			PlayerState state = handler.handleStart(config.match, config.role, config.game);
+			PlayerState state = handler.handleStart(config.match, config.role, config.config);
 			return fmt.toString(PLAYER_STATE_DOBS.get(state));
 		}
 		
@@ -328,21 +338,23 @@ public class GgpProtocol {
 	}
 	
 	public static Dob fromStart(GgpProtocol.Start start) {
-		Game.Config game = start.game;
+		Game.Config config = start.config;
 		
 		Dob match = new Dob(start.match);
 		Dob role = start.role;
-		Dob ggpStart = new Dob(Integer.toString(game.startclock - game.playclock));
-		Dob ggpPlay = new Dob(Integer.toString(game.playclock));
+		Dob ggpStart = new Dob(Long.toString(getGgpStartClock(config)/1000));
+		Dob ggpPlay = new Dob(Long.toString(getGgpPlayClock(config)/1000));
 		
 		KifFormat fmt = KifFormat.inst;
-		List<Dob> rules = Lists.newArrayList();
-		for (Rule rule : game.rules) {
-			if (Rule.isVacuous(rule)) rules.add(rule.head.dob);
-			else rules.add(fmt.dobFromString(fmt.toString(rule)));
+		List<Dob> composed = Lists.newArrayList(new Dob(START_NAME), match, role);
+		for (Rule rule : config.rules) {
+			if (Rule.isVacuous(rule)) composed.add(rule.head.dob);
+			else composed.add(fmt.dobFromString(fmt.toString(rule)));
 		}
 		
-		return new Dob(new Dob(START_NAME), match, role, new Dob(rules), ggpStart, ggpPlay);
+		composed.add(ggpStart);
+		composed.add(ggpPlay);
+		return new Dob(composed);
 	}
 	
 	public static GgpProtocol.Stop toStop(Dob dob) {
