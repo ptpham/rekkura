@@ -49,7 +49,7 @@ public class MonteCarloPlayerTest {
 		// Advance the player to a state where there
 		// should be a clear best move.
 		player.setMatch(role, config);
-		player.advance(0, actionMap);
+		player.advance(actionMap);
 		
 		Thread thread = new Thread(player);
 		thread.start();

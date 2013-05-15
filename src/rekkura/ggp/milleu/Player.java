@@ -12,6 +12,7 @@ import rekkura.model.StateMachine;
 import rekkura.util.Colut;
 import rekkura.util.Synchron;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 
 /**
@@ -32,7 +33,7 @@ public abstract class Player implements Runnable {
 	
 	private final Vector<Dob> moves = Synchron.newVector();
 	private final Vector<Map<Dob, Dob>> history = Synchron.newVector();
-	private boolean started = false;
+	private volatile boolean started = false, complete = false;
 	
 	/**
 	 * A player may only be started once.
@@ -49,12 +50,20 @@ public abstract class Player implements Runnable {
 	
 	public boolean isStarted() { return this.started; }
 	
-	public final synchronized void advance(int turn, Map<Dob, Dob> actions) { 
-		Colut.addAt(history, turn, actions);
-		this.notifyAll();
+	public final synchronized void advance(Map<Dob, Dob> actions) {
+		Preconditions.checkArgument(!complete, "Player's game is over!");
+		appendToHistory(actions);
 	}
 	
-	protected final synchronized void waitForInput() { Synchron.lightWait(this); }
+	public final synchronized void complete(Map<Dob, Dob> actions) {
+		Preconditions.checkArgument(!complete, "Player's game is already over!");
+		complete = true;
+		appendToHistory(actions);
+	}
+	
+	public final boolean isComplete() { return complete; }
+	
+	protected final synchronized boolean waitForInput() { return Synchron.lightWait(this); }
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
 	protected final synchronized Map<Dob, Dob> getMemory(int turn) { return Colut.get(history, turn); }
 	
@@ -63,6 +72,11 @@ public abstract class Player implements Runnable {
 	public final synchronized Dob getLatestDecision() { return Colut.end(moves); }
 	protected final synchronized void setDecision(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
 	protected final synchronized void setDecision(Game.Decision decision) { this.setDecision(decision.turn, decision.action); }
+	
+	private void appendToHistory(Map<Dob, Dob> actions) {
+		Colut.addAt(history, history.size(), actions);
+		this.notifyAll();
+	}
 	
 	/**
 	 * This represents a player that needs to update the state of the game using a state 

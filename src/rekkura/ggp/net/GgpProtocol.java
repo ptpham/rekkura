@@ -179,7 +179,8 @@ public class GgpProtocol {
 			// Thus, we don't want to advance the state.
 			if (moves.size() == state.roles.size()) {
 				Map<Dob, Dob> actions = Game.convertMovesToActionMap(state.roles, moves);
-				state.player.advance(state.turn++, actions);
+				state.player.advance(actions);
+				state.turn++;
 			}
 			Synchron.lightSleep(state.ggpPlayClock - PLAY_EPSILON);
 			
@@ -196,7 +197,7 @@ public class GgpProtocol {
 			state.touch();
 
 			Map<Dob, Dob> actions = Game.convertMovesToActionMap(state.roles, moves);
-			state.player.advance(state.turn, actions);
+			state.player.complete(actions);
 			
 			state.thread.interrupt();
 			this.players.remove(match);
