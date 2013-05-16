@@ -3,7 +3,6 @@ package rekkura.logic.merge;
 import java.util.List;
 import java.util.Set;
 
-import rekkura.logic.merge.Merge.Result;
 import rekkura.model.Atom;
 import rekkura.model.Dob;
 import rekkura.model.Rule;
@@ -21,7 +20,7 @@ public class Merges {
 	public static final PositiveSubstitution posSub = new PositiveSubstitution();
 	public static final NegationSplit negSplit = new NegationSplit();
 	
-	public static final DefaultMerge defaultMerge = DefaultMerge.combine(posSub, negSplit);
+	public static final Merge.Operation defaultMerge = Merge.combine(posSub, negSplit);
 	
 	/**
 	 * The truth merge will only expand merges such that the destination
@@ -29,12 +28,14 @@ public class Merges {
 	 * @author ptpham
 	 *
 	 */
-	public static class PositiveSubstitution extends DefaultMerge {
+	public static class PositiveSubstitution implements Merge.Operation {
 		private PositiveSubstitution() { }
 
-		@Override
-		public List<Rule> generate(Rule srcFixed, Rule dstFixed, Result merge) {
+		public List<Rule> mergeRules(Merge.Application app) {
 			List<Rule> result = Lists.newArrayList();
+			Merge.Result merge = app.merge;
+			Rule srcFixed = app.srcFixed;
+			Rule dstFixed = app.dstFixed;
 			if (!merge.getPivot().truth) return result;
 			
 			List<Atom> body = Colut.filterAt(dstFixed.body, merge.request.dstPosition);
@@ -56,12 +57,14 @@ public class Merges {
 	 * @author ptpham
 	 *
 	 */
-	public static class NegationSplit extends DefaultMerge {
+	public static class NegationSplit implements Merge.Operation {
 		private NegationSplit() { }
 
-		@Override
-		public List<Rule> generate(Rule srcFixed, Rule dstFixed, Result merge) {
+		public List<Rule> mergeRules(Merge.Application app) {
 			List<Rule> result = Lists.newArrayList();
+			Merge.Result merge = app.merge;
+			Rule srcFixed = app.srcFixed;
+			Rule dstFixed = app.dstFixed;
 			if (merge.getPivot().truth) return result;
 
 			Set<Dob> srcHeadVars = srcFixed.getVariablesOf(srcFixed.head.dob);

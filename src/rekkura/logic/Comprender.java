@@ -32,7 +32,7 @@ public class Comprender {
 		
 		Rule src = Colut.first(path);
 		List<Rule> compressed = mergeAll(Colut.slice(path, 1, path.size()), pool, op);
-		for (Rule dst : compressed) result.addAll(op.mergeRules(src, dst, pool));
+		for (Rule dst : compressed) result.addAll(Merge.applyOperation(src, dst, op, pool));
 				
 		return result;
 	}

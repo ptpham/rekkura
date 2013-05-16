@@ -11,6 +11,7 @@ import rekkura.model.Dob;
 import rekkura.model.Rule;
 import rekkura.model.Vars;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -34,6 +35,12 @@ public class Merge {
 		public Atom getPivot() { return dst.body.get(dstPosition); }
 	}
 	
+	/**
+	 * A Merge.Result represents the raw data structures obtained
+	 * from a Merge.Request.
+	 * @author ptpham
+	 *
+	 */
 	public static class Result {
 		public final Map<Dob, Dob> srcUnify = Maps.newHashMap();
 		public final Map<Dob, Dob> dstUnify = Maps.newHashMap();
@@ -47,8 +54,30 @@ public class Merge {
 		public Atom getPivot() { return request.getPivot(); }
 	}
 	
+	/**
+	 * A Merge.Application represents the transformation of
+	 * the source and the destination according to the given
+	 * Merge.Result.
+	 * @author ptpham
+	 *
+	 */
+	public static class Application {
+		public final Rule srcFixed, dstFixed;
+		public final Merge.Result merge;
+		public Application(Rule srcFixed, Rule dstFixed, Merge.Result merge) {
+			this.srcFixed = srcFixed;
+			this.dstFixed = dstFixed;
+			this.merge = merge;
+		}
+	}
+	
+	/**
+	 * A merge operation uses an application to generate new rules.
+	 * @author ptpham
+	 *
+	 */
 	public static interface Operation {
-		public List<Rule> mergeRules(Rule src, Rule dst, Pool pool);
+		public List<Rule> mergeRules(Merge.Application app);
 	}
 	
 	public static Merge.Result compute(Rule src, Rule dst, int dstPosition, Pool pool) {
@@ -81,6 +110,50 @@ public class Merge {
 		return result;
 	}
 	
+	public static Merge.Application apply(Merge.Result merge, Pool pool) {
+		if (merge == null) return null;
+		Rule src = merge.request.src;
+		Rule dst = merge.request.dst;
+		
+		// Apply the unifications to their respective rules
+		Rule srcFixed = pool.rules.submerge(Unifier.replace(src, merge.srcUnify, merge.vars));
+		Rule dstRaw = pool.rules.submerge(Unifier.replace(dst, merge.dstUnify, merge.vars));
+		
+		// Construct the body separately because the unification replace may have changed
+		// the canonical ordering of the terms in the destination body. This is not ideal.
+		List<Atom> fixedBody = Unifier.replace(dst, merge.dstUnify, merge.vars).body;
+		Rule dstFixed = new Rule(dstRaw.head, fixedBody, dstRaw.vars, dstRaw.distinct);
+
+		return new Merge.Application(srcFixed, dstFixed, merge);
+	}
+	
+	public static List<Application> applyOverBody(Rule src, Rule dst, Pool pool) {
+		List<Application> result = Lists.newArrayList();
+		
+		for (int i = 0; i < dst.body.size(); i++) {
+			Merge.Request req = new Merge.Request(src, dst, i);
+			Merge.Application app = Merge.apply(Merge.compute(req, pool), pool);
+			if (app != null) result.add(app);
+		}
+		
+		return result;
+	}
+	
+	public static List<Rule> applyOperation(Rule src, Rule dst, Merge.Operation op, Pool pool) {
+		List<Rule> result = Lists.newArrayList();
+		List<Application> apps = applyOverBody(src, dst, pool);
+		
+		for (Application app : apps) {
+			List<Rule> generated = op.mergeRules(app);
+			for (Rule rule : generated) {
+				Rule submerged = pool.rules.submerge(rule);
+				result.add(submerged);
+			}
+		}
+
+		return result;
+	}
+
 	/**
 	 * Construct the variables for the new rule. This set should contain
 	 * all variables in the fixed source, all variables that were left
@@ -117,4 +190,16 @@ public class Merge {
 		}
 	}
 
+	public static Merge.Operation combine(final Merge.Operation... operations) {
+		return new Merge.Operation() {
+			@Override public List<Rule> mergeRules(Merge.Application app) {
+				List<Rule> result = Lists.newArrayList();
+				for (Merge.Operation op : operations) {
+					List<Rule> generated = op.mergeRules(app);
+					result.addAll(generated);
+				}
+				return result;
+			}
+		};
+	}
 }

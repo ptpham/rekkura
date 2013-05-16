@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import rekkura.logic.Comprender;
 import rekkura.logic.Pool;
-import rekkura.logic.merge.DefaultMerge;
 import rekkura.logic.merge.Merge;
 import rekkura.logic.merge.Merges;
 import rekkura.model.Rule;
@@ -84,7 +83,7 @@ public class ComprenderTest {
 		String expectedFirst = "{(X)(Y)|<((h)(X)(Y)),true>:-<((g)(Y)(X)),false>}";
 		String expectedSecond = "{(X)(Y)|<((h)(X)(Y)),true>:-<((g)(X)(Y)),false>}";
 		
-		Merge.Operation op = DefaultMerge.combine(Merges.posSub, Merges.negSplit);
+		Merge.Operation op = Merge.combine(Merges.posSub, Merges.negSplit);
 		runMerge(Lists.newArrayList(firstRaw, secondRaw), 
 			Sets.newHashSet(expectedFirst, expectedSecond), op);
 	}
