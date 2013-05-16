@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -15,6 +16,11 @@ import java.net.URLConnection;
  */
 public class Netut {
 
+	public static URL lightUrl(String url) {
+		try { return new URL(url); }
+		catch (MalformedURLException e) { throw new IllegalArgumentException(e); }
+	}
+	
 	public static String lightExchange(String message, URL url) {
 		try { return exchange(message, url); }
 		catch (IOException e) { e.printStackTrace(); }
@@ -28,6 +34,7 @@ public class Netut {
 		
 		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(connection.getOutputStream()));
 		writer.write(message);
+		writer.flush();
 		
 		BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 		return reader.readLine();

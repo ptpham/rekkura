@@ -40,26 +40,19 @@ public class GgpProtocol {
 		}
 	}
 
-	private static class Move {
+	public static class Turn {
 		public final String match;
 		public final List<Dob> moves;
-		public Move(String match, List<Dob> moves) {
+		public Turn(String match, List<Dob> moves) {
 			this.match = match;
 			this.moves = Lists.newArrayList(moves);
 		}
 	}
 	
-	public static class Play extends Move {
-		public Play(String match, List<Dob> moves) { super(match, moves); }
-	}
-	
-	public static class Stop extends Move {
-		public Stop(String match, List<Dob> moves) { super(match, moves); }
-	}
-	
 	public static String START_NAME = "start";
 	public static String PLAY_NAME = "play";
 	public static String STOP_NAME = "stop";
+	public static String NIL_STRING = "nil";
 	
 	/**
 	 * A PlayerHandler is responsible for handling the logical
@@ -185,7 +178,7 @@ public class GgpProtocol {
 			Synchron.lightSleep(state.ggpPlayClock - PLAY_EPSILON);
 			
 			Dob action = state.player.getDecision(state.turn);
-			if (action == null) return new Dob("[No Move]");
+			if (action == null) return new Dob("[No Turn]");
 			return Game.convertActionToMove(action);
 		}
 
@@ -268,7 +261,7 @@ public class GgpProtocol {
 		}
 
 		private String stop(Dob dob) {
-			GgpProtocol.Stop stop = toStop(dob);
+			GgpProtocol.Turn stop = dobToTurn(dob);
 			PlayerState state = handler.handleStop(stop.match, stop.moves);
 			return fmt.toString(PLAYER_STATE_DOBS.get(state));
 		}
@@ -280,10 +273,9 @@ public class GgpProtocol {
 		}
 		
 		private String play(Dob dob) {
-			GgpProtocol.Play play = toPlay(dob);
+			GgpProtocol.Turn play = dobToTurn(dob);
 			return fmt.toString(handler.handlePlay(stringAt(dob, 1), play.moves));
 		}
-
 	}
 
 	/**
@@ -348,36 +340,30 @@ public class GgpProtocol {
 		
 		KifFormat fmt = KifFormat.inst;
 		List<Dob> composed = Lists.newArrayList(new Dob(START_NAME), match, role);
+		List<Dob> rules = Lists.newArrayList();
 		for (Rule rule : config.rules) {
-			if (Rule.isVacuous(rule)) composed.add(rule.head.dob);
-			else composed.add(fmt.dobFromString(fmt.toString(rule)));
+			if (Rule.isVacuous(rule)) rules.add(rule.head.dob);
+			else rules.add(fmt.dobFromString(fmt.toString(rule)));
 		}
 		
+		composed.add(new Dob(rules));
 		composed.add(ggpStart);
 		composed.add(ggpPlay);
 		return new Dob(composed);
 	}
 	
-	public static GgpProtocol.Stop toStop(Dob dob) {
+	public static GgpProtocol.Turn dobToTurn(Dob dob) {
 		List<Dob> moves = dob.at(2).childCopy();
-		return new Stop(stringAt(dob, 1), moves);
+		return new Turn(stringAt(dob, 1), moves);
 	}
 	
-	public static Dob fromStop(GgpProtocol.Stop stop) {
-		List<Dob> elems = Lists.newArrayList(new Dob(PLAY_NAME), new Dob(stop.match));
-		elems.addAll(stop.moves);
-		return new Dob(elems);
-	}
-	
-	public static GgpProtocol.Play toPlay(Dob dob) {
-		List<Dob> moves = dob.at(2).childCopy();
-		return new Play(stringAt(dob, 1), moves);
-	}
-	
-	public static Dob fromPlay(GgpProtocol.Play play) {
-		List<Dob> elems = Lists.newArrayList(new Dob(PLAY_NAME), new Dob(play.match));
-		if (Colut.allNulls(play.moves)) elems.addAll(play.moves);
-		else elems.add(new Dob("NIL"));
+	public static Dob dobFromPlay(GgpProtocol.Turn move) { return dobFromTurn(move, false); }
+	public static Dob dobFromStop(GgpProtocol.Turn move) { return dobFromTurn(move, true); }
+	public static Dob dobFromTurn(GgpProtocol.Turn move, boolean last) {
+		String type = last ? STOP_NAME : PLAY_NAME;
+		List<Dob> elems = Lists.newArrayList(new Dob(type), new Dob(move.match));
+		if (Colut.allNulls(move.moves)) elems.add(new Dob(NIL_STRING));
+		else elems.add(new Dob(move.moves));
 		return new Dob(elems);
 	}
 

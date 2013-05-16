@@ -32,29 +32,22 @@ public class RemotePlayer extends Player {
 		GgpProtocol.Start start = new GgpProtocol.Start(config, role, match);
 		String message = fmt.toString(GgpProtocol.fromStart(start));
 		Netut.lightExchange(message, url);
-		System.out.println("Starting");
 		
 		// Wait the start time and then ask for the first move
 		Synchron.lightSleep(GgpProtocol.getGgpStartClock(config));
-		while (!isComplete()) {
+		while (true) {
 			List<Dob> moves = getLastMoves(roles);
-			System.out.println(moves);
 			
-			GgpProtocol.Play play = new GgpProtocol.Play(match, moves);
-			message = fmt.toString(GgpProtocol.fromPlay(play));
+			GgpProtocol.Turn play = new GgpProtocol.Turn(match, moves);
+			message = fmt.toString(GgpProtocol.dobFromTurn(play, isComplete()));
 			String response = Netut.lightExchange(message, url);
+			if (isComplete()) break;
 			
 			Dob move = fmt.dobFromString(response);
 			setDecision(getHistoryExtent(), Game.convertMoveToAction(role, move));
 			
 			waitForInput();
 		}
-		
-		// Send a stop message on the last turn
-		List<Dob> moves = getLastMoves(roles);
-		GgpProtocol.Stop stop = new GgpProtocol.Stop(match, moves);
-		message = fmt.toString(GgpProtocol.fromStop(stop));
-		Netut.lightExchange(message, url);
 	}
 	
 	private List<Dob> getLastMoves(List<Dob> roles) {

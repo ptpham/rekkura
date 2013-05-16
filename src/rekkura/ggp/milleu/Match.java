@@ -7,6 +7,7 @@ import java.util.List;
 import rekkura.ggp.milleu.Game.Config;
 import rekkura.ggp.net.RemotePlayer;
 import rekkura.model.Dob;
+import rekkura.util.Netut;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -59,6 +60,9 @@ public class Match {
 		result.config = config;
 		return result;
 	}
+	
+	public static PlayerPointer getRemote(URL url) { return new PlayerPointer(url); }
+	public static PlayerPointer getRemote(String url) { return getRemote(Netut.lightUrl(url)); }
 
 	/**
 	 * Render players and fills in missing players with legals
