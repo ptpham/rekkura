@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import rekkura.ggp.milleu.Game.Config;
-import rekkura.ggp.net.RemotePlayer;
+import rekkura.ggp.player.RemotePlayer;
 import rekkura.logic.model.Dob;
 import rekkura.util.Netut;
 

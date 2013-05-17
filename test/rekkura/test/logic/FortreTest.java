@@ -11,8 +11,8 @@ import org.junit.Test;
 import rekkura.logic.format.LogicFormat;
 import rekkura.logic.format.StandardFormat;
 import rekkura.logic.model.Dob;
-import rekkura.logic.structures.Fortre;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Fortre;
+import rekkura.logic.structure.Pool;
 import rekkura.util.Colut;
 
 import com.google.common.collect.*;

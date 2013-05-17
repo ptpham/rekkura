@@ -8,7 +8,7 @@ import java.util.Set;
 
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.state.algorithms.Topper;
+import rekkura.state.algorithm.Topper;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.HashMultimap;

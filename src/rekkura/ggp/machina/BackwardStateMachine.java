@@ -9,7 +9,7 @@ import rekkura.ggp.milleu.GameLogicContext;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.prover.StratifiedBackward;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Pool;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;

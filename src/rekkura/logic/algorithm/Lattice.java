@@ -1,11 +1,11 @@
-package rekkura.logic.algorithms;
+package rekkura.logic.algorithm;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import rekkura.logic.model.Dob;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Pool;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;

@@ -1,4 +1,4 @@
-package rekkura.logic.structures;
+package rekkura.logic.structure;
 
 import java.util.List;
 import java.util.Set;

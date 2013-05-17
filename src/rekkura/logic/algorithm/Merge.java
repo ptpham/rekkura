@@ -1,4 +1,4 @@
-package rekkura.logic.algorithms;
+package rekkura.logic.algorithm;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,7 @@ import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.model.Vars;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Pool;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

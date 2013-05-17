@@ -1,10 +1,10 @@
-package rekkura.logic.structures;
+package rekkura.logic.structure;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.logic.algorithms.Unifier;
+import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.model.Logimos.DobSpace;

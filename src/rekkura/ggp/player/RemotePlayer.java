@@ -1,11 +1,13 @@
-package rekkura.ggp.net;
+package rekkura.ggp.player;
 
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import rekkura.ggp.milleu.Game;
+import rekkura.ggp.milleu.Match;
 import rekkura.ggp.milleu.Player;
+import rekkura.ggp.net.GgpProtocol;
 import rekkura.logic.format.KifFormat;
 import rekkura.logic.model.Dob;
 import rekkura.util.Netut;

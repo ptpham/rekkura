@@ -7,11 +7,11 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.logic.algorithms.Comprender;
-import rekkura.logic.algorithms.Merge;
-import rekkura.logic.algorithms.Merges;
+import rekkura.logic.algorithm.Comprender;
+import rekkura.logic.algorithm.Merge;
+import rekkura.logic.algorithm.Merges;
 import rekkura.logic.model.Rule;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Pool;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

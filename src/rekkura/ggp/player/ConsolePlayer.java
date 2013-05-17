@@ -1,4 +1,4 @@
-package rekkura.ggp.players;
+package rekkura.ggp.player;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

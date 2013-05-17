@@ -5,7 +5,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import rekkura.logic.model.Rule;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Pool;
 
 public class PoolTest {
 

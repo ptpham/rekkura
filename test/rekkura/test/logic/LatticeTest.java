@@ -7,10 +7,10 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.logic.algorithms.Lattice;
-import rekkura.logic.algorithms.Lattice.Varpar;
+import rekkura.logic.algorithm.Lattice;
+import rekkura.logic.algorithm.Lattice.Varpar;
 import rekkura.logic.model.Dob;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Pool;
 import rekkura.util.Colut;
 
 import com.google.common.collect.HashMultimap;

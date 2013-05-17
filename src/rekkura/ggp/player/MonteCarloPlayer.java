@@ -1,4 +1,4 @@
-package rekkura.ggp.players;
+package rekkura.ggp.player;
 
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Player.ProverBased;
 import rekkura.logic.model.Dob;
-import rekkura.state.algorithms.DepthCharge;
+import rekkura.state.algorithm.DepthCharge;
 import rekkura.util.Colut;
 import rekkura.util.RankedCarry;
 

@@ -3,13 +3,13 @@ package rekkura.logic.prover;
 import java.util.Collection;
 import java.util.Set;
 
-import rekkura.logic.algorithms.Terra;
+import rekkura.logic.algorithm.Terra;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.logic.structures.Cachet;
-import rekkura.logic.structures.Pool;
-import rekkura.logic.structures.Ruletta;
+import rekkura.logic.structure.Cachet;
+import rekkura.logic.structure.Pool;
+import rekkura.logic.structure.Ruletta;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ListMultimap;

@@ -8,7 +8,7 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import rekkura.ggp.milleu.Game;
-import rekkura.ggp.players.MonteCarloPlayer;
+import rekkura.ggp.player.MonteCarloPlayer;
 import rekkura.logic.format.StandardFormat;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;

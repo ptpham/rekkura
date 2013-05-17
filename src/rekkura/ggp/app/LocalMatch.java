@@ -7,8 +7,8 @@ import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Match;
 import rekkura.ggp.milleu.MatchRunnable;
 import rekkura.ggp.milleu.Player;
-import rekkura.ggp.players.ConsolePlayer;
-import rekkura.ggp.players.MonteCarloPlayer;
+import rekkura.ggp.player.ConsolePlayer;
+import rekkura.ggp.player.MonteCarloPlayer;
 import rekkura.logic.model.Rule;
 import rekkura.test.ggp.SimpleGames;
 

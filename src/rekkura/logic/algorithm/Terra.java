@@ -1,4 +1,4 @@
-package rekkura.logic.algorithms;
+package rekkura.logic.algorithm;
 
 import java.util.*;
 
@@ -6,8 +6,8 @@ import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.model.Unification;
-import rekkura.logic.structures.Cachet;
-import rekkura.logic.structures.Pool;
+import rekkura.logic.structure.Cachet;
+import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
