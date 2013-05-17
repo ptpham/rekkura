@@ -99,7 +99,7 @@ public class MatchRunnable implements Runnable {
 
 	private List<Thread> preparePlayers(List<Dob> roles, Map<Player, Dob> playerRoles) {
 		List<Thread> threads = Lists.newArrayList();
-		this.players.addAll(Match.renderPlayerPointers(match.pointers, roles, match.id));
+		while (players.size() < roles.size()) players.add(new Player.Legal());
 		
 		// Map players to roles
 		for (int i = 0; i < roles.size(); i++) playerRoles.put(players.get(i), roles.get(i));
@@ -114,8 +114,7 @@ public class MatchRunnable implements Runnable {
 		}
 		return threads;
 	}
-
-
+	
 	/**
 	 * Provides moves to players in such a way that signals the
 	 * end of the game.

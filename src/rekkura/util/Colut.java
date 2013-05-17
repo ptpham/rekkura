@@ -60,6 +60,10 @@ public class Colut {
 		return !nonEmpty(s);
 	}
 	
+	public static boolean empty(String s) {
+		return s == null || s.isEmpty();
+	}
+	
 	public static <T> T any(Collection<T> s) {
 		if (empty(s)) return null;
 		return s.iterator().next();

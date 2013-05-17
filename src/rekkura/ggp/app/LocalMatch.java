@@ -23,8 +23,7 @@ public class LocalMatch {
 		
 		List<Player> players = Lists.newArrayList();
 		Collections.addAll(players, new ConsolePlayer(), new MonteCarloPlayer());
-		Match.Builder builder = Match.newBuilder(config, Match.wrap(players));
-		MatchRunnable runner = builder.buildRunnable();
+		MatchRunnable runner = Match.newBuilder(config).build().newRunnable(players);
 		runner.run();
 	}
 	

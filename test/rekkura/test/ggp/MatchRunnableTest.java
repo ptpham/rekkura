@@ -13,7 +13,7 @@ public class MatchRunnableTest {
 	@Test
 	public void basic() {
 		Game.Config config = GgpTestUtil.createBlitzConfig(SimpleGames.getTrivial());
-		MatchRunnable match = Match.newBuilder(config).buildRunnable();
+		MatchRunnable match = Match.newBuilder(config).build().newRunnable();
 		match.run();
 
 		Assert.assertEquals(0, match.timeouts.size());
@@ -23,8 +23,7 @@ public class MatchRunnableTest {
 	@Test
 	public void timeoutRecord() {
 		Game.Config config = new Game.Config(0, 0, SimpleGames.getTrivial());
-		Match.Builder builder = Match.newBuilder(config, Match.wrap(new Player.Unresponsive()));
-		MatchRunnable match = builder.buildRunnable();
+		MatchRunnable match = Match.newBuilder(config).build().newRunnable(new Player.Unresponsive());
 		match.run();
 		
 		Assert.assertEquals(1, match.timeouts.size());
@@ -33,7 +32,7 @@ public class MatchRunnableTest {
 	@Test
 	public void goalsRegistered() {
 		Game.Config config = GgpTestUtil.createBlitzConfig(SimpleGames.getTrivial());
-		MatchRunnable match = Match.newBuilder(config).buildRunnable();
+		MatchRunnable match = Match.newBuilder(config).build().newRunnable();
 		match.run();
 
 		Assert.assertTrue(match.goals.size() > 0);

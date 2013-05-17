@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import rekkura.ggp.milleu.Game;
-import rekkura.ggp.milleu.Match;
 import rekkura.ggp.milleu.Player;
 import rekkura.ggp.net.GgpProtocol;
 import rekkura.logic.format.KifFormat;
@@ -16,9 +15,7 @@ import rekkura.util.Synchron;
 import com.google.common.collect.Maps;
 
 /**
- * You should not need to explicitly create this player.
- * Use Match.getRemote(Url url) to create a {@link Match.PlayerPointer}
- * to a remote player. 
+ * Forwards moves to and from a remote player with the GgpProtocol.
  * @author ptpham
  *
  */
@@ -29,6 +26,10 @@ public class RemotePlayer extends Player {
 	public RemotePlayer(String match, URL url) {
 		this.url = url;
 		this.match = match;
+	}
+	
+	public RemotePlayer(String match, String url) {
+		this(match, Netut.lightUrl(url));
 	}
 	
 	@Override

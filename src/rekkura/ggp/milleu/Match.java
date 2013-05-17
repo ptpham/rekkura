@@ -1,107 +1,51 @@
 package rekkura.ggp.milleu;
 
-import java.net.URL;
-import java.util.Collection;
 import java.util.List;
 
 import rekkura.ggp.milleu.Game.Config;
 import rekkura.ggp.player.RemotePlayer;
-import rekkura.logic.model.Dob;
-import rekkura.util.Netut;
+import rekkura.util.Colut;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-/**
- * This class allows you to configure matches. A match
- * requires a Game.Config and optionally allows you to 
- * specify PlayerPointers to fill various roles. 
- * A PlayerPointer can either be a reference to a local
- * Player object or it can be a URL to a remote player.
- * Remote players will be automatically constructed 
- * when the MatchRunnable built from the match is run.
- * @author ptpham
- *
- */
 public class Match {
 	public final Game.Config config;
 	public final String id, game;
-	public final ImmutableList<PlayerPointer> pointers;
 	
-	private Match(String id, String game, Game.Config config, List<PlayerPointer> pointers) {
-		this.pointers = ImmutableList.copyOf(pointers);
+	private Match(String id, String game, Game.Config config) {
 		this.config = config;
 		this.game = game;
+		
+		if (Colut.empty(id)) {
+			id = "rekkura-default-match-id-";
+			id += Long.toString(Math.round(Math.random()));
+		}
 		this.id = id;
-	}
-
-	public static class PlayerPointer {
-		public final Player local;
-		public final URL remote;
-		public PlayerPointer(Player local) { this.local = local; this.remote = null; }
-		public PlayerPointer(URL remote) { this.remote = remote; this.local = null; }
-		public PlayerPointer() { this.remote = null; this.local = null; }
 	}
 
 	public static class Builder {
 		public String match, game;
 		public Game.Config config;
-		public List<PlayerPointer> pointers = Lists.newArrayList();
-		public Match build() { return new Match(match, game, config, pointers); }
-		public MatchRunnable buildRunnable() { return new MatchRunnable(build()); }
+		public Match build() { return new Match(match, game, config); }
 	}
 	
-	public static List<PlayerPointer> wrap(Player... players) {
-		return wrap(Lists.newArrayList(players));
-	}
-	
-	public static List<PlayerPointer> wrap(Collection<Player> players) {
-		List<PlayerPointer> result = Lists.newArrayList();
-		for (Player player : players) result.add(new PlayerPointer(player));
-		return result;
-	}
-	
-	public static Builder newBuilder(Game.Config config) {
-		return newBuilder(config, Lists.<PlayerPointer>newArrayList());
-	}
-
-	public static Builder newBuilder(Config config, List<PlayerPointer> players) {
+	public static Builder newBuilder(Config config) {
 		Builder result = new Builder();
-		result.pointers.addAll(players);
 		result.config = config;
 		return result;
 	}
 	
-	public static PlayerPointer getRemote(URL url) { return new PlayerPointer(url); }
-	public static PlayerPointer getRemote(String url) { return getRemote(Netut.lightUrl(url)); }
-
-	/**
-	 * Render players and fills in missing players with legals
-	 * @param match
-	 * @param roles
-	 * @return
-	 */
-	public List<Player> renderPlayers() {
-		List<Dob> roles = Game.getRoles(config.rules);
-		return renderPlayerPointers(this.pointers, roles, this.id);
+	public RemotePlayer getRemote(String url) {
+		return new RemotePlayer(id, url);
 	}
-
-	public static List<Player> renderPlayerPointers(
-		List<PlayerPointer> pointers, List<Dob> roles, String id) {
-		
-		pointers = Lists.newArrayList(pointers);
-		while (pointers.size() < roles.size()) pointers.add(new Match.PlayerPointer());
-		
-		List<Player> players = Lists.newArrayList();
-		for (Match.PlayerPointer pointer : pointers) {
-			if (pointer.local != null) {
-				players.add(pointer.local);
-			} else if (pointer.remote != null) {
-				players.add(new RemotePlayer(id, pointer.remote));
-			} else {
-				players.add(new Player.Legal());
-			}
-		}
-		return players;
+	
+	public MatchRunnable newRunnable(Player... players) {
+		return newRunnable(Lists.newArrayList(players));
+	}
+	
+	public MatchRunnable newRunnable(List<Player> players) {
+		MatchRunnable result = new MatchRunnable(this);
+		result.players.addAll(players);
+		return result;
 	}
 }
