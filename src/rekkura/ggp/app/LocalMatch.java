@@ -9,7 +9,7 @@ import rekkura.ggp.milleu.MatchRunnable;
 import rekkura.ggp.milleu.Player;
 import rekkura.ggp.players.ConsolePlayer;
 import rekkura.ggp.players.MonteCarloPlayer;
-import rekkura.model.Rule;
+import rekkura.logic.model.Rule;
 import rekkura.test.ggp.SimpleGames;
 
 import com.google.common.collect.Lists;

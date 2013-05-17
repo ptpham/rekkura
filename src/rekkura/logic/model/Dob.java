@@ -1,4 +1,4 @@
-package rekkura.model;
+package rekkura.logic.model;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
-import rekkura.fmt.StandardFormat;
+import rekkura.logic.format.StandardFormat;
 import rekkura.util.CachingSupplier;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterable;

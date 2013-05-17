@@ -8,8 +8,8 @@ import junit.framework.Assert;
 import org.junit.Test;
 
 import rekkura.ggp.machina.GgpStateMachine;
-import rekkura.model.Dob;
-import rekkura.model.StateMachine;
+import rekkura.logic.model.Dob;
+import rekkura.state.model.StateMachine;
 import rekkura.test.ggp.SimpleGames;
 import rekkura.util.Colut;
 

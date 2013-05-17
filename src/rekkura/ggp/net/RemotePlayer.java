@@ -4,16 +4,22 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-import rekkura.fmt.KifFormat;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Player;
-import rekkura.model.Dob;
+import rekkura.logic.format.KifFormat;
+import rekkura.logic.model.Dob;
 import rekkura.util.Netut;
 import rekkura.util.Synchron;
 
 import com.google.common.collect.Maps;
 
-
+/**
+ * You should not need to explicitly create this player.
+ * Use Match.getRemote(Url url) to create a {@link Match.PlayerPointer}
+ * to a remote player. 
+ * @author ptpham
+ *
+ */
 public class RemotePlayer extends Player {
 	private URL url;
 	private String match;

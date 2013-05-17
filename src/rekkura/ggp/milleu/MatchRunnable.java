@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.Vector;
 
 import rekkura.ggp.machina.ProverStateMachine;
-import rekkura.model.Dob;
+import rekkura.logic.model.Dob;
 import rekkura.util.Colut;
 import rekkura.util.Event;
 import rekkura.util.Synchron;

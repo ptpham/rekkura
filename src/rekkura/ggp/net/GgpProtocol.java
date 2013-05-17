@@ -5,11 +5,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import rekkura.fmt.KifFormat;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Player;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.format.KifFormat;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 import rekkura.util.Colut;
 import rekkura.util.Reffle;
 import rekkura.util.Synchron;

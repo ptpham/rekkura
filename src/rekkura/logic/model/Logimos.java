@@ -1,4 +1,4 @@
-package rekkura.model;
+package rekkura.logic.model;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;

@@ -1,14 +1,14 @@
-package rekkura.logic;
+package rekkura.logic.structures;
 
 import java.util.List;
 import java.util.Set;
 
-import rekkura.fmt.LogicFormat;
-import rekkura.fmt.StandardFormat;
-import rekkura.model.Atom;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
-import rekkura.model.Vars;
+import rekkura.logic.format.LogicFormat;
+import rekkura.logic.format.StandardFormat;
+import rekkura.logic.model.Atom;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
+import rekkura.logic.model.Vars;
 import rekkura.util.CachingSupplier;
 import rekkura.util.Submerger;
 

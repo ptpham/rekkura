@@ -1,4 +1,4 @@
-package rekkura.logic;
+package rekkura.state.algorithms;
 
 import java.util.Collection;
 import java.util.List;

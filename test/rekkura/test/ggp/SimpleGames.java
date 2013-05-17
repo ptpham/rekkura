@@ -3,10 +3,10 @@ package rekkura.test.ggp;
 import java.util.Arrays;
 import java.util.List;
 
-import rekkura.fmt.KifFormat;
-import rekkura.fmt.StandardFormat;
 import rekkura.ggp.net.GgpProtocol;
-import rekkura.model.Rule;
+import rekkura.logic.format.KifFormat;
+import rekkura.logic.format.StandardFormat;
+import rekkura.logic.model.Rule;
 
 import com.google.common.collect.Lists;
 

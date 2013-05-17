@@ -7,11 +7,11 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.fmt.StandardFormat;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.players.MonteCarloPlayer;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.format.StandardFormat;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 import rekkura.util.Synchron;
 
 import com.google.common.collect.Lists;

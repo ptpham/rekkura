@@ -1,11 +1,11 @@
-package rekkura.alg;
+package rekkura.state.algorithms;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import rekkura.model.Dob;
-import rekkura.model.StateMachine;
+import rekkura.logic.model.Dob;
+import rekkura.state.model.StateMachine;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.ListMultimap;

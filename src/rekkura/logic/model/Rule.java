@@ -1,8 +1,8 @@
-package rekkura.model;
+package rekkura.logic.model;
 
 import java.util.*;
 
-import rekkura.fmt.StandardFormat;
+import rekkura.logic.format.StandardFormat;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterator;
 

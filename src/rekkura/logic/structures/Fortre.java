@@ -1,9 +1,11 @@
-package rekkura.logic;
+package rekkura.logic.structures;
 
 import java.util.*;
 
-import rekkura.model.Dob;
-import rekkura.model.Vars;
+import rekkura.logic.algorithms.Unifier;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Vars;
+import rekkura.state.algorithms.Topper;
 import rekkura.util.Colut;
 
 import com.google.common.collect.*;

@@ -3,9 +3,9 @@ package rekkura.ggp.machina;
 import java.util.Collection;
 import java.util.Set;
 
-import rekkura.model.Dob;
-import rekkura.model.Rule;
-import rekkura.model.StateMachine;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
+import rekkura.state.model.StateMachine;
 
 public interface GgpStateMachine extends StateMachine<Set<Dob>, Dob> {
 

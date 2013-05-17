@@ -1,15 +1,14 @@
-package rekkura.logic.merge;
+package rekkura.logic.algorithms;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.logic.Pool;
-import rekkura.logic.Unifier;
-import rekkura.model.Atom;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
-import rekkura.model.Vars;
+import rekkura.logic.model.Atom;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
+import rekkura.logic.model.Vars;
+import rekkura.logic.structures.Pool;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

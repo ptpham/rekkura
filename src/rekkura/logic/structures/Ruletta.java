@@ -1,12 +1,14 @@
-package rekkura.logic;
+package rekkura.logic.structures;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import rekkura.model.Atom;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.algorithms.Unifier;
+import rekkura.logic.model.Atom;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
+import rekkura.state.algorithms.Topper;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;

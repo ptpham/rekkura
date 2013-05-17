@@ -8,11 +8,11 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.fmt.LogicFormat;
-import rekkura.fmt.StandardFormat;
+import rekkura.logic.format.LogicFormat;
+import rekkura.logic.format.StandardFormat;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 import rekkura.logic.prover.StratifiedProver;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
 
 import com.google.common.collect.Sets;
 

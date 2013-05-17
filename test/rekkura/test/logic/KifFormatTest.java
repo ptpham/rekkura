@@ -1,13 +1,13 @@
-package rekkura.test.fmt;
+package rekkura.test.logic;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.fmt.KifFormat;
-import rekkura.model.Atom;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.format.KifFormat;
+import rekkura.logic.model.Atom;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 
 public class KifFormatTest {
 

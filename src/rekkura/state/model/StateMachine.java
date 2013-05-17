@@ -1,6 +1,8 @@
-package rekkura.model;
+package rekkura.state.model;
 
 import java.util.Map;
+
+import rekkura.logic.model.Dob;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multiset;

@@ -8,11 +8,11 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.fmt.LogicFormat;
-import rekkura.fmt.StandardFormat;
-import rekkura.logic.Fortre;
-import rekkura.logic.Pool;
-import rekkura.model.Dob;
+import rekkura.logic.format.LogicFormat;
+import rekkura.logic.format.StandardFormat;
+import rekkura.logic.model.Dob;
+import rekkura.logic.structures.Fortre;
+import rekkura.logic.structures.Pool;
 import rekkura.util.Colut;
 
 import com.google.common.collect.*;

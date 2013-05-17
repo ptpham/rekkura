@@ -6,9 +6,9 @@ import java.util.Set;
 import java.util.Vector;
 
 import rekkura.ggp.machina.BackwardStateMachine;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
-import rekkura.model.StateMachine;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
+import rekkura.state.model.StateMachine;
 import rekkura.util.Colut;
 import rekkura.util.Synchron;
 

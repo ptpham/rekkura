@@ -1,11 +1,11 @@
-package rekkura.fmt;
+package rekkura.logic.format;
 
 import java.util.Collection;
 import java.util.List;
 
-import rekkura.model.Atom;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.model.Atom;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 
 import com.google.common.collect.Lists;
 

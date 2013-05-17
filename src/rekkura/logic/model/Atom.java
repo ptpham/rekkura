@@ -1,4 +1,4 @@
-package rekkura.model;
+package rekkura.logic.model;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -7,7 +7,7 @@ import java.util.Iterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import rekkura.fmt.StandardFormat;
+import rekkura.logic.format.StandardFormat;
 
 /**
  * An {@link Atom} is simply a combination of a

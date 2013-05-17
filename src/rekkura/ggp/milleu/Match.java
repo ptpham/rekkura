@@ -6,12 +6,23 @@ import java.util.List;
 
 import rekkura.ggp.milleu.Game.Config;
 import rekkura.ggp.net.RemotePlayer;
-import rekkura.model.Dob;
+import rekkura.logic.model.Dob;
 import rekkura.util.Netut;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+/**
+ * This class allows you to configure matches. A match
+ * requires a Game.Config and optionally allows you to 
+ * specify PlayerPointers to fill various roles. 
+ * A PlayerPointer can either be a reference to a local
+ * Player object or it can be a URL to a remote player.
+ * Remote players will be automatically constructed 
+ * when the MatchRunnable built from the match is run.
+ * @author ptpham
+ *
+ */
 public class Match {
 	public final Game.Config config;
 	public final String id, game;

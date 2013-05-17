@@ -1,12 +1,12 @@
-package rekkura.logic;
+package rekkura.logic.algorithms;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.model.*;
-import rekkura.model.Rule.Distinct;
+import rekkura.logic.model.*;
+import rekkura.logic.model.Rule.Distinct;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;

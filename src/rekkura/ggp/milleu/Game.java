@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.fmt.StandardFormat;
-import rekkura.model.Atom;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.format.StandardFormat;
+import rekkura.logic.model.Atom;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;

@@ -7,10 +7,10 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import rekkura.alg.DepthCharge;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Player.ProverBased;
-import rekkura.model.Dob;
+import rekkura.logic.model.Dob;
+import rekkura.state.algorithms.DepthCharge;
 import rekkura.util.Colut;
 import rekkura.util.RankedCarry;
 

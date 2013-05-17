@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.logic.Topper;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
+import rekkura.state.algorithms.Topper;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.HashMultimap;

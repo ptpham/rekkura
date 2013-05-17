@@ -8,7 +8,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.logic.Topper;
+import rekkura.state.algorithms.Topper;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;

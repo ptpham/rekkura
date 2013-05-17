@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 
 import rekkura.ggp.milleu.GameLogicContext;
-import rekkura.logic.Pool;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 import rekkura.logic.prover.StratifiedBackward;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.structures.Pool;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;

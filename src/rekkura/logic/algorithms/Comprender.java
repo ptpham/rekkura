@@ -1,9 +1,9 @@
-package rekkura.logic;
+package rekkura.logic.algorithms;
 
 import java.util.List;
 
-import rekkura.logic.merge.Merge;
-import rekkura.model.Rule;
+import rekkura.logic.model.Rule;
+import rekkura.logic.structures.Pool;
 import rekkura.util.Colut;
 
 import com.google.common.collect.Lists;

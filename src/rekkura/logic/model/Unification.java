@@ -1,4 +1,4 @@
-package rekkura.model;
+package rekkura.logic.model;
 
 import java.util.Arrays;
 import java.util.Map;

@@ -5,13 +5,13 @@ import java.util.Map;
 import java.util.Set;
 
 import rekkura.ggp.milleu.GameLogicContext;
-import rekkura.logic.Pool;
-import rekkura.logic.Ruletta;
-import rekkura.logic.Unifier;
+import rekkura.logic.algorithms.Unifier;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
 import rekkura.logic.prover.StratifiedForward;
 import rekkura.logic.prover.StratifiedProver;
-import rekkura.model.Dob;
-import rekkura.model.Rule;
+import rekkura.logic.structures.Pool;
+import rekkura.logic.structures.Ruletta;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;

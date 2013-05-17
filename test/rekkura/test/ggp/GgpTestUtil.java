@@ -3,7 +3,7 @@ package rekkura.test.ggp;
 import java.util.List;
 
 import rekkura.ggp.milleu.Game;
-import rekkura.model.Rule;
+import rekkura.logic.model.Rule;
 
 public class GgpTestUtil {
 

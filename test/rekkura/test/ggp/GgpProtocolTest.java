@@ -9,7 +9,7 @@ import rekkura.ggp.net.GgpProtocol;
 import rekkura.ggp.net.GgpProtocol.DefaultPlayerHandler;
 import rekkura.ggp.net.GgpProtocol.GgpState;
 import rekkura.ggp.net.GgpProtocol.PlayerDemuxer;
-import rekkura.model.Dob;
+import rekkura.logic.model.Dob;
 
 import com.google.common.collect.Lists;
 

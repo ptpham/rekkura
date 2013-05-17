@@ -7,7 +7,7 @@ import java.util.Map;
 
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Player;
-import rekkura.model.Dob;
+import rekkura.logic.model.Dob;
 
 import com.google.common.collect.ListMultimap;
 
