@@ -1,6 +1,7 @@
 package rekkura.logic.structure;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import rekkura.logic.format.LogicFormat;
@@ -13,6 +14,7 @@ import rekkura.util.CachingSupplier;
 import rekkura.util.Submerger;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -33,6 +35,28 @@ public class Pool {
 	public final Submerger<Rule> rules = createRuleSubmerger();
 	public final Set<Dob> allVars = Sets.newHashSet();
 	public final Vars.Context context = Vars.asContext(allVars, vargen);
+	
+	public Map<Dob, Dob> submergeUnify(Map<Dob, Dob> unify) {
+		Map<Dob, Dob> result = Maps.newHashMap();
+		
+		for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
+			Dob key = dobs.submerge(entry.getKey());
+			Dob value = dobs.submerge(entry.getValue());
+			result.put(key, value);
+		}
+		return result;
+	}
+	
+	public Map<Dob, Dob> submergeUnifyStrings(Map<String, String> unify) {
+		Map<Dob, Dob> result = Maps.newHashMap();
+		
+		for (Map.Entry<String, String> entry : unify.entrySet()) {
+			Dob key = dobs.submergeString(entry.getKey());
+			Dob value = dobs.submergeString(entry.getValue());
+			result.put(key, value);
+		}
+		return result;
+	}
 	
 	private Submerger<Dob> createDobSubmerger() {
 		return new Submerger<Dob>() {

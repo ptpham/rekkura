@@ -214,12 +214,12 @@ public class Terra {
 	 * is the order of the variables in the rule.
 	 * @param rule
 	 * @param candidates
-	 * @param pool
 	 * @param truths
+	 * @param pool
 	 * @return
 	 */
 	public static Map<Dob, Dob> applyVariables(Rule rule, List<Dob> candidates, 
-			Pool pool, Set<Dob> truths) {
+			Set<Dob> truths, Pool pool) {
 		Map<Dob, Dob> unify = Maps.newHashMap();
 		List<Dob> vars = rule.vars; 
 		List<Atom> body = rule.body;
