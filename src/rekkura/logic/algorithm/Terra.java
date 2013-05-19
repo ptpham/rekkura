@@ -225,6 +225,7 @@ public class Terra {
 		List<Atom> body = rule.body;
 		
 		// Construct replacement
+		if (rule.vars.size() != candidates.size()) return null;
 		for (int i = 0; i < vars.size(); i++) {
 			unify.put(vars.get(i), candidates.get(i));
 		}

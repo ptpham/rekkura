@@ -20,42 +20,51 @@ import com.google.common.collect.Sets;
 public class TerraTest {
 
 	@Test
-	public void applyPositive() {
+	public void applyVarsPositive() {
 		String rawRule = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)),true><((h)(Y)),true>}";
 		List<String> rawCandidates = Lists.newArrayList("(a)", "(b)");
 		List<String> rawTruths = Lists.newArrayList("((g)(a))", "((h)(b))");
 		Map<String, String> rawExpected = ImmutableMap.of("(X)", "(a)", "(Y)", "(b)");
-		checkApply(rawRule, rawCandidates, rawTruths, rawExpected);
+		checkApplyVars(rawRule, rawCandidates, rawTruths, rawExpected);
 	}
 	
 	@Test
-	public void applyNegative() {
+	public void applyVarsNegative() {
 		String rawRule = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)),false><((h)(Y)),false>}";
 		List<String> rawCandidates = Lists.newArrayList("(a)", "(b)");
 		List<String> rawTruths = Lists.newArrayList();
 		Map<String, String> rawExpected = ImmutableMap.of("(X)", "(a)", "(Y)", "(b)");
-		checkApply(rawRule, rawCandidates, rawTruths, rawExpected);
+		checkApplyVars(rawRule, rawCandidates, rawTruths, rawExpected);
 	}
 	
 	@Test
-	public void applyPositiveFailure() {
+	public void applyVarsPositiveFailure() {
 		String rawRule = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)),false><((h)(Y)),true>}";
 		List<String> rawCandidates = Lists.newArrayList("(a)", "(b)");
 		List<String> rawTruths = Lists.newArrayList("((g)(a))", "((h)(b))");
 		Map<String, String> rawExpected = null;
-		checkApply(rawRule, rawCandidates, rawTruths, rawExpected);
+		checkApplyVars(rawRule, rawCandidates, rawTruths, rawExpected);
 	}
 	
 	@Test
-	public void applyNegativeFailure() {
+	public void applyVarsNegativeFailure() {
 		String rawRule = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)),false><((h)(Y)),true>}";
 		List<String> rawCandidates = Lists.newArrayList("(a)", "(b)");
 		List<String> rawTruths = Lists.newArrayList("((h)(c))");
 		Map<String, String> rawExpected = null;
-		checkApply(rawRule, rawCandidates, rawTruths, rawExpected);
+		checkApplyVars(rawRule, rawCandidates, rawTruths, rawExpected);
+	}
+	
+	@Test
+	public void applyVarsMissingVars() {
+		String rawRule = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)),false><((h)(Y)),true>}";
+		List<String> rawCandidates = Lists.newArrayList("(a)");
+		List<String> rawTruths = Lists.newArrayList("((h)(c))");
+		Map<String, String> rawExpected = null;
+		checkApplyVars(rawRule, rawCandidates, rawTruths, rawExpected);
 	}
 
-	private void checkApply(String rawRule, List<String> rawCandidates,
+	private void checkApplyVars(String rawRule, List<String> rawCandidates,
 			List<String> rawTruths, Map<String, String> rawExpected) {
 		Pool pool = new Pool();
 
