@@ -7,6 +7,7 @@ import java.util.Set;
 
 import rekkura.logic.model.*;
 import rekkura.logic.model.Rule.Distinct;
+import rekkura.util.Colut;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -234,7 +235,13 @@ public class Unifier {
 		return symmetrizer;
 	}
 	
-
+	/**
+	 * Returns true if the src was successfully merged into the dst
+	 * unification and false otherwise.
+	 * @param dst
+	 * @param src
+	 * @return
+	 */
 	public static boolean mergeUnifications(Map<Dob, Dob> dst, Map<Dob, Dob> src) {
 		if (src == null) return false;
 		for (Map.Entry<Dob, Dob> pair : src.entrySet()) {
@@ -257,5 +264,26 @@ public class Unifier {
 		}
 		
 		return result;
+	}
+	
+	public static Map<Dob, Dob> unifyList(List<Dob> bases, List<Dob> targets) {
+		if (bases == null || targets == null) return null;
+		if (bases.size() != targets.size()) return null;
+		
+		Map<Dob, Dob> unify = Maps.newHashMap();
+		for (int i = 0; i < bases.size(); i++) {
+			Dob base = bases.get(i);
+			Dob target = targets.get(i);
+			Map<Dob, Dob> current = Unifier.unify(base, target);
+			if (!Unifier.mergeUnifications(unify, current)) return null;
+		}
+		return unify;
+	}
+	
+	public static Map<Dob, Dob> unifyListVars(List<Dob> bodies,
+			List<Dob> dobs, Collection<Dob> vars) {
+		Map<Dob, Dob> unify = Unifier.unifyList(dobs, bodies);
+		if (!Colut.containsAll(Colut.keySet(unify), vars)) return null;
+		return unify;
 	}
 }

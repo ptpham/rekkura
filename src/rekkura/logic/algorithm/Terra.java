@@ -9,7 +9,6 @@ import rekkura.logic.model.Unification;
 import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
-import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
 
 import com.google.common.collect.ArrayListMultimap;
@@ -41,7 +40,6 @@ public class Terra {
 		};
 	}
 	
-	
 	/**
 	 * Returns a list that contains the assignment domain of each body 
 	 * term in the given rule assuming that we want to expand the given
@@ -64,24 +62,34 @@ public class Terra {
 		return candidates;
 	}
 	
+	/**
+	 * This method exposes an efficient rendering process for a collection of ground dobs.
+	 * If you want to apply a single assignment in a vaccuum, consider applyBodies.
+	 * To generate the support for this function, consider using getBodySpace.
+	 * @param rule
+	 * @param support
+	 * @param pool
+	 * @param truths
+	 * @return
+	 */
 	public static Set<Dob> applyBodyExpansion(Rule rule, final ListMultimap<Atom, Dob> support, 
 			Pool pool, Set<Dob> truths) {
 		Set<Dob> result = Sets.newHashSet();
 
 		// Sort the dimensions of the space so that the smallest ones come first.
-		List<Atom> positives = getSortedPositives(rule, support);
+		List<Atom> positives = Atom.filterPositives(rule.body);
+		sortBySupportSize(positives, support);
 		
-		List<Atom> negatives = Atom.getNegatives(rule.body);
+		List<Atom> negatives = Atom.filterNegatives(rule.body);
 		List<List<Unification>> space = constructUnificationSpace(rule, support, positives);
 		
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		Unification unify = Unification.from(rule.vars);
 		
 		// This block deals with the no variables special case...
-		// Please refactor if you can see a cleaner way to do it.
-		if (rule.vars.size() == 0 && Colut.containsAll(Atom.dobIterableFromAtoms(positives), truths)
-			&& Colut.containsNone(Atom.dobIterableFromAtoms(negatives), truths)) {
-			return Sets.<Dob>newHashSet(rule.head.dob);
+		if (rule.vars.size() == 0 && checkGroundAtoms(rule.body, truths)) {
+			result.add(rule.head.dob);
+			return result;
 		}
 		
 		while (iterator.hasNext()) {
@@ -101,12 +109,7 @@ public class Terra {
 			// should not exist.
 			Map<Dob, Dob> converted = failure == -1 ? unify.toMap() : null;
 			if (converted != null && negatives.size() > 0) {
-				boolean failed = false;
-				for (Atom atom : negatives) {
-					Dob generated = pool.dobs.submerge(Unifier.replace(atom.dob, converted));
-					if (truths.contains(generated)) failed = true;
-				}
-				if (failed) continue;
+				if (!checkNegatives(converted, negatives, truths, pool)) continue;
 			}
 			
 			// If we manage to unify against all bodies, apply the substitution
@@ -114,12 +117,60 @@ public class Terra {
 			// in it, then do not add it to the result.
 			if (converted != null && unify.isValid()) {
 				if (rule.evaluateDistinct(converted)) {
-					Dob generated = pool.dobs.submerge(Unifier.replace(rule.head.dob, converted));
+					Dob generated = renderHead(converted, rule, pool);
 					result.add(generated);
 				}
 			} else if (failure >= 0) iterator.advance(failure);
 		}
 		return result;
+	}
+
+	public static boolean checkGroundAtoms(Iterable<Atom> body, Set<Dob> truths) {
+		for (Atom atom : body) {
+			boolean truth = truths.contains(atom.dob);
+			if (atom.truth ^ truth) return false;
+		}
+		return true;
+	}
+
+	public static Dob renderHead(Map<Dob, Dob> unify, Rule rule, Pool pool) {
+		return pool.dobs.submerge(Unifier.replace(rule.head.dob, unify));
+	}
+	
+	/**
+	 * Attempts to generate a rule's head with the given assignment to the rule's body
+	 * and the given set of things that are currently true.
+	 * @param rule
+	 * @param bodies these should be in order of the positive atoms in the rule
+	 * @param truths
+	 * @param pool
+	 * @return
+	 */
+	public static Dob applyBodies(Rule rule, List<Dob> bodies, Set<Dob> truths, Pool pool) {
+		List<Dob> dobs = Atom.asDobList(Atom.filterPositives(rule.body));
+		Map<Dob, Dob> unify = Unifier.unifyListVars(dobs, bodies, rule.vars);
+		if (!checkNegatives(unify, rule.body, truths, pool)) return null;
+		if (!rule.evaluateDistinct(unify)) return null;
+		return renderHead(unify, rule, pool);
+	}
+
+	/**
+	 * Returns true if the unification does not yield any dob
+	 * contained the set of truths passed in.
+	 * @param unify
+	 * @param atoms
+	 * @param truths
+	 * @param pool
+	 * @return
+	 */
+	public static boolean checkNegatives(Map<Dob, Dob> unify,
+			List<Atom> atoms, Set<Dob> truths, Pool pool) {
+		for (Atom atom : atoms) {
+			if (atom.truth) continue;
+			Dob generated = pool.dobs.submerge(Unifier.replace(atom.dob, unify));
+			if (generated == null || truths.contains(generated)) return false;
+		}
+		return true;
 	}
 	
 	private static List<List<Unification>> constructUnificationSpace(Rule rule,
@@ -138,15 +189,13 @@ public class Terra {
 		return space;
 	}
 
-	private static List<Atom> getSortedPositives(Rule rule,
+	public static void sortBySupportSize(List<Atom> positives,
 			final ListMultimap<Atom, Dob> support) {
-		List<Atom> positives = Atom.getPositives(rule.body);
 		Collections.sort(positives, new Comparator<Atom>() {
 			@Override public int compare(Atom first, Atom second) {
 				return support.get(first).size() - support.get(second).size();
 			}
 		});
-		return positives;
 	}
 	
 	/**

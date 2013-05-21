@@ -22,6 +22,7 @@ public abstract class Submerger<U> {
 	}
 	
 	public U submerge(U original) {
+		if (original == null) return null;
 		if (known.contains(original)) return original;
 		String stringed = toString(original);
 		return submerge(original, stringed);

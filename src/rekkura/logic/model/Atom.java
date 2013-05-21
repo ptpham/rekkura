@@ -65,14 +65,18 @@ public class Atom {
 			@Override public Iterator<Dob> iterator() { return dobIteratorFromAtoms(atoms); }
 		};
 	}
+	
+	public static List<Dob> asDobList(Iterable<Atom> atoms) {
+		return Lists.newArrayList(dobIterableFromAtoms(atoms));
+	}
 
-	public static List<Atom> getPositives(Collection<Atom> atoms) {
+	public static List<Atom> filterPositives(Collection<Atom> atoms) {
 		List<Atom> positives = Lists.newArrayList();
 		for (Atom atom : atoms) { if (atom.truth) positives.add(atom); }
 		return positives;
 	}
 	
-	public static List<Atom> getNegatives(Collection<Atom> atoms) {
+	public static List<Atom> filterNegatives(Collection<Atom> atoms) {
 		List<Atom> negatives = Lists.newArrayList();
 		for (Atom atom : atoms) { if (!atom.truth) negatives.add(atom); }
 		return negatives;

@@ -18,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class TerraTest {
-
+	
 	@Test
 	public void applyVarsPositive() {
 		String rawRule = "{(X)(Y)|<((f)(X)(Y)),true>:-<((g)(X)),true><((h)(Y)),true>}";

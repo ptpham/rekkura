@@ -1,10 +1,6 @@
 package rekkura.util;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
@@ -258,5 +254,15 @@ public class Colut {
 	
 	public static <U> void clear(Collection<U> collection) {
 		if (collection != null) collection.clear();
+	}
+	
+	public static <U, V> Set<U> keySet(Map<U, V> map) {
+		if (map == null) return null;
+		return map.keySet();
+	}
+	
+	public static <U, V> Collection<V> values(Map<U, V> map) {
+		if (map == null) return null;
+		return map.values();
 	}
 }
