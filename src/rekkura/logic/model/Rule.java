@@ -123,14 +123,19 @@ public class Rule {
 	 * @return
 	 */
 	public boolean evaluateDistinct(Map<Dob, Dob> unify) {
-		if (this.distinct.size() == 0) return true;
+		return evaluateDistinct(unify, this.vars, this.distinct);
+	}
+
+	public static boolean evaluateDistinct(Map<Dob, Dob> unify, 
+		Collection<Dob> vars, List<Distinct> distinct) {
+		if (distinct.size() == 0) return true;
 		
-		for (Distinct entry : this.distinct) {
+		for (Distinct entry : distinct) {
 			Dob first = entry.first;
 			Dob second = entry.second;
 			
-			if (this.vars.contains(first)) first = unify.get(first);
-			if (this.vars.contains(second)) second = unify.get(second);
+			if (vars.contains(first)) first = unify.get(first);
+			if (vars.contains(second)) second = unify.get(second);
 			
 			if (first == second) return false;
 		}
@@ -221,18 +226,6 @@ public class Rule {
 		body = Colut.filterAdjacentRefeq(body);
 		distincts = Colut.filterAdjacentRefeq(distincts);
 		return new Rule(rule.head, body, vars, distincts);
-	}
-	
-	public List<Atom> getPositives() {
-		List<Atom> positives = Lists.newArrayList();
-		for (Atom atom : this.body) { if (atom.truth) positives.add(atom); }
-		return positives;
-	}
-	
-	public List<Atom> getNegatives() {
-		List<Atom> negatives = Lists.newArrayList();
-		for (Atom atom : this.body) { if (!atom.truth) negatives.add(atom); }
-		return negatives;
 	}
 	
 	public Set<Dob> getVariablesOf(Dob dob) {

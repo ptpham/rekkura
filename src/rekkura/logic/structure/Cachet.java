@@ -1,16 +1,11 @@
 package rekkura.logic.structure;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.logic.model.Logimos.DobSpace;
 import rekkura.util.Cache;
 import rekkura.util.Colut;
-import rekkura.util.OtmUtil;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
@@ -80,34 +75,6 @@ public class Cachet {
 	public final Ruletta rta;
 
 	public Cachet(Ruletta rta) { this.rta = rta; }
-	
-	public static class VarAux {
-		public final Cache<Dob, List<Dob>> spines;
-		
-		/**
-		 * This holds the mapping from a body form to the sets of replacements
-		 * for its various children.
-		 * Memory is O(FV).
-		 */
-		public final Cache<Dob, DobSpace> unispaces = 
-			Cache.create(new Function<Dob, DobSpace>() {
-				@Override public DobSpace apply(Dob dob) { return new DobSpace(dob); }
-			});	
-		
-		public final Set<Dob> allVars;
-	
-		public VarAux(Cache<Dob, List<Dob>> spines, Set<Dob> allVars) {
-			this.spines = spines;
-			this.allVars = allVars;
-		}
-		
-		public void storeVariableReplacements(Dob ground, Dob body) {
-			Map<Dob, Dob> unify = Unifier.unify(body, ground);
-			DobSpace space = this.unispaces.get(body);
-			OtmUtil.putAll(space.replacements, unify);
-		}
-	}
-	
 	
 	public void storeGround(Dob dob) {
 		// The root of the subtree is the end of the trunk.

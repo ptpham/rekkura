@@ -3,9 +3,11 @@ package rekkura.logic.model;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 
 import rekkura.logic.format.StandardFormat;
 
@@ -62,6 +64,18 @@ public class Atom {
 		return new Iterable<Dob>() {
 			@Override public Iterator<Dob> iterator() { return dobIteratorFromAtoms(atoms); }
 		};
+	}
+
+	public static List<Atom> getPositives(Collection<Atom> atoms) {
+		List<Atom> positives = Lists.newArrayList();
+		for (Atom atom : atoms) { if (atom.truth) positives.add(atom); }
+		return positives;
+	}
+	
+	public static List<Atom> getNegatives(Collection<Atom> atoms) {
+		List<Atom> negatives = Lists.newArrayList();
+		for (Atom atom : atoms) { if (!atom.truth) negatives.add(atom); }
+		return negatives;
 	}
 	
 	@Override public String toString() { return StandardFormat.inst.toString(this); }
