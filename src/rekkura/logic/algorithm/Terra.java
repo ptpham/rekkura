@@ -41,8 +41,8 @@ public class Terra {
 	}
 	
 	/**
-	 * Returns a list that contains the assignment domain of each body 
-	 * term in the given rule assuming that we want to expand the given
+	 * Returns a list that contains the assignment domain of each positive
+	 * body term in the given rule assuming that we want to expand the given
 	 * dob at the given position.
 	 * @param rule
 	 * @param position
@@ -54,6 +54,7 @@ public class Terra {
 		
 		for (int i = 0; i < rule.body.size(); i++) {
 			Atom atom = rule.body.get(i);
+			if (!atom.truth) continue;
 			
 			Iterable<Dob> grounds = getGroundCandidates(atom.dob, cachet);
 			List<Dob> next = Lists.newArrayList(grounds);
@@ -74,9 +75,12 @@ public class Terra {
 	 */
 	public static Set<Dob> applyBodyExpansion(Rule rule, final ListMultimap<Atom, Dob> support, 
 			Pool pool, Set<Dob> truths) {
-		Set<Dob> result = Sets.newHashSet();
+		// This block deals with the vacuous rule special case ...
+		Dob varless = applyVarless(rule, truths);
+		if (varless != null) return Sets.newHashSet(pool.dobs.submerge(varless));
 
 		// Sort the dimensions of the space so that the smallest ones come first.
+		Set<Dob> result = Sets.newHashSet();
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		sortBySupportSize(positives, support);
 		
@@ -85,12 +89,6 @@ public class Terra {
 		
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		Unification unify = Unification.from(rule.vars);
-		
-		// This block deals with the no variables special case...
-		if (rule.vars.size() == 0 && checkGroundAtoms(rule.body, truths)) {
-			result.add(rule.head.dob);
-			return result;
-		}
 		
 		while (iterator.hasNext()) {
 			unify.clear();
@@ -125,6 +123,18 @@ public class Terra {
 		return result;
 	}
 
+	/**
+	 * This method can be used to handle the vacuous/varless rule special case.
+	 * @param rule
+	 * @param truths
+	 * @return
+	 */
+	public static Dob applyVarless(Rule rule, Set<Dob> truths) {
+		if (rule.vars.size() == 0 && checkGroundAtoms(rule.body, truths)) {
+			return rule.head.dob;
+		} else return null;
+	}
+
 	public static boolean checkGroundAtoms(Iterable<Atom> body, Set<Dob> truths) {
 		for (Atom atom : body) {
 			boolean truth = truths.contains(atom.dob);
@@ -147,6 +157,9 @@ public class Terra {
 	 * @return
 	 */
 	public static Dob applyBodies(Rule rule, List<Dob> bodies, Set<Dob> truths, Pool pool) {
+		Dob varless = applyVarless(rule, truths);
+		if (varless != null) return pool.dobs.submerge(varless);
+		
 		List<Dob> dobs = Atom.asDobList(Atom.filterPositives(rule.body));
 		Map<Dob, Dob> unify = Unifier.unifyListVars(dobs, bodies, rule.vars);
 		if (!checkNegatives(unify, rule.body, truths, pool)) return null;
@@ -207,7 +220,7 @@ public class Terra {
 	 * @param pool
 	 * @return
 	 */
-	public static Map<Dob, Dob> applyVariables(Rule rule, List<Dob> candidates, 
+	public static Map<Dob, Dob> applyVars(Rule rule, List<Dob> candidates, 
 			Set<Dob> truths, Pool pool) {
 		Map<Dob, Dob> unify = Maps.newHashMap();
 		List<Dob> vars = rule.vars; 

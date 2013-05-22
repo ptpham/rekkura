@@ -72,7 +72,7 @@ public class TerraTest {
 		List<Dob> candidates = pool.dobs.submergeStrings(rawCandidates);
 		Set<Dob> truths = Sets.newHashSet(pool.dobs.submergeStrings(rawTruths));
 		
-		Map<Dob, Dob> assignment = Terra.applyVariables(rule, candidates, truths, pool);
+		Map<Dob, Dob> assignment = Terra.applyVars(rule, candidates, truths, pool);
 		if (rawExpected == null) {
 			Assert.assertNull(assignment);
 		} else {
