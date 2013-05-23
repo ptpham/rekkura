@@ -14,7 +14,6 @@ import rekkura.util.Synchron;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 import com.google.common.eventbus.EventBus;
 
 /**
@@ -30,7 +29,7 @@ public class MatchRunnable implements Runnable {
 	public final Vector<Player> players = Synchron.newVector();
 	
 	public final Multimap<Integer, Player> timeouts = Synchron.newHashMultimap();
-	public final Multiset<Dob> goals = Synchron.newHashMultiset();
+	public final Map<Dob, Integer> goals = Synchron.newHashmap();
 	public final EventBus bus;
 	public final Match match;
 	
@@ -93,7 +92,7 @@ public class MatchRunnable implements Runnable {
 		}
 		
 		// Compute the goals for the players
-		this.goals.addAll(machine.getGoals(state));
+		this.goals.putAll(machine.getGoals(state));
 		Event.post(bus, new GoalEvent());
 	}
 

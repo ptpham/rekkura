@@ -123,6 +123,16 @@ public class Colut {
 		return list.get(i);
 	}
 	
+	public static <U, V> V get(Map<U, V> map, U val, V def) {
+		if (map == null) return def;
+		if (!map.containsKey(val)) return def;
+		return map.get(val);
+	}
+	
+	public static <U, V> V get(Map<U, V> map, U val) {
+		return get(map, val, null);
+	}
+	
 	public static <U> Set<U> intersection(Collection<U> first, Collection<U> second) {
 		Set<U> result = Sets.newHashSet(first);
 		result.retainAll(second);

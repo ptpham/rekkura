@@ -15,7 +15,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
 
 /**
  * This state machine leverages the proving style of the backward prover
@@ -76,7 +75,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	}
 
 	@Override
-	public Multiset<Dob> getGoals(Set<Dob> state) {
+	public Map<Dob, Integer> getGoals(Set<Dob> state) {
 		return extractGoals(proverPass(state, GOAL_QUERY, EMTPY_UNIFY));
 	}
 	

@@ -16,7 +16,6 @@ import rekkura.logic.structure.Ruletta;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
 public class ProverStateMachine extends GameLogicContext implements GgpStateMachine {
@@ -51,7 +50,7 @@ public class ProverStateMachine extends GameLogicContext implements GgpStateMach
 	}
 
 	@Override
-	public Multiset<Dob> getGoals(Set<Dob> truths) {
+	public Map<Dob, Integer> getGoals(Set<Dob> truths) {
 		return extractGoals(proverPass(truths, EMTPY_UNIFY));
 	}
 	

@@ -118,8 +118,8 @@ public class GameLogicContext {
 		return this.pool.dobs.submerge(new Dob(name));
 	}
 	
-	public Multiset<Dob> extractGoals(Set<Dob> dobs) {
-		Multiset<Dob> result = HashMultiset.create();
+	public Map<Dob, Integer> extractGoals(Set<Dob> dobs) {
+		Map<Dob, Integer> result = Maps.newHashMap();
 		for (Dob dob : dobs) {
 			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, pool.context.getAll());
 			if (unify == null) continue;
@@ -131,7 +131,7 @@ public class GameLogicContext {
 			int goal = 0;
 			try { goal = Integer.parseInt(value.name); } 
 			catch (Exception e) { continue; }
-			result.add(role, goal);
+			result.put(role, goal);
 		}
 		
 		return result;

@@ -80,7 +80,7 @@ public class MonteCarloPlayer extends ProverBased {
 			List<Set<Dob>> charge = DepthCharge.fire(state, machine, fixed, rand);
 			
 			Set<Dob> terminal = Colut.end(charge);
-			int goal = machine.getGoals(terminal).count(role);
+			int goal = Colut.get(machine.getGoals(terminal), role, 0);
 			goals.add(action, goal);
 		}
 		
