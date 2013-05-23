@@ -11,6 +11,7 @@ import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -37,11 +38,11 @@ public class Game {
 		
 	public static class Config {
 		public long startclock, playclock;
-		public List<Rule> rules;
+		public ImmutableList<Rule> rules;
 		public Config(long startclock, long playclock, List<Rule> rules) {
 			this.startclock = startclock;
 			this.playclock = playclock;
-			this.rules = rules;
+			this.rules = ImmutableList.copyOf(rules);
 		}
 	}
 	

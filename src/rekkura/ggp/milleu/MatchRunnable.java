@@ -30,16 +30,17 @@ public class MatchRunnable implements Runnable {
 	
 	public final Multimap<Integer, Player> timeouts = Synchron.newHashMultimap();
 	public final Map<Dob, Integer> goals = Synchron.newHashmap();
-	public final EventBus bus;
 	public final Match match;
-	
+
+	private final EventBus bus;
 	private class WithMatchRunnable { public final MatchRunnable match = MatchRunnable.this; }
+
 	public class TimeoutEvent extends WithMatchRunnable { }
 	public class StartEvent extends WithMatchRunnable { }
-	public class GoalEvent extends WithMatchRunnable { }
 	public class PlayEvent extends WithMatchRunnable { }
 	public class StopEvent extends WithMatchRunnable { }
-	
+	public class GoalEvent extends WithMatchRunnable { }
+
 	public MatchRunnable(Match match) { this(match, null); }
 	public MatchRunnable(Match match, EventBus bus) {
 		this.match = match;
