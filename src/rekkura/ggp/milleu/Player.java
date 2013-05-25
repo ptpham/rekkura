@@ -82,11 +82,11 @@ public abstract class Player implements Runnable {
 	 * This represents a player that needs to update the state of the game using a state 
 	 * machine. If you are using a prover state machine, you probably want to 
 	 * subclass from {@link Player.ProverBased}. One finicky thing about the layering right 
-	 * now is that the role {@code Dob} needs to be submerged for provers {@code Player.ProverBased}
+	 * now is that the role {@code Dob} needs to be submerged for provers. {@code Player.ProverBased}
 	 * will do this for you.<br>
 	 * <br>
 	 * {@code prepare} gets called at the beginning of the game and the first move should be set here. <br>
-	 * {@code move} gets called on every move afterward the first. <br>
+	 * {@code move} gets called on every move after the first. <br>
 	 * {@code reflect} gets called once the game is over.<br>
 	 * <br>
 	 * Use the {@code validState} method to check if you need to return from {@code prepare} or

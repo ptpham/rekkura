@@ -20,8 +20,6 @@ public class Merges {
 	public static final PositiveSubstitution posSub = new PositiveSubstitution();
 	public static final NegationSplit negSplit = new NegationSplit();
 	
-	public static final Merge.Operation defaultMerge = Merge.combine(posSub, negSplit);
-	
 	/**
 	 * The truth merge will only expand merges such that the destination
 	 * position is positive.
