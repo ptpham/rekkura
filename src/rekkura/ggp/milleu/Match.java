@@ -7,6 +7,7 @@ import rekkura.ggp.player.RemotePlayer;
 import rekkura.util.Colut;
 
 import com.google.common.collect.Lists;
+import com.google.common.eventbus.EventBus;
 
 public class Match {
 	public final Game.Config config;
@@ -44,7 +45,11 @@ public class Match {
 	}
 	
 	public MatchRunnable newRunnable(List<Player> players) {
-		MatchRunnable result = new MatchRunnable(this);
+		return newRunnable(players, null);
+	}
+	
+	public MatchRunnable newRunnable(List<Player> players, EventBus bus) {
+		MatchRunnable result = new MatchRunnable(this, bus);
 		result.players.addAll(players);
 		return result;
 	}

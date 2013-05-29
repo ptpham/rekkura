@@ -66,6 +66,7 @@ public abstract class Player implements Runnable {
 	protected final synchronized boolean waitForInput() { return Synchron.lightWait(this); }
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
 	protected final synchronized Map<Dob, Dob> getMemory(int turn) { return Colut.get(history, turn); }
+	protected final synchronized Map<Dob, Dob> getLatestMemory() { return Colut.end(history); }
 	
 	public final synchronized boolean hasDecision(int turn) { return Colut.get(moves, turn) != null; }
 	public final synchronized Dob getDecision(int turn) { return Colut.get(moves, turn); }
