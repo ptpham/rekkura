@@ -15,6 +15,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * This state machine leverages the proving style of the backward prover
@@ -35,6 +36,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	private Set<Dob> last;
 	
 	public final Multimap<Rule, Dob> knownStatic = HashMultimap.create();
+	public final Set<Rule> queryRules = Sets.newHashSet();
 	
 	private BackwardStateMachine(StratifiedBackward prover) {
 		super(prover.pool, prover.rta);
@@ -43,9 +45,10 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		
 		// Store the subset of known that will never change
 		prover.proveAll(Lists.<Dob>newArrayList());
-		
-		List<Rule> queryRules = constructQueryRules();
-		this.staticRules.addAll(pool.rules.submerge(queryRules));
+
+		// Construct and add query rules
+		queryRules.addAll(pool.rules.submerge(constructQueryRules()));
+		this.staticRules.addAll(queryRules);
 		
 		for (Rule rule : this.staticRules) {
 			this.knownStatic.putAll(rule, this.prover.getKnown(rule));

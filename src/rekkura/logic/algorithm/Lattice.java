@@ -8,6 +8,7 @@ import rekkura.logic.model.Dob;
 import rekkura.logic.structure.Pool;
 import rekkura.util.OtmUtil;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.*;
 
 public class Lattice {
@@ -21,6 +22,11 @@ public class Lattice {
 	public final Map<Dob, Dob> secondInto = Maps.newHashMap();
 	
 	private Lattice(Request req) { this.req = req; }
+	
+	@Override
+	public String toString() {
+		return Joiner.on("\n\t").join(req, edges, firstInto, secondInto);
+	}
 	
 	/**
 	 * These dobs should be from the same variable scope.
@@ -36,6 +42,11 @@ public class Lattice {
 			this.first = first;
 			this.second = second;
 			this.base = base;
+		}
+		
+		@Override
+		public String toString() {
+			return "[Lattice.Request for " + Joiner.on(", ").join(first, second, base) + "]";
 		}
 	}
 	
