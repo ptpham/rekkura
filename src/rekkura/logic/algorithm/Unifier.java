@@ -144,13 +144,13 @@ public class Unifier {
 	 */
 	public static Map<Dob, Dob> unifyVars(Dob base, Dob target, Collection<Dob> vars) {
 		Map<Dob, Dob> result = unify(base, target);
-		if (isVariableUnify(result, vars)) return null;
+		if (!isVariableUnify(result, vars)) return null;
 		return result;
 	}
 	
 
 	public static boolean isVariableUnify(Map<Dob, Dob> unify, Collection<Dob> vars) {
-		return unify == null || !vars.containsAll(unify.keySet());
+		return unify == null || vars.containsAll(unify.keySet());
 	}
 	
 	/**
