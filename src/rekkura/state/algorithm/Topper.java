@@ -131,6 +131,14 @@ public class Topper {
 		
 		return result;
 	}
+	
+	public static <U> List<Set<U>> connected(Multimap<U, U> edges) {
+		// TODO: This implementation is currently super lazy/inefficient.
+		Multimap<U, U> working = HashMultimap.create();
+		Multimaps.invertFrom(working, edges);
+		working.putAll(edges);
+		return stronglyConnected(working);
+	}
 
 	public static <U> List<Set<U>> stronglyConnected(Multimap<U, U> edges, Set<U> roots) {
 		if (edges == null || edges.size() == 0) return Lists.newArrayList();

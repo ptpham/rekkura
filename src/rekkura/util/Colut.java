@@ -275,4 +275,8 @@ public class Colut {
 		if (map == null) return null;
 		return map.values();
 	}
+	
+	public static <U> Set<U> union(Collection<U> first, Collection<U> second) {
+		return Sets.union(Sets.newHashSet(first), Sets.newHashSet(second));
+	}
 }
