@@ -3,9 +3,9 @@ package rekkura.test.ggp;
 import java.util.Arrays;
 import java.util.List;
 
-import rekkura.ggp.net.GgpProtocol;
 import rekkura.logic.format.KifFormat;
 import rekkura.logic.format.StandardFormat;
+import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 
 import com.google.common.collect.Lists;
@@ -308,8 +308,7 @@ public class SimpleGames {
 	}
 
 	private static List<Rule> kifStringsToRules(String[] raw) {
-		List<Rule> original = KifFormat.inst.rulesFromStrings(Arrays.asList(raw));
-		return GgpProtocol.deorPass(original);
+		List<Dob> original = KifFormat.inst.dobsFromStrings(Arrays.asList(raw));
+		return KifFormat.dobsToRules(original);
 	}
-	
 }

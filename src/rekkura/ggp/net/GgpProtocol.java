@@ -277,24 +277,6 @@ public class GgpProtocol {
 			return fmt.toString(handler.handlePlay(stringAt(dob, 1), play.moves));
 		}
 	}
-
-	/**
-	 *  In a glorious future in which we don't have ORs anymore,
-	 *  this class could be made more general and this could be removed.
-	 * @param rules
-	 * @return
-	 */
-	public static List<Rule> deorPass(List<Rule> rules) {
-		KifFormat fmt = KifFormat.inst;
-		List<Rule> result = Lists.newArrayList();
-		for (Rule rule : rules) {
-			for (Rule expanded : fmt.deor(rule)) {
-				Rule cleaned = fmt.ruleFromString(fmt.toString(expanded));
-				result.add(cleaned);
-			}
-		}
-		return result;
-	}
 	
 	public static <P extends Player> DefaultPlayerDemuxer createDefaultPlayerDemuxer(Class<P> type) {
 		Reffle.Factory<P> factory = Reffle.createFactory(type);
@@ -307,7 +289,6 @@ public class GgpProtocol {
 	}
 	
 	public static GgpProtocol.Start toStart(Dob dob) {
-		KifFormat fmt = KifFormat.inst;
 		String match = stringAt(dob, 1);
 		Dob role = dob.at(2);
 		
@@ -315,13 +296,7 @@ public class GgpProtocol {
 		// does not properly parse as a rule. This is kind of a gross
 		// special case for KIF because it is a poorly designed format. =P
 		List<Dob> rawRules = dob.at(3).childCopy();
-		List<Rule> rules = Lists.newArrayList();
-		for (Dob rawRule : rawRules) { 
-			try { rules.add(fmt.ruleFromString(fmt.toString(rawRule))); }
-			catch (Exception e) { rules.add(Rule.asVacuous(rawRule)); }
-		}
-		
-		rules = deorPass(rules);
+		List<Rule> rules = KifFormat.dobsToRules(rawRules);
 		
 		int ggpStart = Colut.parseInt(stringAt(dob, dob.size() - 2))*1000;
 		int ggpPlay = Colut.parseInt(stringAt(dob, dob.size() - 1))*1000;
@@ -329,7 +304,7 @@ public class GgpProtocol {
 		Game.Config config = new Game.Config(ggpStart + ggpPlay, ggpPlay, rules);
 		return new GgpProtocol.Start(config, role, match);
 	}
-	
+
 	public static Dob fromStart(GgpProtocol.Start start) {
 		Game.Config config = start.config;
 		

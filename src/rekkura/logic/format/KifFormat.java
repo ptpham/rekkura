@@ -202,5 +202,43 @@ public class KifFormat extends LogicFormat {
 		return result;
 	}
 	
+	/**
+	 * This converts dobs in Kif format to their proper rule representations.
+	 * This needs to happen because Rekkura does not internally represent a
+	 * distinction between a ground relation (proposition) and a rule in a 
+	 * game description.
+	 * @param rawRules
+	 * @return
+	 */
+	public static List<Rule> dobsToRules(List<Dob> rawRules) {
+		KifFormat fmt = KifFormat.inst;
+		List<Rule> rules = Lists.newArrayList();
+		for (Dob rawRule : rawRules) { 
+			try { rules.add(fmt.ruleFromString(fmt.toString(rawRule))); }
+			catch (Exception e) { rules.add(Rule.asVacuous(rawRule)); }
+		}
+		
+		rules = deorPass(rules);
+		return rules;
+	}
+
+	/**
+	 *  In a glorious future in which we don't have ORs anymore,
+	 *  this class could be made more general and this could be removed.
+	 * @param rules
+	 * @return
+	 */
+	public static List<Rule> deorPass(List<Rule> rules) {
+		KifFormat fmt = KifFormat.inst;
+		List<Rule> result = Lists.newArrayList();
+		for (Rule rule : rules) {
+			for (Rule expanded : fmt.deor(rule)) {
+				Rule cleaned = fmt.ruleFromString(fmt.toString(expanded));
+				result.add(cleaned);
+			}
+		}
+		return result;
+	}
+	
 	public static final KifFormat inst = new KifFormat();
 }

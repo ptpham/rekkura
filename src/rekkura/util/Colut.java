@@ -3,11 +3,7 @@ package rekkura.util;
 import java.util.*;
 
 import com.google.common.base.Function;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * (Collection Utilities) These methods are supposed to be
@@ -276,7 +272,9 @@ public class Colut {
 		return map.values();
 	}
 	
-	public static <U> Set<U> union(Collection<U> first, Collection<U> second) {
-		return Sets.union(Sets.newHashSet(first), Sets.newHashSet(second));
+	public static <U> Set<U> union(Iterable<U> first, Iterable<U> second) {
+		Set<U> result = Sets.newHashSet(first);
+		Iterables.addAll(result, second);
+		return result;
 	}
 }
