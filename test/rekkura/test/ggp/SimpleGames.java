@@ -113,7 +113,7 @@ public class SimpleGames {
 				"(<= not-filled (true (cell ?c 6 b)))",
 				"(<= terminal (not not-filled))" };
 		
-		return KifFormat.stringsToRules(raw);
+		return KifFormat.genericStringsToRules(raw);
 	}
 
 	public static List<Rule> getPilgrimage() {
@@ -302,7 +302,7 @@ public class SimpleGames {
 			"(<= (goal blue ?s) (not (complete red)) (not (complete blue)) (pilgrim_height blue ?h) (height_score ?h ?s))",
 		};
 		
-		return KifFormat.stringsToRules(raw);
+		return KifFormat.genericStringsToRules(raw);
 	}
 
 }

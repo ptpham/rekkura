@@ -246,7 +246,7 @@ public class KifFormat extends LogicFormat {
 	 * @param raw
 	 * @return
 	 */
-	public static List<Rule> stringsToRules(String[] raw) {
+	public static List<Rule> genericStringsToRules(String[] raw) {
 		List<Dob> original = KifFormat.inst.dobsFromStrings(Arrays.asList(raw));
 		return KifFormat.dobsToRules(original);
 	}
