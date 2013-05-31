@@ -1,11 +1,9 @@
 package rekkura.test.ggp;
 
-import java.util.Arrays;
 import java.util.List;
 
 import rekkura.logic.format.KifFormat;
 import rekkura.logic.format.StandardFormat;
-import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 
 import com.google.common.collect.Lists;
@@ -115,7 +113,7 @@ public class SimpleGames {
 				"(<= not-filled (true (cell ?c 6 b)))",
 				"(<= terminal (not not-filled))" };
 		
-		return kifStringsToRules(raw);
+		return KifFormat.stringsToRules(raw);
 	}
 
 	public static List<Rule> getPilgrimage() {
@@ -304,11 +302,7 @@ public class SimpleGames {
 			"(<= (goal blue ?s) (not (complete red)) (not (complete blue)) (pilgrim_height blue ?h) (height_score ?h ?s))",
 		};
 		
-		return kifStringsToRules(raw);
+		return KifFormat.stringsToRules(raw);
 	}
 
-	private static List<Rule> kifStringsToRules(String[] raw) {
-		List<Dob> original = KifFormat.inst.dobsFromStrings(Arrays.asList(raw));
-		return KifFormat.dobsToRules(original);
-	}
 }

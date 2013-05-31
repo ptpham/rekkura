@@ -1,5 +1,6 @@
 package rekkura.logic.format;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -238,6 +239,16 @@ public class KifFormat extends LogicFormat {
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * Use this method for your one stop shop from strings to valid rules.
+	 * @param raw
+	 * @return
+	 */
+	public static List<Rule> stringsToRules(String[] raw) {
+		List<Dob> original = KifFormat.inst.dobsFromStrings(Arrays.asList(raw));
+		return KifFormat.dobsToRules(original);
 	}
 	
 	public static final KifFormat inst = new KifFormat();
