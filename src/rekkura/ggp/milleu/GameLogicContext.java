@@ -47,6 +47,8 @@ public class GameLogicContext {
 	public final Map<Dob, Dob> INIT_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> LEGAL_UNIFY = Maps.newHashMap();
 	public final Map<Dob, Dob> EMTPY_UNIFY = Maps.newHashMap();
+    public final Map<Dob, Dob> BASE_UNIFY = Maps.newHashMap(); // for propnet
+    public final Map<Dob, Dob> INPUT_UNIFY = Maps.newHashMap(); // for propnet
 	
 	public final String ROLE_VAR_NAME = "[GLC_ROLE]";
 	public final String GENERIC_VAR_NAME = "[GLC_GEN]";
@@ -101,7 +103,9 @@ public class GameLogicContext {
 		this.NEXT_UNIFY.put(this.NEXT, this.TRUE);
 		this.INIT_UNIFY.put(this.INIT, this.TRUE);
 		this.LEGAL_UNIFY.put(this.LEGAL, this.DOES);
-		
+	    this.INPUT_UNIFY.put(this.INPUT, this.DOES);
+        this.BASE_UNIFY.put(this.BASE, this.TRUE);
+
 		Multimap<Rule, Rule> ruleToDepRule = HashMultimap.create();
 		Multimaps.invertFrom(this.rta.ruleToGenRule, ruleToDepRule);
 		

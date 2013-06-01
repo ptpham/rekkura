@@ -159,11 +159,10 @@ public class Terra {
 	public static Dob applyBodies(Rule rule, List<Dob> bodies, Set<Dob> truths, Pool pool) {
 		Dob varless = applyVarless(rule, truths);
 		if (varless != null) return pool.dobs.submerge(varless);
-		
 		List<Dob> dobs = Atom.asDobList(Atom.filterPositives(rule.body));
 		Map<Dob, Dob> unify = Unifier.unifyListVars(dobs, bodies, rule.vars);
 		if (!checkNegatives(unify, rule.body, truths, pool)) return null;
-		if (!rule.evaluateDistinct(unify)) return null;
+        if (!rule.evaluateDistinct(unify)) return null;
 		return renderHead(unify, rule, pool);
 	}
 

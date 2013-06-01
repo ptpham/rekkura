@@ -40,6 +40,7 @@ public class Colut {
 	}
 	
 	public static <T> boolean containsAll(Iterable<T> source, Collection<T> targets) {
+        if (source == null) return false;
 		for (T s : source) if (!targets.contains(s)) return false;
 		return true;
 	}

@@ -2,6 +2,7 @@ package rekkura.ggp.milleu;
 
 import java.util.List;
 
+import com.google.common.eventbus.EventBus;
 import rekkura.ggp.milleu.Game.Config;
 import rekkura.ggp.player.RemotePlayer;
 import rekkura.util.Colut;

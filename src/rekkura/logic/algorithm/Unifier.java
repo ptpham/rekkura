@@ -282,7 +282,7 @@ public class Unifier {
 	
 	public static Map<Dob, Dob> unifyListVars(List<Dob> bodies,
 			List<Dob> dobs, Collection<Dob> vars) {
-		Map<Dob, Dob> unify = Unifier.unifyList(dobs, bodies);
+		Map<Dob, Dob> unify = Unifier.unifyList(bodies, dobs);
 		if (!Colut.containsAll(Colut.keySet(unify), vars)) return null;
 		return unify;
 	}

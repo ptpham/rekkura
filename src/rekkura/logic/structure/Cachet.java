@@ -1,5 +1,6 @@
 package rekkura.logic.structure;
 
+import java.util.Collection;
 import java.util.List;
 
 import rekkura.logic.model.Dob;
@@ -75,7 +76,12 @@ public class Cachet {
 	public final Ruletta rta;
 
 	public Cachet(Ruletta rta) { this.rta = rta; }
-	
+
+    public void storeAllGround(Collection<Dob> grounds) {
+        for (Dob ground : grounds)
+            storeGround(ground);
+    }
+
 	public void storeGround(Dob dob) {
 		// The root of the subtree is the end of the trunk.
 		Dob end = this.canonicalForms.get(dob);

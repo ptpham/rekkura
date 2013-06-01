@@ -1,10 +1,6 @@
 package rekkura.state.algorithm;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
@@ -18,6 +14,20 @@ import com.google.common.collect.*;
  * @author ptpham
  */
 public class Topper {
+
+    public static <U> List<U> toList(Multiset<U> nodes) {
+        Multimap<Integer, U> indexed = HashMultimap.create();
+        for (U node : nodes.elementSet()) {
+            int idx = nodes.count(node);
+            indexed.put(idx, node);
+        }
+        List<Integer> indices = Lists.newArrayList(indexed.keySet());
+        Collections.sort(indices);
+        List<U> ordered = Lists.newArrayList();
+        for (Integer idx : indices)
+            ordered.addAll(indexed.get(idx));
+        return ordered;
+    }
 
 	/**
 	 * This topological sort is capable of dealing with cycles. The map
