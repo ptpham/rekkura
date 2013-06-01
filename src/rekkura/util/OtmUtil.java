@@ -229,4 +229,13 @@ public class OtmUtil {
 			iterator.remove();
 		}
 	}
+	
+	public static <U> Multimap<Integer, U> invertMultiset(Multiset<U> nodes) {
+		Multimap<Integer, U> indexed = HashMultimap.create();
+        for (U node : nodes.elementSet()) {
+            int idx = nodes.count(node);
+            indexed.put(idx, node);
+        }
+		return indexed;
+	}
 }

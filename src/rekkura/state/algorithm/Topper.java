@@ -16,16 +16,12 @@ import com.google.common.collect.*;
 public class Topper {
 
     public static <U> List<U> toList(Multiset<U> nodes) {
-        Multimap<Integer, U> indexed = HashMultimap.create();
-        for (U node : nodes.elementSet()) {
-            int idx = nodes.count(node);
-            indexed.put(idx, node);
-        }
+        Multimap<Integer, U> indexed = OtmUtil.invertMultiset(nodes);
         List<Integer> indices = Lists.newArrayList(indexed.keySet());
         Collections.sort(indices);
+        
         List<U> ordered = Lists.newArrayList();
-        for (Integer idx : indices)
-            ordered.addAll(indexed.get(idx));
+        for (Integer idx : indices) ordered.addAll(indexed.get(idx));
         return ordered;
     }
 

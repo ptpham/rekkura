@@ -1,6 +1,5 @@
 package rekkura.logic.structure;
 
-import java.util.Collection;
 import java.util.List;
 
 import rekkura.logic.model.Dob;
@@ -77,9 +76,8 @@ public class Cachet {
 
 	public Cachet(Ruletta rta) { this.rta = rta; }
 
-    public void storeAllGround(Collection<Dob> grounds) {
-        for (Dob ground : grounds)
-            storeGround(ground);
+    public void storeAllGround(Iterable<Dob> grounds) {
+        for (Dob ground : grounds) storeGround(ground);
     }
 
 	public void storeGround(Dob dob) {
