@@ -278,4 +278,15 @@ public class Colut {
 		Iterables.addAll(result, second);
 		return result;
 	}
+	
+	public static <U> Iterable<U> prepend(U elem, Iterable<U> rest) {
+		List<U> dummy = Lists.newArrayList();
+		dummy.add(elem);
+		return Iterables.concat(dummy, rest);
+	}
+	
+	public static <U> U set(List<U> list, int pos, U elem) {
+		if (list == null || pos < 0 || list.size() <= pos) return null;
+		return list.set(pos, elem);
+	}
 }

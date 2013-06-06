@@ -9,7 +9,11 @@ import rekkura.logic.structure.Pool;
 import rekkura.util.OtmUtil;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 public class Lattice {
 	public final Request req;
@@ -124,6 +128,4 @@ public class Lattice {
 		
 		return result;
 	}
-	
-	
 }
