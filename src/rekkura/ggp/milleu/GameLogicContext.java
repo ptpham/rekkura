@@ -172,7 +172,8 @@ public class GameLogicContext {
 	
 	public List<Rule> constructQueryRules() {
 		List<Dob> queries = Lists.newArrayList(INIT_QUERY,
-			NEXT_QUERY, GOAL_QUERY, LEGAL_QUERY, TRUE_QUERY, DOES_QUERY);
+			NEXT_QUERY, GOAL_QUERY, LEGAL_QUERY, TRUE_QUERY, 
+			DOES_QUERY, BASE_QUERY, INIT_QUERY);
 		List<Dob> vars = Lists.newArrayList(ROLE_VAR, GENERIC_VAR);
 		
 		List<Rule> result = Lists.newArrayList();
