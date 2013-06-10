@@ -11,11 +11,7 @@ import rekkura.logic.model.Rule;
 import rekkura.logic.prover.StratifiedBackward;
 import rekkura.logic.structure.Pool;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This state machine leverages the proving style of the backward prover
@@ -26,15 +22,8 @@ import com.google.common.collect.Sets;
 public class BackwardStateMachine extends GameLogicContext implements GgpStateMachine {
 
 	public final StratifiedBackward prover;
-	
 	private final Pool pool;
-	
-	/**
-	 * This is for the purpose of coalescing inferences
-	 * on the same turn.
-	 */
-	private Set<Dob> last;
-	
+		
 	public final Multimap<Rule, Dob> knownStatic = HashMultimap.create();
 	public final Set<Rule> queryRules = Sets.newHashSet();
 	
@@ -67,9 +56,8 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 
 	@Override
 	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
-		applyState(state);
-		prover.preserveTruths(actions.values());
-		return extractTrues(proverPass(state, NEXT_QUERY, NEXT_UNIFY));
+		Iterable<Dob> complete = Iterables.concat(state, actions.values());
+		return extractTrues(proverPass(complete, NEXT_QUERY, NEXT_UNIFY));
 	}
 
 	@Override
@@ -97,19 +85,12 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		return augmented;
 	}
 	
-	private Set<Dob> proverPass(Set<Dob> state, Dob query, Map<Dob, Dob> unify) {
-		applyState(state);
+	private Set<Dob> proverPass(Iterable<Dob> state, Dob query, Map<Dob, Dob> unify) {
+		prover.clear();
+		prover.preserveTruths(state);
+		prover.putKnown(knownStatic);
 		Set<Dob> proven = prover.ask(query);
 		Set<Dob> submerged = ProverStateMachine.submersiveReplace(proven, unify, pool);
 		return submerged;
 	}
-
-	private void applyState(Set<Dob> state) {
-		if (state != last) {
-			prover.clear();
-			prover.preserveTruths(state);
-			prover.putKnown(knownStatic);
-			last = state;
-		}
-	}	
 }
