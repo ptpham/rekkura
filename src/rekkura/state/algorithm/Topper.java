@@ -16,13 +16,17 @@ import com.google.common.collect.*;
 public class Topper {
 
     public static <U> List<U> toList(Multiset<U> nodes) {
+    	return Colut.flatten(toPartitionedList(nodes));
+    }
+    
+    public static <U> List<List<U>> toPartitionedList(Multiset<U> nodes) {
         Multimap<Integer, U> indexed = OtmUtil.invertMultiset(nodes);
         List<Integer> indices = Lists.newArrayList(indexed.keySet());
         Collections.sort(indices);
-        
-        List<U> ordered = Lists.newArrayList();
-        for (Integer idx : indices) ordered.addAll(indexed.get(idx));
-        return ordered;
+
+        List<List<U>> result = Lists.newArrayList();
+        for (Integer idx : indices) result.add(Lists.newArrayList(indexed.get(idx)));
+        return result;
     }
 
 	/**

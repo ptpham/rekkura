@@ -21,7 +21,7 @@ public class Colut {
 	}
 	
 	public static <T> void addAll(Collection<T> target, Collection<T> other) {
-		if (other == null) return;
+		if (other == null || target == null) return;
 		target.addAll(other);
 	}
 	
@@ -288,5 +288,12 @@ public class Colut {
 	public static <U> U set(List<U> list, int pos, U elem) {
 		if (list == null || pos < 0 || list.size() <= pos) return null;
 		return list.set(pos, elem);
+	}
+	
+	public static <U> List<U> flatten(Collection<? extends Collection<U>> data) {
+		List<U> result = Lists.newArrayList();
+		if (data == null) return result;
+		for (Collection<U> collection : data) Colut.addAll(result, collection);
+		return result;
 	}
 }
