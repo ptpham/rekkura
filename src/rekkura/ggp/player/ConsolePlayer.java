@@ -8,8 +8,10 @@ import java.util.Map;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Player;
 import rekkura.logic.model.Dob;
+import rekkura.util.Event;
 
 import com.google.common.collect.ListMultimap;
+import com.google.common.eventbus.EventBus;
 
 /**
  * This super exciting player will allow you (a human!)
@@ -20,6 +22,9 @@ import com.google.common.collect.ListMultimap;
 public class ConsolePlayer extends Player.ProverBased {
 	@Override protected void plan() { queryHumanMove(); }
 	@Override protected void move() { queryHumanMove(); }
+	
+	public static class MoveEvent {}
+	public EventBus bus;
 	
 	@Override protected void reflect() {
 		printLastTurn();
@@ -45,6 +50,7 @@ public class ConsolePlayer extends Player.ProverBased {
 			int selection = Integer.parseInt(reader.readLine());
 			setDecision(turn.turn, available.get(selection));
 		} catch (Throwable e) { setDecision(anyDecision()); }
+		Event.post(bus, new MoveEvent());
 	}
 	
 	protected Map<Dob, Dob> getLastTurnActions() {
