@@ -200,13 +200,13 @@ public abstract class StratifiedProverTest {
 		String[] rawRules = { 
 			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
 			"{(X) | <((Q)(X)),true> :- <((J)(X)),true> }",
-			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
-			"{(X) | <((K)(X)),true> :- <((M)(X)),false> }",
-			"{(X) | <((R)(X)),true> :- <((N)(X)),true> <((K)(Y)),false> }"
+			"{(X) | <(M),true> :- <((Q)(X)),true> }",
+			"{    | <(K),true> :- <(M),false> }",
+			"{(X) | <((R)(X)),true> :- <((N)(X)),true> <(K),false> }"
 		};
 		
 		String[][] rawDobs = {
-			{"((P)(a))", "((Q)(b))"}, {"((M)(b))", "((N)(a))", "((R)(a))"}
+			{"((P)(a))", "((Q)(b))"}, {"(M)", "((N)(a))", "((R)(a))"}
 		};
 
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
@@ -231,6 +231,27 @@ public abstract class StratifiedProverTest {
 	}
 
 	@Test
+	public void complexDoubleNegation() {
+		String[] rawRules = { 
+			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
+			"{(Z) | <((N)(Z)),true> :- <((T)(Z)),true> }",
+			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
+			"{(X) | <((K)(X)),true> :- <((M)(X)),true> }",
+			"{(X) | <((N)(X)),true> :- }",
+			"{    | <(N),true> :- <(D),false>}",
+			"{(X)(Y) | <((R)(X)(Y)),true> :- <((N)(X)),true> <((K)(Y)),true> <(N),false> }"
+		};
+		
+		String[][] rawDobs = {
+			{"((P)(a))", "((Q)(b))", "((T)(c))"}, 
+			{"((N)(c))", "((M)(b))", "((K)(b))", 
+			 "((N)(a))", "(N)" }
+		};
+
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
+	@Test
 	public void complex() {
 		String[] rawRules = { 
 			"{(X) | <((N)(X)),true> :- <((P)(X)),true> }",
@@ -238,8 +259,7 @@ public abstract class StratifiedProverTest {
 			"{(X) | <((M)(X)),true> :- <((Q)(X)),true> }",
 			"{(X) | <((K)(X)),true> :- <((M)(X)),true> }",
 			"{(X) | <((N)(X)),true> :- }",
-			"{(Z) | <((N)(Z)),true> :- <((D)((M)(Z))),false>}",
-			"{(X)(Y) | <((R)(X)(Y)),true> :- <((N)(X)),true> <((K)(Y)),true> <((N)(Y)),false> }"
+			"{(X)(Y) | <((R)(X)(Y)),true> :- <((N)(X)),true> <((K)(Y)),true> <(N),false> }"
 		};
 		
 		String[][] rawDobs = {

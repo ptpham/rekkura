@@ -32,16 +32,24 @@ public class StratifiedForward extends StratifiedProver {
 		= TreeMultimap.create(Ordering.natural(), Ordering.arbitrary());
 
 	private List<Rule> bodyless = Lists.newArrayList();
+	private List<Rule> varless = Lists.newArrayList();
 	
 	public StratifiedForward(Collection<Rule> rules) {
 		super(rules);
-		for (Rule rule : this.rta.allRules) if (rule.body.size() == 0) bodyless.add(rule);
+		for (Rule rule : this.rta.allRules) {
+			if (rule.body.size() == 0) bodyless.add(rule);
+			if (rule.vars.size() == 0 && rta.ruleOrder.count(rule) == 1) {
+				varless.add(rule);
+			}
+		}
+		
 		clear();
 	}
 
 	public void reset(Iterable<Dob> truths) {
 		clear();
 		this.queueRules(bodyless);
+		this.queueRules(varless);
 		for (Dob truth : truths) if (truth != null) queueTruth(truth);
 	}
 	

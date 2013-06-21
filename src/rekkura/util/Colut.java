@@ -296,4 +296,15 @@ public class Colut {
 		for (Collection<U> collection : data) Colut.addAll(result, collection);
 		return result;
 	}
+	
+	public static <U> int countIn(Iterable<U> source, Collection<U> target) {
+		int i = 0; for (U u : source) if (target.contains(u)) i++;
+		return i;
+	}
+	
+	public static <U> boolean removeAll(Iterable<U> source, Collection<U> target) {
+		boolean result = false;
+		for (U u : source) result |= target.remove(u);
+		return result;
+	}
 }

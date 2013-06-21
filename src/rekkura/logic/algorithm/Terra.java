@@ -9,13 +9,11 @@ import rekkura.logic.model.Unification;
 import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
+import rekkura.util.Colut;
 import rekkura.util.NestedIterable;
+import rekkura.util.RankedCarry;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This class holds a collection of utilities for generating
@@ -84,8 +82,18 @@ public class Terra {
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		sortBySupportSize(positives, support);
 		
-		List<Atom> negatives = Atom.filterNegatives(rule.body);
-		List<List<Unification>> space = constructUnificationSpace(rule, support, positives);
+		// Then greedily find a variable cover and resort for the final support
+		List<Atom> expanders = Terra.greedyVarCover(positives, rule.vars);
+		if (expanders == null) return result;
+		sortBySupportSize(expanders, support);
+		
+		// Add all remaining positives to the list to be checked
+		List<Atom> check = Lists.newArrayList(positives);
+		check.removeAll(expanders);
+		
+		// Add negatives to the list of things that need to be checked
+		check.addAll(Atom.filterNegatives(rule.body));
+		List<List<Unification>> space = constructUnificationSpace(rule, support, expanders);
 		
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		Unification unify = Unification.from(rule.vars);
@@ -106,8 +114,8 @@ public class Terra {
 			// All negatives grounded with the constructed unification
 			// should not exist.
 			Map<Dob, Dob> converted = failure == -1 ? unify.toMap() : null;
-			if (converted != null && negatives.size() > 0) {
-				if (!checkNegatives(converted, negatives, truths, pool)) continue;
+			if (converted != null && check.size() > 0) {
+				if (!checkAtoms(converted, check, truths, pool)) continue;
 			}
 			
 			// If we manage to unify against all bodies, apply the substitution
@@ -120,6 +128,34 @@ public class Terra {
 				}
 			} else if (failure >= 0) iterator.advance(failure);
 		}
+		return result;
+	}
+
+	/**
+	 * Returns a cover of the variables obtained by greedily selecting atoms 
+	 * that cover the most uncovered variables.
+	 * @param atoms
+	 * @param vars
+	 * @return
+	 */
+	public static List<Atom> greedyVarCover(Iterable<Atom> atoms, Iterable<Dob> vars) {
+		List<Dob> remaining = Lists.newArrayList(vars);
+		List<Atom> result = Lists.newArrayList();
+		
+		while (remaining.size() > 0) {
+			RankedCarry<Integer, Atom> carry = RankedCarry.createReverseNatural(0, null);
+			for (Atom candidate : atoms) {
+				int count = Colut.countIn(candidate.dob.fullIterable(), remaining);
+				carry.consider(count, candidate);
+			}
+			
+			Atom atom = carry.getCarry();
+			if (atom == null) return null;
+			
+			Colut.removeAll(atom.dob.fullIterable(), remaining);
+			result.add(atom);
+		}
+		
 		return result;
 	}
 
@@ -161,26 +197,25 @@ public class Terra {
 		if (varless != null) return pool.dobs.submerge(varless);
 		List<Dob> dobs = Atom.asDobList(Atom.filterPositives(rule.body));
 		Map<Dob, Dob> unify = Unifier.unifyListVars(dobs, bodies, rule.vars);
-		if (!checkNegatives(unify, rule.body, truths, pool)) return null;
+		if (!checkAtoms(unify, Atom.filterNegatives(rule.body), truths, pool)) return null;
 		if (!rule.evaluateDistinct(unify)) return null;
 		return renderHead(unify, rule, pool);
 	}
 
 	/**
-	 * Returns true if the unification does not yield any dob
-	 * contained the set of truths passed in.
+	 * Returns true if the unification satisfies the atoms that
+	 * need to be checked.
 	 * @param unify
 	 * @param atoms
 	 * @param truths
 	 * @param pool
 	 * @return
 	 */
-	public static boolean checkNegatives(Map<Dob, Dob> unify,
+	public static boolean checkAtoms(Map<Dob, Dob> unify,
 			List<Atom> atoms, Set<Dob> truths, Pool pool) {
 		for (Atom atom : atoms) {
-			if (atom.truth) continue;
 			Dob generated = pool.dobs.submerge(Unifier.replace(atom.dob, unify));
-			if (generated == null || truths.contains(generated)) return false;
+			if (generated == null || truths.contains(generated) != atom.truth) return false;
 		}
 		return true;
 	}
@@ -201,11 +236,21 @@ public class Terra {
 		return space;
 	}
 
+	/**
+	 * Sorts in increasing order of support size except for a support size
+	 * of zero. These are placed at the end.
+	 * @param positives
+	 * @param support
+	 */
 	public static void sortBySupportSize(List<Atom> positives,
 			final ListMultimap<Atom, Dob> support) {
 		Collections.sort(positives, new Comparator<Atom>() {
 			@Override public int compare(Atom first, Atom second) {
-				return support.get(first).size() - support.get(second).size();
+				int firstSize = support.get(first).size();
+				int secondSize = support.get(second).size();
+				if (firstSize == 0 && secondSize == 0) return 0;
+				if (firstSize == 0) return 1;
+				return firstSize - secondSize;
 			}
 		});
 	}
