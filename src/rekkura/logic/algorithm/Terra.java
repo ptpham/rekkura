@@ -101,8 +101,8 @@ public class Terra {
 		while (iterator.hasNext()) {
 			unify.clear();
 
-			// All positives must contribute in a non-conflicting way
-			// to the unification
+			// Dobs in the variable cover must contribute in a
+			// non conflicting way to the unification.
 			int failure = -1;
 			List<Unification> assignment = iterator.next();
 			
@@ -111,16 +111,14 @@ public class Terra {
 				if (!unify.sloppyDirtyMergeWith(current)) failure = i;
 			}
 			
-			// All negatives grounded with the constructed unification
-			// should not exist.
+			// Verify that the atoms that did not participate in the unification
+			// have their truth values satisfied.
 			Map<Dob, Dob> converted = failure == -1 ? unify.toMap() : null;
 			if (converted != null && check.size() > 0) {
 				if (!checkAtoms(converted, check, truths, pool)) continue;
 			}
 			
-			// If we manage to unify against all bodies, apply the substitution
-			// to the head and render it. If the generated head still has variables
-			// in it, then do not add it to the result.
+			// Final check for distincts before rendering head
 			if (converted != null && unify.isValid()) {
 				if (rule.evaluateDistinct(converted)) {
 					Dob generated = renderHead(converted, rule, pool);
