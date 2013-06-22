@@ -307,4 +307,18 @@ public class Colut {
 		for (U u : source) result |= target.remove(u);
 		return result;
 	}
+	
+	public static <U> Comparator<U> getAsStringComparator() {
+		return new Comparator<U>() {
+			@Override public int compare(U o1, U o2) {
+				return o1.toString().compareTo(o2.toString());
+			}
+		};
+	}
+	
+	public static <U> List<U> sortAsStrings(Collection<U> original) {
+		List<U> result = Lists.newArrayList(original);
+		Collections.sort(result, getAsStringComparator());
+		return result;
+	}
 }

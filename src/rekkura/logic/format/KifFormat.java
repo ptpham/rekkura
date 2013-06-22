@@ -250,6 +250,20 @@ public class KifFormat extends LogicFormat {
 		List<Dob> original = KifFormat.inst.dobsFromStrings(Arrays.asList(raw));
 		return KifFormat.dobsToRules(original);
 	}
+
+	/**
+	 * Use this method for your one stop shop from rules embedding in a dob
+	 * as a string to rules ... #kifsocray
+	 * @param rulesheet
+	 * @return
+	 */
+	public static List<Rule> dobStringToRules(String raw) {
+		Dob dob = inst.dobFromString(raw);
+		String[] strings = new String[dob.size()];
+		for (int i = 0; i < dob.size(); i++) strings[i] = dob.at(i).toString();
+		return genericStringsToRules(strings);
+	}
 	
 	public static final KifFormat inst = new KifFormat();
+
 }
