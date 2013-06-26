@@ -113,6 +113,7 @@ public class Pool {
 		
 		List<Dob> vars = Lists.newArrayList();
 		for (Dob var : rule.vars) vars.add(dobs.submerge(var));
+		this.allVars.addAll(vars);
 		
 		Rule result = new Rule(head, body, vars, distincts);
 		if (Rule.orderedRefeq(rule, result)) result = rule;

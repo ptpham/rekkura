@@ -1,7 +1,9 @@
 package rekkura.logic.structure;
 
 import java.util.List;
+import java.util.Set;
 
+import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.util.Cache;
@@ -70,23 +72,39 @@ public class Cachet {
 	 * Memory is O(FG) but it will only store the things that
 	 * are true in any given proving cycle.
 	 */
-	public final Multimap<Dob, Dob> unisuccess = HashMultimap.create();
-		
+	public final Multimap<Dob, Dob> formToGrounds = HashMultimap.create();
+	
+	public final Cache<Dob, List<Dob>> groundToForms = 
+		Cache.create(new Function<Dob, List<Dob>>() {
+			@Override public List<Dob> apply(Dob dob)
+			{ return getUnifiableForms(dob); }
+		});
+	
 	public final Ruletta rta;
 
 	public Cachet(Ruletta rta) { this.rta = rta; }
 
+	public List<Dob> getUnifiableForms(Dob dob) {
+		List<Dob> result = Lists.newArrayList();
+		Set<Dob> vars = rta.fortre.pool.allVars;
+		for (Dob node : spines.get(dob)) {
+			if (Unifier.unifyVars(node, dob, vars) != null) {
+				result.add(node);
+			}
+		}
+		return result;
+	}
+	
     public void storeAllGround(Iterable<Dob> grounds) {
         for (Dob ground : grounds) storeGround(ground);
     }
 
 	public void storeGround(Dob dob) {
-		// The root of the subtree is the end of the trunk.
-		Dob end = this.canonicalForms.get(dob);
-		if (end != null) this.storeGroundAt(dob, end);
+		List<Dob> forms = this.groundToForms.get(dob);
+		for (Dob form : forms) this.storeGroundAt(dob, form);
 	}
 	
 	public void storeGroundAt(Dob ground, Dob body) {
-		unisuccess.put(body, ground);
+		formToGrounds.put(body, ground);
 	}
 }

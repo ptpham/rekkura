@@ -1,6 +1,10 @@
 package rekkura.logic.algorithm;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
@@ -10,10 +14,13 @@ import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
 import rekkura.util.Colut;
-import rekkura.util.NestedIterable;
 import rekkura.util.RankedCarry;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * This class holds a collection of utilities for generating
@@ -30,12 +37,8 @@ public class Terra {
 	 * @return
 	 */
 	public static Iterable<Dob> getGroundCandidates(Dob dob, final Cachet cachet) {
-		Iterable<Dob> subtree = cachet.spines.get(dob);
-		return new NestedIterable<Dob, Dob>(subtree) {
-			@Override protected Iterator<Dob> prepareNext(Dob u) {
-				return cachet.unisuccess.get(u).iterator();
-			}
-		};
+		Dob canonical = cachet.canonicalForms.get(dob);
+		return cachet.formToGrounds.get(canonical);
 	}
 	
 	/**
@@ -274,17 +277,7 @@ public class Terra {
 			unify.put(vars.get(i), candidates.get(i));
 		}
 		
-		boolean success = true;
-		for (int i = 0; i < body.size() && success; i++) {
-			Atom atom = body.get(i);
-		
-			// Generate the ground body
-			Dob ground = pool.dobs.submerge(Unifier.replace(atom.dob, unify));
-			boolean truth = truths.contains(ground);
-			if (truth != atom.truth) success = false;
-		}
-		
-		if (!success) return null;
+		if (!checkAtoms(unify, body, truths, pool)) return null;
 		return unify;
 	}
 }

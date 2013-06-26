@@ -70,7 +70,7 @@ public class StratifiedBackward extends StratifiedProver {
 	
 	public void clear() {
 		this.truths.clear();
-		this.cachet.unisuccess.clear();
+		this.cachet.formToGrounds.clear();
 		this.pending.clear();
 		this.asking.clear();
 		this.known.clear();

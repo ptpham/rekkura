@@ -63,7 +63,7 @@ public class StratifiedForward extends StratifiedProver {
 	public void clear() {
 		this.truths.clear();
 		this.pendingRules.clear();
-		this.cachet.unisuccess.clear();
+		this.cachet.formToGrounds.clear();
 	}
 
 	/**
