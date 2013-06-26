@@ -1,4 +1,4 @@
-package rekkura.test.ggp;
+package rekkura.test.ggp.machina;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +12,8 @@ import rekkura.ggp.player.MonteCarloPlayer;
 import rekkura.logic.format.StandardFormat;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
+import rekkura.test.ggp.GgpTestUtil;
+import rekkura.test.ggp.SimpleGames;
 import rekkura.util.Synchron;
 
 import com.google.common.collect.Lists;
