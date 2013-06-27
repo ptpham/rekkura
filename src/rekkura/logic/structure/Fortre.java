@@ -7,6 +7,7 @@ import rekkura.logic.model.Dob;
 import rekkura.logic.model.Vars;
 import rekkura.state.algorithm.Topper;
 import rekkura.util.Colut;
+import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
 
@@ -70,23 +71,32 @@ public class Fortre {
 			boolean cognate = false;
 			for (Dob form : allForms) { cognate |= Unifier.equivalent(form, generalization, allVars); }
 			if (!cognate) symmetrized.add(generalization);
+			symmetrized.addAll(component);
 		}
 		
 		// Find subset relationships
+		symmetrized.add(root);
+		Multimap<Dob, Dob> subsets = HashMultimap.create();
 		for (Dob child : symmetrized) {
-			List<Dob> parents = Lists.newArrayList();
-			
 			for (Dob parent : symmetrized) {
 				if (parent == child) continue;
 				if (Unifier.unifyVars(parent, child, allVars) != null) {
-					parents.add(parent);
+					subsets.put(parent, child);
 				}
 			}
-			
-			if (parents.size() == 1) {
-				this.allChildren.put(parents.get(0), child);
-			} else if (parents.size() == 0) {
-				this.allChildren.put(root, child);
+		}
+		
+		// Top sort and extract final tree
+		Multiset<Dob> ordering = Topper.topSort(subsets, Sets.newHashSet(root));
+		Multimap<Integer,Dob> partitions = OtmUtil.invertMultiset(ordering);
+		int max = Collections.max(partitions.keySet());
+		for (int i = 1; i < max; i++) {
+			Collection<Dob> parents = partitions.get(i);
+			Collection<Dob> children = partitions.get(i+1);
+			for (Dob parent : parents) {
+				for (Dob child : subsets.get(parent)) {
+					if (children.contains(child)) allChildren.put(parent, child);
+				}
 			}
 		}
 	}
