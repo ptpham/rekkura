@@ -81,13 +81,12 @@ public class Terra {
 		if (varless != null) return Sets.newHashSet(pool.dobs.submerge(varless));
 
 		// Sort the dimensions of the space so that the smallest ones come first.
-		Set<Dob> result = Sets.newHashSet();
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		sortBySupportSize(positives, support);
 		
 		// Then greedily find a variable cover and resort for the final support
 		List<Atom> expanders = Terra.greedyVarCover(positives, rule.vars);
-		if (expanders == null) return result;
+		if (expanders == null) return Sets.newHashSet();
 		sortBySupportSize(expanders, support);
 		
 		// Add all remaining positives to the list to be checked
@@ -99,6 +98,13 @@ public class Terra {
 		List<List<Unification>> space = constructUnificationSpace(rule, support, expanders);
 		
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
+		return expandBodyAssignments(rule, check, iterator, pool, truths);
+	}
+
+	public static Set<Dob> expandBodyAssignments(Rule rule, List<Atom> check,
+		Cartesian.AdvancingIterator<Unification> iterator, Pool pool, Set<Dob> truths) {
+		
+		Set<Dob> result = Sets.newHashSet();
 		Unification unify = Unification.from(rule.vars);
 		
 		while (iterator.hasNext()) {
@@ -180,8 +186,13 @@ public class Terra {
 		return true;
 	}
 
+	// TODO: Clean this up
 	public static Dob renderHead(Map<Dob, Dob> unify, Rule rule, Pool pool) {
-		return pool.dobs.submerge(Unifier.replace(rule.head.dob, unify));
+		return renderDob(unify, rule.head.dob, pool);
+	}
+	
+	public static Dob renderDob(Map<Dob, Dob> unify, Dob dob, Pool pool) {
+		return pool.dobs.submerge(Unifier.replace(dob, unify));
 	}
 	
 	/**

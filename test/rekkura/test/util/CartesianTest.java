@@ -36,7 +36,7 @@ public class CartesianTest {
 	@Test
 	public void advanceFirstDim() {
 		List<Integer> base = Lists.newArrayList(1, 2, 3, 4, 5);
-		Cartesian.AdvancingIterator<Integer> iterator = constructIterator(base, 2);
+		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, 2);
 		
 		iterator.next();
 		iterator.advance(0);
@@ -47,7 +47,7 @@ public class CartesianTest {
 	@Test
 	public void advanceLastDim() {
 		List<Integer> base = Lists.newArrayList(1, 2, 3, 4, 5);
-		Cartesian.AdvancingIterator<Integer> iterator = constructIterator(base, 2);
+		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, 2);
 		
 		// This advance should not do anything because an advance on
 		// an unexplored dimension will fail.
@@ -56,16 +56,16 @@ public class CartesianTest {
 		Assert.assertEquals(25, seen);
 	}
 
-	private Cartesian.AdvancingIterator<Integer> constructIterator(
+	private Cartesian.ListListIterator<Integer> constructIterator(
 			List<Integer> base, int dims) {
 		List<List<Integer>> candidates = Lists.newArrayList();
 		for (int i = 0; i < dims; i++) candidates.add(base);
 			
-		Cartesian.AdvancingIterator<Integer> iterator = Cartesian.asIterator(candidates);
+		Cartesian.ListListIterator<Integer> iterator = Cartesian.asIterator(candidates);
 		return iterator;
 	}
 	
-	private int runAdvancingIterator(Cartesian.AdvancingIterator<Integer> iterator) {
+	private int runAdvancingIterator(Cartesian.ListListIterator<Integer> iterator) {
 		int seen = 0;
 		while (iterator.hasNext()) {
 			iterator.next();

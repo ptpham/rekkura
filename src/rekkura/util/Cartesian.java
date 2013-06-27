@@ -14,8 +14,8 @@ import com.google.common.collect.Lists;
  */
 public class Cartesian {
 	
-	public static <U> AdvancingIterator<U> asIterator(List<List<U>> candidates) {
-		return new AdvancingIterator<U>(candidates);
+	public static <U> ListListIterator<U> asIterator(List<List<U>> candidates) {
+		return new ListListIterator<U>(candidates);
 	}
 	
 	public static <U> Iterable<List<U>> asIterable(final List<List<U>> candidates) {
@@ -37,13 +37,17 @@ public class Cartesian {
 		return product;
 	}
 	
+	public static interface AdvancingIterator<U> extends Iterator<List<U>> {
+		public void advance(int dim);
+	}
+	
 	/**
 	 * Allows skipping over an element in a given dimension.
 	 * @author ptpham
 	 *
 	 * @param <U>
 	 */
-	public static class AdvancingIterator<U> implements Iterator<List<U>> {
+	public static class ListListIterator<U> implements AdvancingIterator<U> {
 		public final int spaceSize;
 		
 		private final int[] positions, sliceSizes;
@@ -51,7 +55,7 @@ public class Cartesian {
 		private List<U> prepared;
 		private boolean hasPrepared;
 
-		private AdvancingIterator(List<List<U>> candidates) {
+		private ListListIterator(List<List<U>> candidates) {
 			this.candidates = candidates;
 			
 			int size = candidates.size() > 0 ? 1 : 0;
@@ -84,14 +88,6 @@ public class Cartesian {
 			return result;
 		}
 		
-		private void increment() {
-			for (int i = positions.length - 1; i >= 0; i--) {
-				this.positions[i]++;
-				if (this.positions[i] < this.sliceSizes[i]) break;
-				if (i > 0) this.positions[i] = 0;
-			}
-		}
-		
 		private void prepareNext() {
 			if (isPrepared()) return;
 			if (this.positions.length == 0) return;
@@ -106,6 +102,9 @@ public class Cartesian {
 		}
 		
 		public int dimensions() { return this.candidates.size(); }
+		private void increment() {
+			Cartesian.increment(this.positions, this.sliceSizes);
+		}
 		
 		/**
 		 * This forces a move forward in the given dimension. If
@@ -133,4 +132,12 @@ public class Cartesian {
 		@Override public void remove() 
 		{ throw new IllegalAccessError("Remove not allowed!"); }
 	}
+	
+	public static void increment(int[] pos, int[] sizes) {
+		for (int i = pos.length - 1; i >= 0; i--) {
+			if (++pos[i] < sizes[i]) break;
+			if (i > 0) pos[i] = 0;
+		}
+	}
+
 }
