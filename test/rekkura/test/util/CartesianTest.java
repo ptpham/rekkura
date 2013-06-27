@@ -55,6 +55,34 @@ public class CartesianTest {
 		int seen = runAdvancingIterator(iterator);
 		Assert.assertEquals(25, seen);
 	}
+	
+	@Test
+	public void advanceMany() {
+		int dims = 10;
+		List<Integer> base = Lists.newArrayList(1, 2);
+		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, dims);
+		
+		for (int i = 0; i < dims - 1; i++) {
+			iterator.next();
+			iterator.advance(i);
+		}
+		int seen = runAdvancingIterator(iterator);
+		Assert.assertEquals(base.size(), seen);
+	}
+	
+	@Test
+	public void advanceIncrement() {
+		int dims = 3;
+		List<Integer> base = Lists.newArrayList(0, 1);
+		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, dims);
+		
+		for (int i = 0; i < 2; i++) {
+			iterator.next();
+			iterator.advance(1);
+		}
+		int seen = runAdvancingIterator(iterator);
+		Assert.assertEquals(base.size()*base.size(), seen);
+	}
 
 	private Cartesian.ListListIterator<Integer> constructIterator(
 			List<Integer> base, int dims) {
