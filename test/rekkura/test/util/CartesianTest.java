@@ -10,24 +10,24 @@ import rekkura.util.Cartesian;
 
 import com.google.common.collect.Lists;
 
-public class CartesianTest {
+public abstract class CartesianTest {
 	
 	@Test
-	public void advancingInnerEmpty() {
+	public void innerEmtpy() {
 		List<Integer> base = Lists.newArrayList();
 		int seen = runAdvancingIterator(constructIterator(base, 2));
 		Assert.assertEquals(0, seen);
 	}
 	
 	@Test(timeout=100)
-	public void advancingOuterEmpty() {
+	public void outerEmtpy() {
 		List<Integer> base = Lists.newArrayList();
 		int seen = runAdvancingIterator(constructIterator(base, 0));
 		Assert.assertEquals(0, seen);
 	}
 	
 	@Test
-	public void advancingCube() {
+	public void completeCube() {
 		List<Integer> base = Lists.newArrayList(1, 2, 3, 4, 5);
 		int seen = runAdvancingIterator(constructIterator(base, 2));
 		Assert.assertEquals(25, seen);
@@ -36,7 +36,7 @@ public class CartesianTest {
 	@Test
 	public void advanceFirstDim() {
 		List<Integer> base = Lists.newArrayList(1, 2, 3, 4, 5);
-		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, 2);
+		Cartesian.AdvancingIterator<Integer> iterator = constructIterator(base, 2);
 		
 		iterator.next();
 		iterator.advance(0);
@@ -47,7 +47,7 @@ public class CartesianTest {
 	@Test
 	public void advanceLastDim() {
 		List<Integer> base = Lists.newArrayList(1, 2, 3, 4, 5);
-		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, 2);
+		Cartesian.AdvancingIterator<Integer> iterator = constructIterator(base, 2);
 		
 		// This advance should not do anything because an advance on
 		// an unexplored dimension will fail.
@@ -60,7 +60,7 @@ public class CartesianTest {
 	public void advanceMany() {
 		int dims = 10;
 		List<Integer> base = Lists.newArrayList(1, 2);
-		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, dims);
+		Cartesian.AdvancingIterator<Integer> iterator = constructIterator(base, dims);
 		
 		for (int i = 0; i < dims - 1; i++) {
 			iterator.next();
@@ -74,7 +74,7 @@ public class CartesianTest {
 	public void advanceIncrement() {
 		int dims = 3;
 		List<Integer> base = Lists.newArrayList(0, 1);
-		Cartesian.ListListIterator<Integer> iterator = constructIterator(base, dims);
+		Cartesian.AdvancingIterator<Integer> iterator = constructIterator(base, dims);
 		
 		for (int i = 0; i < 2; i++) {
 			iterator.next();
@@ -84,16 +84,10 @@ public class CartesianTest {
 		Assert.assertEquals(base.size()*base.size(), seen);
 	}
 
-	private Cartesian.ListListIterator<Integer> constructIterator(
-			List<Integer> base, int dims) {
-		List<List<Integer>> candidates = Lists.newArrayList();
-		for (int i = 0; i < dims; i++) candidates.add(base);
-			
-		Cartesian.ListListIterator<Integer> iterator = Cartesian.asIterator(candidates);
-		return iterator;
-	}
+	protected abstract Cartesian.AdvancingIterator<Integer>
+	constructIterator(List<Integer> base, int dims);
 	
-	private int runAdvancingIterator(Cartesian.ListListIterator<Integer> iterator) {
+	protected int runAdvancingIterator(Cartesian.AdvancingIterator<Integer> iterator) {
 		int seen = 0;
 		while (iterator.hasNext()) {
 			iterator.next();

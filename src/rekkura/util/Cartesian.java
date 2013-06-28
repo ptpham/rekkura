@@ -4,8 +4,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 /**
  * This holds utilities for iterating over the cartesian product of sets of items.
@@ -21,9 +23,21 @@ public class Cartesian {
 	public static <U> Iterable<List<U>> asIterable(final List<List<U>> candidates) {
 		if (candidates.size() == 0) return Lists.newArrayList();
 		return new Iterable<List<U>>() {
-			@Override public Iterator<List<U>> iterator() {
-				return asIterator(candidates);
-			}
+			@Override public Iterator<List<U>> iterator()
+			{ return asIterator(candidates); }
+		};
+	}
+	
+	public static <U> MultimapIterator<U> asIterator(Multimap<U,U> edges, List<U> roots, int limit) {
+		return new MultimapIterator<U>(edges, roots, limit);
+	}
+	
+	public static <U> Iterable<List<U>> asIterable(final Multimap<U,U> edges,
+		final List<U> roots, final int limit) {
+		if (roots.size() == 0) return Lists.newArrayList();
+		return new Iterable<List<U>>() {
+			@Override public Iterator<List<U>> iterator()
+			{ return asIterator(edges, roots, limit); }
 		};
 	}
 	
@@ -113,31 +127,116 @@ public class Cartesian {
 		 * counts as looking into the subspace.
 		 */
 		public void advance(int dim) {
-			boolean nonZeroes = false;
-			for (int i = dim + 1; i < this.positions.length; i++) {
-				if (positions[i] > 0) {
-					nonZeroes = true;
-					break;
-				}
-			}
-			
-			if (!nonZeroes) return;
-			
-			for (int i = dim + 1; i < this.positions.length; i++) {
-				this.positions[i] = this.sliceSizes[i] - 1;
-			}
+			if (!Cartesian.hasNonZerosBeyond(this.positions, dim)) return;
+			Cartesian.maximizeBeyond(this.positions, this.sliceSizes, dim);
 			this.increment();
 		}
-	
+
 		@Override public void remove() 
 		{ throw new IllegalAccessError("Remove not allowed!"); }
 	}
 	
-	public static void increment(int[] pos, int[] sizes) {
+	public static class MultimapIterator<U> implements AdvancingIterator<U> {
+		private final List<List<U>> elems;
+		private final int[] positions, sizes;
+		private final Multimap<U,U> edges;
+		
+		private List<U> next;
+
+		public MultimapIterator(Multimap<U,U> edges, List<U> roots, int limit) {
+			Preconditions.checkArgument(limit >= 0);
+			this.elems = Lists.newArrayList();
+			this.positions = new int[limit];
+			this.sizes = new int[limit];
+			this.edges = edges;
+			
+			this.elems.add(roots);
+			if (limit > 0) this.sizes[0] = roots.size();
+		}
+		
+		@Override
+		public boolean hasNext() {
+			prepareNext();
+			return next != null;
+		}
+
+		@Override
+		public List<U> next() {
+			if (!hasNext()) throw new NoSuchElementException();
+			List<U> result = this.next;
+			next = null;
+			return result;
+		}
+		
+		private void increment() {
+			int root = Cartesian.increment(this.positions, this.sizes);
+			while (elems.size() > root + 1) Colut.popEnd(elems);
+		}
+		
+		private void prepareNext() {
+			if (next != null) return;
+			if (this.positions.length == 0) return;
+			if (this.positions[0] >= this.sizes[0]) return;
+			
+			while (elems.size() < this.positions.length) {
+				int pos = elems.size();
+				U last = Colut.end(elems).get(this.positions[pos-1]);
+				List<U> next = Lists.newArrayList(this.edges.get(last));
+				if (next.isEmpty()) break;
+				
+				this.elems.add(next);
+				this.positions[pos] = 0;
+				this.sizes[pos] = next.size();
+			}
+			
+			this.next = Lists.newArrayList();
+			for (int i = 0; i < elems.size(); i++) {
+				this.next.add(this.elems.get(i).get(this.positions[i]));
+			}
+			
+			increment();
+		}
+
+		@Override
+		public void advance(int dim) {
+			if (!Cartesian.hasNonZerosBeyond(this.positions, dim)) return;
+			Cartesian.maximizeBeyond(this.positions, this.sizes, dim);
+			increment();
+		}
+		
+		@Override public void remove() 
+		{ throw new IllegalAccessError("Remove not allowed!"); }
+	}
+	
+	/**
+	 * This increment will go beyond the size boundary in the
+	 * zeroeth position instead of overflowing.
+	 * @param pos
+	 * @param sizes
+	 * @return
+	 */
+	public static int increment(int[] pos, int[] sizes) {
 		for (int i = pos.length - 1; i >= 0; i--) {
-			if (++pos[i] < sizes[i]) break;
+			if (++pos[i] < sizes[i]) return i;
 			if (i > 0) pos[i] = 0;
 		}
+		return 0;
 	}
 
+	public static boolean hasNonZerosBeyond(int[] pos, int dim) {
+		boolean nonZeroes = false;
+		for (int i = dim + 1; i < pos.length; i++) {
+			if (pos[i] > 0) {
+				nonZeroes = true;
+				break;
+			}
+		}
+		return nonZeroes;
+	}
+
+	public static void maximizeBeyond(int[] pos, int[] sizes, int dim) {
+		for (int i = dim + 1; i < pos.length; i++) {
+			pos[i] = sizes[i] - 1;
+		}
+	}
 }

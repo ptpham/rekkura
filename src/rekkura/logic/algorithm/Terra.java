@@ -188,11 +188,7 @@ public class Terra {
 
 	// TODO: Clean this up
 	public static Dob renderHead(Map<Dob, Dob> unify, Rule rule, Pool pool) {
-		return renderDob(unify, rule.head.dob, pool);
-	}
-	
-	public static Dob renderDob(Map<Dob, Dob> unify, Dob dob, Pool pool) {
-		return pool.dobs.submerge(Unifier.replace(dob, unify));
+		return pool.dobs.submerge(Unifier.replace(rule.head.dob, unify));
 	}
 	
 	/**

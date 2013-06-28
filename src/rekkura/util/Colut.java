@@ -321,4 +321,12 @@ public class Colut {
 		Collections.sort(result, getAsStringComparator());
 		return result;
 	}
+	
+	public static <U> U popEnd(List<U> list) {
+		if (list == null) return null;
+		
+		U u = end(list);
+		if (list.size() > 0) list.remove(list.size() - 1);
+		return u;
+	}
 }
