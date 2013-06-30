@@ -3,7 +3,9 @@ package rekkura.state.algorithm;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
+import rekkura.ggp.machina.GgpStateMachine;
 import rekkura.logic.model.Dob;
 import rekkura.state.model.StateMachine;
 import rekkura.util.OtmUtil;
@@ -51,4 +53,11 @@ public class DepthCharge {
 		return result;
 	}
 	
+	public static double measureCps(GgpStateMachine machine, int charges) {
+		Set<Dob> initial = machine.getInitial();
+		long begin = System.currentTimeMillis();
+		for (int i = 0; i < charges; i++) DepthCharge.fire(initial, machine);
+		long interval = System.currentTimeMillis() - begin;
+		return 1000*charges/(double)interval;
+	}
 }
