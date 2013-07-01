@@ -8,7 +8,9 @@ import java.util.Set;
 import rekkura.ggp.machina.GgpStateMachine;
 import rekkura.logic.model.Dob;
 import rekkura.state.model.StateMachine;
+import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
+import rekkura.util.Synchron;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -59,5 +61,27 @@ public class DepthCharge {
 		for (int i = 0; i < charges; i++) DepthCharge.fire(initial, machine);
 		long interval = System.currentTimeMillis() - begin;
 		return 1000*charges/(double)interval;
+	}
+	
+	public static double measureCpsThreaded(GgpStateMachine[] machines,
+		final Set<Dob> initial, final int perMachine) {
+
+		List<Thread> threads = Lists.newArrayList();
+		for (int i = 0; i < machines.length; i++) {
+			final GgpStateMachine machine = machines[i];
+			threads.add(new Thread(new Runnable() {
+				@Override public void run() {
+					for (int i = 0; i < perMachine; i++) {
+						DepthCharge.fire(initial, machine);
+					}
+				}
+			}));
+		}
+		
+		long begin = System.currentTimeMillis();
+		for (Thread thread : threads) thread.start();
+		while (threads.size() > 0) { Synchron.lightJoin(Colut.popAny(threads)); }
+		long interval = System.currentTimeMillis() - begin;
+		return 1000*machines.length*perMachine/(double)interval;
 	}
 }

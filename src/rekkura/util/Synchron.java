@@ -74,4 +74,9 @@ public class Synchron {
 	}
 	
 	public static <U> Vector<U> newVector() { return new Vector<U>(); }
+
+	public static boolean lightJoin(Thread thread) {
+		try { thread.join(); return true; }
+		catch (InterruptedException e) { return false; }
+	}
 }
