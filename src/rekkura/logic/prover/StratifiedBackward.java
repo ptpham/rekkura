@@ -1,18 +1,14 @@
 package rekkura.logic.prover;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.state.algorithm.Topper;
+import rekkura.state.algorithm.BackwardTraversal;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -24,58 +20,32 @@ import com.google.common.collect.Sets;
  *
  */
 public class StratifiedBackward extends StratifiedProver {
-
-	/**
-	 * The prover will not expand any rule that has non-zero entries here.
-	 */
-	private final HashMultimap<Rule, Dob> known = HashMultimap.create();
 	
-	private final HashMultimap<Rule, Dob> pending = HashMultimap.create();
-	
-	/**
-	 * This multiset gives the index of the strongly connected component
-	 * the rule belongs to.
-	 */
-	private final Map<Rule, Integer> indices = Maps.newHashMap();
-	
-	/**
-	 * This maintains the strongly connected component sets. This
-	 * set does not include rules that are not in a strongly connected
-	 * component.
-	 */
-	private final List<Set<Rule>> components;
-	
-	/**
-	 * This array is used to coordinate across a strongly connected
-	 * component. The first node reached in the component becomes the 
-	 * root of the component and continues to ask into the component
-	 * as long as new dobs are being generated.
-	 */
-	private final boolean[] rooted;
-	private final Set<Rule> asking = Sets.newHashSet();
+	private final BackwardTraversal<Rule, Dob> traversal;
+	private final BackwardTraversal.Visitor<Rule, Dob> visitor;
 	
 	public StratifiedBackward(Collection<Rule> rules) {
 		super(rules);
-		
-		components = Topper.stronglyConnected(this.rta.ruleToGenRule);
-		for (int i = 0; i < components.size(); i++) {
-			Set<Rule> cycle = components.get(i);
-			for (Rule rule : cycle) indices.put(rule, i);
-		}
-		
-		rooted = new boolean[components.size()];
-		
+		this.visitor = createVisitor();
+		this.traversal = new BackwardTraversal<Rule,Dob>(visitor, this.rta.ruleToGenRule);
 		clear();
 	}
 	
+	private BackwardTraversal.Visitor<Rule, Dob> createVisitor() {
+		return new BackwardTraversal.Visitor<Rule, Dob>() {
+			@Override
+			public Set<Dob> expandNode(Rule rule) {
+				Set<Dob> generated = expandRule(rule);
+				for (Dob dob : generated) preserveTruth(dob);
+				return generated;
+			}
+		};
+	}
+
 	public void clear() {
 		this.truths.clear();
 		this.cachet.formToGrounds.clear();
-		this.pending.clear();
-		this.asking.clear();
-		this.known.clear();
-		
-		Arrays.fill(rooted, false);
+		this.traversal.clear();
 	}
 	
 	/**
@@ -88,10 +58,10 @@ public class StratifiedBackward extends StratifiedProver {
 	 */
 	public void putKnown(Multimap<Rule, Dob> addition) {
 		preserveTruths(addition.values());
-		known.putAll(addition);
+		traversal.known.putAll(addition);
 	}
 	
-	public Set<Dob> getKnown(Rule rule) { return this.known.get(rule); }
+	public Set<Dob> getKnown(Rule rule) { return this.traversal.known.get(rule); }
 
 	/**
 	 * Returns the set of 
@@ -103,7 +73,7 @@ public class StratifiedBackward extends StratifiedProver {
 		Iterable<Rule> rules = OtmUtil.valueIterable(this.rta.headToRule, spine);
 
 		Set<Dob> result = Sets.newHashSet();
-		for (Rule rule : rules) ask(rule, result);
+		for (Rule rule : rules) this.traversal.ask(rule, result);
 		return result;
 	}
 	
@@ -113,77 +83,8 @@ public class StratifiedBackward extends StratifiedProver {
 		this.preserveTruths(truths);
 		
 		Set<Dob> result = Sets.newHashSet();
-		for (Rule rule : this.rta.allRules) ask(rule, result);
+		for (Rule rule : this.rta.allRules) this.traversal.ask(rule, result);
 		
 		return result;
-	}
-	
-	private boolean ask(Rule rule, Set<Dob> result) {
-		if (known.containsKey(rule)) {
-			result.addAll(known.get(rule));
-			return false;
-		}
-		
-		boolean inComponent = this.indices.containsKey(rule);
-		if (inComponent) {
-			int index = this.indices.get(rule);
-			return expandComponentRule(rule, result, index);
-		} else return expandRuleToMap(rule, result, this.known);
-	}
-
-	private boolean expandComponentRule(Rule rule, Set<Dob> result, int index) {
-		boolean root = !this.rooted[index];
-		if (!this.asking.add(rule)) return false;
-		
-		boolean expanded = false;
-		if (root) expanded = expandRuleAsRoot(rule, result, index);
-		else expanded = expandRuleToMap(rule, result, this.pending);
-		
-		this.asking.remove(rule);
-		return expanded;
-	}
-
-	/**
-	 * The root (the first node reached in this strongly connected
-	 * component) acts as the base for a loop that continues
-	 * as long as new dobs are being generated. Once everything 
-	 * has been generated, the dobs in pending are move to known
-	 * for the entire component.
-	 * @param rule
-	 * @param result
-	 * @param index
-	 * @return
-	 */
-	private boolean expandRuleAsRoot(Rule rule, Set<Dob> result, int index) {
-		boolean expanded = false;
-
-		this.rooted[index] = true;
-		while (true) {
-			boolean current = expandRuleToMap(rule, result, this.pending);
-			expanded |= current;
-			if (!current) break;
-		}
-		this.rooted[index] = false;
-		
-		for (Rule node : this.components.get(index)) {
-			this.known.putAll(node, this.pending.get(node));
-			this.pending.removeAll(node);
-		}
-		
-		return expanded;
-	}
-
-	private boolean expandRuleToMap(Rule rule, Set<Dob> result, Multimap<Rule, Dob> map) {
-		boolean expanded = false;
-		for (Rule parent : this.rta.ruleToGenRule.get(rule)) {
-			expanded |= ask(parent, result);
-		}
-
-		Set<Dob> generated = expandRule(rule);
-		map.putAll(rule, generated);
-		for (Dob dob : generated) this.preserveTruth(dob);
-		expanded |= result.addAll(generated);
-		
-		return expanded;
 	}
 }
