@@ -70,9 +70,9 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		return extractGoals(proverPass(state, GOAL_QUERY, EMTPY_UNIFY));
 	}
 	
-	public static StratifiedBackward createProverForRules(Collection<Rule> rules) {
+	public static StratifiedBackward.Standard createProverForRules(Collection<Rule> rules) {
 		List<Rule> augmented = augmentWithQueryRules(rules);
-		return new StratifiedBackward(augmented);
+		return new StratifiedBackward.Standard(augmented);
 	}
 
 	public static BackwardStateMachine createForRules(Collection<Rule> rules) {
