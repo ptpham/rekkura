@@ -1,9 +1,9 @@
 package rekkura.test.ggp.machina;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -59,6 +59,6 @@ public class MonteCarloPlayerTest {
 		while (player.getWavesComputed() < 1) { Synchron.lightSleep(50); }
 		
 		String taken = StandardFormat.inst.toString(player.getDecision(1));
-		Assert.assertEquals("((does)(o)((mark)(2)(2)))", taken);
+		assertEquals("((does)(o)((mark)(2)(2)))", taken);
 	}
 }

@@ -1,10 +1,12 @@
 package rekkura.test.logic;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -15,7 +17,13 @@ import rekkura.logic.structure.Fortre;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Colut;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 public class FortreTest {
 	
@@ -56,7 +64,7 @@ public class FortreTest {
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
 		
-		Assert.assertEquals(trunks.get(rawDobs[0]), trunks.get(rawDobs[1]));
+		assertEquals(trunks.get(rawDobs[0]), trunks.get(rawDobs[1]));
 	}
 
 	public void simpleSymmetry() {
@@ -104,7 +112,7 @@ public class FortreTest {
 		Multimap<Dob, Dob> edges = HashMultimap.create();
 		for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) edges.put(dobs.get(i), dobs.get(j));
 		Dob generalization = Fortre.computeGeneralization(dobs.get(0), edges, pool.context);
-		Assert.assertNotNull(generalization);
+		assertNotNull(generalization);
 	}
 	
 	@Test
@@ -119,7 +127,7 @@ public class FortreTest {
 		List<Dob> bodyList = stringsToDobs(bodyDobs, fmt, pool);
 		List<Dob> queryList = stringsToDobs(queryDobs, fmt, pool);
 		
-		Assert.assertNull(Fortre.downwardUnify(queryList.get(0), bodyList, Sets.newHashSet(varList)));
+		assertNull(Fortre.downwardUnify(queryList.get(0), bodyList, Sets.newHashSet(varList)));
 	}
 	
 	private Map<String, List<Dob>> makeAndCheckTrunks(String[] rawVars, String[] rawDobs, String[] rawGenerated) {
@@ -142,9 +150,9 @@ public class FortreTest {
 	}
 
 	private void checkTrunkLengths(Map<String, Integer> expected, Map<String, List<Dob>> actual) {
-		Assert.assertEquals(expected.size(), actual.size());
+		assertEquals(expected.size(), actual.size());
 		for (String key : expected.keySet()) {
-			Assert.assertEquals(expected.get(key).intValue(), actual.get(key).size());
+			assertEquals(expected.get(key).intValue(), actual.get(key).size());
 		}
 	}
 	

@@ -1,9 +1,9 @@
 package rekkura.test.logic;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -70,10 +70,10 @@ public class ComprenderTest {
 		Pool pool = new Pool();
 		List<Rule> rules = pool.rules.submergeStrings(Lists.newArrayList(firstRaw, secondRaw));
 		List<Rule> generated = Comprender.mergeAll(rules, pool, Merges.posSub);
-		Assert.assertEquals(1, generated.size());
+		assertEquals(1, generated.size());
 		
 		Rule rule = generated.get(0);
-		Assert.assertEquals(3, rule.vars.size());
+		assertEquals(3, rule.vars.size());
 	}
 	
 	@Test
@@ -107,6 +107,6 @@ public class ComprenderTest {
 		
 		Set<Rule> expected = Sets.newHashSet(pool.rules.submergeStrings(rawExpected));
 		Set<Rule> actual = Sets.newHashSet(pool.rules.submerge(Comprender.mergeAll(rules, pool, op)));
-		Assert.assertEquals(expected, actual);
+		assertEquals(expected, actual);
 	}
 }

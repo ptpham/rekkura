@@ -1,8 +1,8 @@
 package rekkura.test.util;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
-import junit.framework.Assert;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -25,7 +25,7 @@ public class CartesianMultimapTest extends CartesianTest {
 		
 		List<Integer> roots = Lists.newArrayList(1);
 		int seen = runAdvancingIterator(Cartesian.asIterator(edges, roots, 3));
-		Assert.assertEquals(3, seen);
+		assertEquals(3, seen);
 	}
 	
 	@Override

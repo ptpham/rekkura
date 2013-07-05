@@ -1,6 +1,8 @@
 package rekkura.test.ggp;
 
-import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import org.junit.Test;
 
 import rekkura.ggp.milleu.Game;
@@ -35,16 +37,16 @@ public class GgpProtocolTest {
 		Dob role = new Dob("role");
 		Game.Config config = GgpTestUtil.createBlitzConfig(SimpleGames.getTicTacToe());
 		handler.handleStart(match, role, config);
-		Assert.assertEquals(1, handler.players.size());
+		assertEquals(1, handler.players.size());
 		
 		GgpState state = handler.players.get(match);
-		Assert.assertEquals(GgpProtocol.getGgpStartClock(config), state.ggpStartClock);
-		Assert.assertEquals(GgpProtocol.getGgpPlayClock(config), state.ggpPlayClock);
-		Assert.assertEquals(Player.Legal.class, state.player.getClass());
-		Assert.assertNotNull(state.player);
+		assertEquals(GgpProtocol.getGgpStartClock(config), state.ggpStartClock);
+		assertEquals(GgpProtocol.getGgpPlayClock(config), state.ggpPlayClock);
+		assertEquals(Player.Legal.class, state.player.getClass());
+		assertNotNull(state.player);
 		
 		handler.handleStop(match, Lists.newArrayList(new Dob("(x)"), new Dob("o")));
-		Assert.assertEquals(0, handler.players.size());
+		assertEquals(0, handler.players.size());
 	}
 	
 	

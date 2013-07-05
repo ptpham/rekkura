@@ -1,10 +1,10 @@
 package rekkura.test.logic;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -36,7 +36,7 @@ public class TopperTest {
 		expected.add(Sets.newHashSet(19, 20));
 		
 		List<Set<Integer>> actual = Topper.stronglyConnected(edges, roots);
-		Assert.assertEquals(expected, actual);
+		assertEquals(expected, actual);
 	}
 	
 	@Test
@@ -51,7 +51,7 @@ public class TopperTest {
 		expected.add(Sets.newHashSet(0));
 
 		List<Set<Integer>> actual = Topper.stronglyConnected(edges, roots);
-		Assert.assertEquals(expected, actual);
+		assertEquals(expected, actual);
 	}
 	
 	@Test
@@ -73,7 +73,7 @@ public class TopperTest {
 		Multiset<Integer> expected = HashMultiset.create();
 		for (int[] raw : expectedRaw) expected.add(raw[0], raw[1]);
 		
-		Assert.assertEquals(expected, Topper.generalTopSort(edges, roots));
+		assertEquals(expected, Topper.generalTopSort(edges, roots));
 	}
 	
 	@Test
@@ -84,7 +84,7 @@ public class TopperTest {
 		
 		Multimap<Integer, Integer> expected = toMultimap(new int[][]{
 				{0, 2}, {2, 4}, {2, 5}} );
-		Assert.assertEquals(expected, reduction);
+		assertEquals(expected, reduction);
 	}
 
 	private Multimap<Integer, Integer> toMultimap(int[][] edgesRaw) {

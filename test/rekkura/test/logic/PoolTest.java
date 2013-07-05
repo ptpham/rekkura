@@ -1,6 +1,5 @@
 package rekkura.test.logic;
-
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -42,7 +41,7 @@ public class PoolTest {
 		Rule first = pool.rules.submergeString(firstRaw);
 		Rule second = pool.rules.submergeString(canon);
 		
-		Assert.assertEquals(first, second);
-		Assert.assertEquals(canon, first.toString());
+		assertEquals(first, second);
+		assertEquals(canon, first.toString());
 	}	
 }

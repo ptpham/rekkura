@@ -1,10 +1,9 @@
 package rekkura.test.logic.prover;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -309,7 +308,7 @@ public abstract class StratifiedProverTest {
 		Set<String> expectedSet = Sets.newHashSet(expected);
 		expectedSet.addAll(Arrays.asList(initial));
 		
-		Assert.assertEquals(expectedSet, provenSet);
+		assertEquals(expectedSet, provenSet);
 	}
 	
 	public Set<Dob> runProver(String[] rawRules, String[] rawInitial) {

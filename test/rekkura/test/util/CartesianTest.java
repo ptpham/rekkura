@@ -1,8 +1,8 @@
 package rekkura.test.util;
 
-import java.util.List;
+import static org.junit.Assert.*;
 
-import junit.framework.Assert;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -16,21 +16,21 @@ public abstract class CartesianTest {
 	public void innerEmtpy() {
 		List<Integer> base = Lists.newArrayList();
 		int seen = runAdvancingIterator(constructIterator(base, 2));
-		Assert.assertEquals(0, seen);
+		assertEquals(0, seen);
 	}
 	
 	@Test(timeout=100)
 	public void outerEmtpy() {
 		List<Integer> base = Lists.newArrayList();
 		int seen = runAdvancingIterator(constructIterator(base, 0));
-		Assert.assertEquals(0, seen);
+		assertEquals(0, seen);
 	}
 	
 	@Test
 	public void completeCube() {
 		List<Integer> base = Lists.newArrayList(1, 2, 3, 4, 5);
 		int seen = runAdvancingIterator(constructIterator(base, 2));
-		Assert.assertEquals(25, seen);
+		assertEquals(25, seen);
 	}
 	
 	@Test
@@ -41,7 +41,7 @@ public abstract class CartesianTest {
 		iterator.next();
 		iterator.advance(0);
 		int seen = runAdvancingIterator(iterator);
-		Assert.assertEquals(20, seen);
+		assertEquals(20, seen);
 	}
 	
 	@Test
@@ -53,7 +53,7 @@ public abstract class CartesianTest {
 		// an unexplored dimension will fail.
 		iterator.advance(1);
 		int seen = runAdvancingIterator(iterator);
-		Assert.assertEquals(25, seen);
+		assertEquals(25, seen);
 	}
 	
 	@Test
@@ -67,7 +67,7 @@ public abstract class CartesianTest {
 			iterator.advance(i);
 		}
 		int seen = runAdvancingIterator(iterator);
-		Assert.assertEquals(base.size(), seen);
+		assertEquals(base.size(), seen);
 	}
 	
 	@Test
@@ -81,7 +81,7 @@ public abstract class CartesianTest {
 			iterator.advance(1);
 		}
 		int seen = runAdvancingIterator(iterator);
-		Assert.assertEquals(base.size()*base.size(), seen);
+		assertEquals(base.size()*base.size(), seen);
 	}
 
 	protected abstract Cartesian.AdvancingIterator<Integer>

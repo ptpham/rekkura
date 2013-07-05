@@ -1,5 +1,7 @@
 package rekkura.test.ggp;
 
+import static org.junit.Assert.*;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -16,8 +18,8 @@ public class MatchRunnableTest {
 		MatchRunnable match = Match.newBuilder(config).build().newRunnable(new Player.Unresponsive());
 		match.run();
 		
-		Assert.assertEquals(1, match.timeouts.size());
-		Assert.assertEquals(1, match.history.size());
+		assertEquals(1, match.timeouts.size());
+		assertEquals(1, match.history.size());
 		Assert.assertTrue(match.goals.size() > 0);
 	}
 }

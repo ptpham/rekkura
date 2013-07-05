@@ -1,9 +1,9 @@
 package rekkura.test.logic;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -30,9 +30,9 @@ public class LatticeTest {
 		List<Dob> vars = Colut.slice(dobs, 2, raw.size());
 		
 		Varpar vp = Lattice.partition(dobs.get(0), dobs.get(1), vars);
-		Assert.assertEquals(Lists.newArrayList(dobs.get(2)), vp.first);
-		Assert.assertEquals(Lists.newArrayList(dobs.get(3)), vp.second);
-		Assert.assertEquals(Lists.newArrayList(dobs.get(4)), vp.both);
+		assertEquals(Lists.newArrayList(dobs.get(2)), vp.first);
+		assertEquals(Lists.newArrayList(dobs.get(3)), vp.second);
+		assertEquals(Lists.newArrayList(dobs.get(4)), vp.both);
 	}
 	
 	@Test
@@ -50,7 +50,7 @@ public class LatticeTest {
 		Map<Dob, Dob> expected = Maps.newHashMap();
 		expected.put(grounds.get(0), lattice.get(0));
 		expected.put(grounds.get(1), lattice.get(1));
-		Assert.assertEquals(expected, result);
+		assertEquals(expected, result);
 	}
 	
 	@Test
@@ -70,7 +70,7 @@ public class LatticeTest {
 		expected.put(dobs.get(8), dobs.get(9));
 		expected.put(dobs.get(7), dobs.get(8));
 		
-		Assert.assertEquals(expected, lattice.edges);
+		assertEquals(expected, lattice.edges);
 	}
 	
 }

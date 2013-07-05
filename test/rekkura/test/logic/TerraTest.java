@@ -1,10 +1,12 @@
 package rekkura.test.logic;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -74,11 +76,11 @@ public class TerraTest {
 		
 		Map<Dob, Dob> assignment = Terra.applyVars(rule, candidates, truths, pool);
 		if (rawExpected == null) {
-			Assert.assertNull(assignment);
+			assertNull(assignment);
 		} else {
-			Assert.assertNotNull(assignment);
+			assertNotNull(assignment);
 			Map<Dob, Dob> expected = pool.submergeUnifyStrings(rawExpected);
-			Assert.assertEquals(expected, assignment);
+			assertEquals(expected, assignment);
 		}
 	}
 }

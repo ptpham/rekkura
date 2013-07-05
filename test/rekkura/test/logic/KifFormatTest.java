@@ -1,6 +1,7 @@
 package rekkura.test.logic;
 
-import junit.framework.Assert;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -17,22 +18,22 @@ public class KifFormatTest {
 	public void dob() {
 		String raw = "(a (b c) d)";
 		Dob dob = fmt.dobFromString(raw);
-		Assert.assertEquals(raw, fmt.toString(dob));
+		assertEquals(raw, fmt.toString(dob));
 	}
 
 	@Test
 	public void atom() {
 		String raw = "(not (a e (b (c f)) d))";
 		Atom atom = fmt.atomFromString(raw);
-		Assert.assertEquals(raw, fmt.toString(atom));
+		assertEquals(raw, fmt.toString(atom));
 	}
 	
 	@Test
 	public void rule() {
 		String raw = "(<= e ?g f (not (a (b c) d)))";
 		Rule rule = fmt.ruleFromString(raw);
-		Assert.assertEquals(raw, fmt.toString(rule));
-		Assert.assertEquals(1, rule.vars.size());
+		assertEquals(raw, fmt.toString(rule));
+		assertEquals(1, rule.vars.size());
 	}
 	
 	@Test
@@ -40,21 +41,21 @@ public class KifFormatTest {
 		String raw = "(<= e f g (not (a (b c) d)) " + 
 						"(distinct a b) (distinct ?x ?y))";
 		Rule rule = fmt.ruleFromString(raw);
-		Assert.assertEquals(2, rule.distinct.size());
-		Assert.assertEquals(raw, fmt.toString(rule));
+		assertEquals(2, rule.distinct.size());
+		assertEquals(raw, fmt.toString(rule));
 	}
 	
 	@Test
 	public void atomCompression() {
 		String raw = "((proposition))";
 		Atom proposition = fmt.atomFromString(raw);
-		Assert.assertTrue(proposition.dob.isTerminal());
+		assertTrue(proposition.dob.isTerminal());
 	}
 	
 	@Test
 	public void dobCompression() {
 		String raw = "(proposition)";
 		Dob proposition = fmt.dobFromString(raw);
-		Assert.assertEquals(raw, proposition.toString());
+		assertEquals(raw, proposition.toString());
 	}
 }
