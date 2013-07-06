@@ -88,15 +88,13 @@ public class Terra {
 		List<Atom> expanders = Terra.greedyVarCover(positives, rule.vars);
 		if (expanders == null) return Sets.newHashSet();
 		sortBySupportSize(expanders, support);
-		
-		// Add all remaining positives to the list to be checked
-		List<Atom> check = Lists.newArrayList(positives);
+
+		// Add all remaining positives and negatives to the list to be checked
+		List<Atom> check = Lists.newArrayList(rule.body);
 		check.removeAll(expanders);
-		
-		// Add negatives to the list of things that need to be checked
-		check.addAll(Atom.filterNegatives(rule.body));
+
+		// Construct iterator and expand
 		List<List<Unification>> space = constructUnificationSpace(rule, support, expanders);
-		
 		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
 		return expandBodyAssignments(rule, check, iterator, pool, truths);
 	}

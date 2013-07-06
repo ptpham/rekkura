@@ -32,6 +32,12 @@ public class Unification {
 		this(EMPTY_MAP, vars);
 	}
 	
+	public Unification copy() {
+		Unification result = new Unification(vars);
+		result.bay = Arrays.copyOf(this.bay, this.bay.length);
+		return result;
+	}
+	
 	public static Unification from(Map<Dob, Dob> source, ImmutableList<Dob> ordering) {
 		return new Unification(source, ordering);
 	}
