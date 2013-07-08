@@ -102,7 +102,7 @@ public class StratifiedForward extends StratifiedProver {
 		if (!hasMore()) throw new NoSuchElementException();
 		Rule rule = Colut.popAny(this.pendingRules.values());
 		
-		Set<Dob> generated = expandRule(rule);
+		Set<Dob> generated = expandRule(rule, truths, cachet, pool);
 		
 		// Submerge all of the newly generated dobs
 		List<Dob> result = Lists.newArrayListWithCapacity(generated.size());

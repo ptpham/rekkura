@@ -125,9 +125,9 @@ public class Ruletta {
 	 * have filtered the forms you are interested in.
 	 * @return
 	 */
-	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map, Set<Dob> allVars) {
+	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map) {
 		List<Dob> forms = Unifier.retainSuccesses(query, 
-			this.fortre.getCognateSpine(query), allVars);
+			this.fortre.getCognateSpine(query), this.fortre.pool.allVars);
 		return OtmUtil.valueIterable(map, forms);
 	}
 	

@@ -75,7 +75,7 @@ public abstract class StratifiedProver {
 	 * @param rule
 	 * @return
 	 */
-	public Set<Dob> expandRule(Rule rule) {	
+	public static Set<Dob> expandRule(Rule rule, Set<Dob> truths, Cachet cachet, Pool pool) {
 		// Prepare the domains of each positive body in the rule
 		ListMultimap<Atom, Dob> assignments = Terra.getBodySpace(rule, cachet);
 		return Terra.applyBodyExpansion(rule, assignments, pool, truths);

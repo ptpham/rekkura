@@ -1,9 +1,22 @@
 package rekkura.util;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import com.google.common.base.Function;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * (Collection Utilities) These methods are supposed to be
@@ -328,5 +341,24 @@ public class Colut {
 		U u = end(list);
 		if (list.size() > 0) list.remove(list.size() - 1);
 		return u;
+	}
+
+	public static <U,V> Map<U,V> retainAll(Collection<U> keep, Map<U,V> map) {
+		if (map == null) return null;
+		Map<U,V> result = Maps.newHashMap();
+		for (U key : map.keySet()) {
+			if (keep.contains(key)) result.put(key, map.get(key));
+		}
+		return result;
+	}
+
+	public static <U,V> Map<U, V> removeAll(Collection<U> remove, Map<U, V> map) {
+		if (map == null) return null;
+		Map<U,V> result = Maps.newHashMap();
+		for (U key : map.keySet()) {
+			if (remove.contains(key)) continue;
+			result.put(key, map.get(key));
+		}
+		return result;
 	}
 }

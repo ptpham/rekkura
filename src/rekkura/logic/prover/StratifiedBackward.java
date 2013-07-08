@@ -79,18 +79,20 @@ public abstract class StratifiedBackward extends StratifiedProver {
 		return result;
 	}
 	
+	protected Set<Dob> standardRuleExpansion(Rule rule) {
+		Set<Dob> generated = expandRule(rule, truths, cachet, pool);
+		for (Dob dob : generated) preserveTruth(dob);
+		return generated;
+	}
+	
 	public static class Standard extends StratifiedBackward {
 		public Standard(Collection<Rule> rules) { super(rules); }
 
 		@Override
 		protected BackwardTraversal.Visitor<Rule, Dob> createVisitor() {
 			return new BackwardTraversal.Visitor<Rule, Dob>() {
-				@Override
-				public Set<Dob> expandNode(Rule rule) {
-					Set<Dob> generated = expandRule(rule);
-					for (Dob dob : generated) preserveTruth(dob);
-					return generated;
-				}
+				@Override public Set<Dob> expandNode(Rule rule) 
+				{ return standardRuleExpansion(rule); }
 			};
 		}
 	}
