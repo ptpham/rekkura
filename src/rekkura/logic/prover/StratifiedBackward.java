@@ -60,7 +60,7 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	 * @return
 	 */
 	public Set<Dob> ask(Dob dob) {
-		List<Dob> spine = this.cachet.canonicalSpines.get(dob);
+		List<Dob> spine = this.cachet.spines.get(dob);
 		Iterable<Rule> rules = OtmUtil.valueIterable(this.rta.headToRule, spine);
 
 		Set<Dob> result = Sets.newHashSet();
