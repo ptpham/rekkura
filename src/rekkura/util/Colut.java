@@ -292,6 +292,12 @@ public class Colut {
 		return result;
 	}
 	
+	public static <U> Set<U> union(Iterable<? extends Iterable<U>> sets) {
+		Set<U> result = Sets.newHashSet();
+		for (Iterable<U> set : sets) Iterables.addAll(result, set);
+		return result;
+	}
+	
 	public static <U> Iterable<U> prepend(U elem, Iterable<U> rest) {
 		List<U> dummy = Lists.newArrayList();
 		dummy.add(elem);

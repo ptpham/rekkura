@@ -40,8 +40,7 @@ public class FortreTest {
 	
 	/**
 	 * This is a test to see if a more general dob added
-	 * after a more specific dob gets added in the proper 
-	 * location.
+	 * after a more specific dob gets appropriately removed.
 	 */
 	@Test
 	public void specificityOrder() {
@@ -49,7 +48,7 @@ public class FortreTest {
 		String[] rawDobs = { "((P)(X)(a))", "((P)(X)(Y))" };
 		String[] rawGenerated = { };
 		
-		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 3, rawDobs[1], 2);
+		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 2, rawDobs[1], 2);
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
 	}
@@ -83,7 +82,7 @@ public class FortreTest {
 		String[] rawDobs =  { "((P)(X)(b)(c))", "((P)(a)(Y)(c))", "((P)(a)(e)(Z))" };
 		String[] rawGenerated = { "((P)(X)(Y)(Z))" };
 
-		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 3, rawDobs[1], 3, rawDobs[2], 3, rawGenerated[0], 2);
+		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 2, rawDobs[1], 2, rawDobs[2], 2, rawGenerated[0], 2);
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
 	}
@@ -94,7 +93,7 @@ public class FortreTest {
 		String[] rawDobs =  { "((P)(1)(1)(Z))", "((P)(2)(2)(Z))", "((P)(X)(Y)(m))" };
 		String[] rawGenerated = { "((P)(X)(Y)(Z))" };
 
-		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 3, rawDobs[1], 3, rawDobs[2], 3, rawGenerated[0], 2);
+		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 2, rawDobs[1], 2, rawDobs[2], 2, rawGenerated[0], 2);
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
 	}

@@ -45,33 +45,32 @@ public class Fortre {
 		List<Set<Dob>> cognateComponents = Topper.stronglyConnected(cognateEdges);
 		
 		// Store cognates from strongly connected components
+		List<Dob> filteredForms = Lists.newArrayList();
+		Set<Dob> allCognates = Colut.union(cognateComponents);
+		
+		for (Dob dob : allForms) if (!allCognates.contains(dob)) filteredForms.add(dob);
 		for (Set<Dob> component : cognateComponents) {
 			Dob representative = Colut.any(component);
+			filteredForms.add(representative);
 			for (Dob other : component) {
 				if (representative == other) continue;
 				this.cognates.put(representative, other);
-				allForms.remove(other);
 			}
 		}
 		
 		// Find the symmetrizing components
 		Set<Dob> allVars = pool.allVars;
-		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(allForms, allVars, pool);
+		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(filteredForms, allVars, pool);
 		List<Set<Dob>> symmetrizingComponents = Topper.stronglyConnected(symmetricEdges);
 		
 		// Create the generalization forms by compressing each component
-		List<Dob> symmetrized = Lists.newArrayList(allForms);
+		Set<Dob> symmetrized = Sets.newHashSet(filteredForms);
 		for (Set<Dob> component : symmetrizingComponents) {
 			if (component.size() < 2) continue;
 			Dob generalization = computeGeneralization(Colut.any(component), symmetricEdges, pool.context);
 
-			generalization = pool.dobs.submerge(generalization);
-			// Make sure the generalization is not a cognate of 
-			// something that we already have.
-			boolean cognate = false;
-			for (Dob form : allForms) { cognate |= Unifier.equivalent(form, generalization, allVars); }
-			if (!cognate) symmetrized.add(generalization);
-			symmetrized.addAll(component);
+			symmetrized.removeAll(component);
+			symmetrized.add(pool.dobs.submerge(generalization));
 		}
 		
 		// Find subset relationships
