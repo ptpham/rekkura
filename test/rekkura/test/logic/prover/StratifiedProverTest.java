@@ -212,6 +212,20 @@ public abstract class StratifiedProverTest {
 	}
 	
 	@Test
+	public void alternatingSpecificity() {
+		String[] rawRules = {
+			"{(X)(Y) | <((N)(a)(Y)),true> :- <((P)(X)(Y)),true> }",
+			"{(X) | <((Q)(X)),true> :- <((N)(X)(1)),true> }",
+		};
+		
+		String[][] rawDobs = {
+			{ "((P)(a)(1))" }, { "((N)(a)(1))", "((Q)(a))" }
+		};
+		
+		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
+	}
+	
+	@Test
 	public void cartesianProduct() {
 		String[] rawRules = { 
 				"{| <((index)(1)),true> :- }",

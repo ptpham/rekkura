@@ -107,6 +107,45 @@ public class SimpleGames {
         };
         return KifFormat.genericStringsToRules(raw);
     }
+    
+    public static List<Rule> getJoinButtonsAndLights() {
+    	String[] raw = {
+	    	"(role robot)",
+	    	"(<= (base (p ?x)) (index ?x))",
+	    	"(<= (base (q ?x)) (index ?x))",
+	    	"(<= (base (r ?x)) (index ?x))",
+	    	"(base (step 1))", "(base (step 2))", "(base (step 3))", "(base (step 4))",
+	    	"(base (step 5))", "(base (step 6))", "(base (step 7))",
+	    	"(<= (input robot (move ?u ?v ?w)) (button ?u) (button ?v) (button ?w))",
+	    	"(index 1)", "(index 2)", "(index 3)",
+	    	"(button a)", "(button b)", "(button c)",
+	    	"(init (step 1))",
+	    	"(<= (legal robot (move ?u ?v ?w)) (button ?u) (button ?v) (button ?w))",
+	    	"(<= (next (p ?x)) (movetype ?x a) (not (true (p ?x))))",
+	    	"(<= (next (p ?x)) (movetype ?x b) (true (q ?x)))",
+	    	"(<= (next (p ?x)) (true (p ?x)) (not (movetype ?x a)) (not (movetype ?x b)))",
+	    	"(<= (next (q ?x)) (movetype ?x b) (true (p ?x)))",
+	    	"(<= (next (q ?x)) (true (q ?x)) (not (movetype ?x b)))",
+	    	"(<= (next (r ?x)) (movetype ?x c) (true (q ?x)))",
+	    	"(<= (next (r ?x)) (true (r ?x)) (not (movetype ?x c)))",
+	    	"(<= (next (step ?y)) (true (step ?x)) (successor ?x ?y))",
+	    	"(<= (movetype 1 ?u) (does robot (move ?u ?v ?w)))",
+	    	"(<= (movetype 2 ?v) (does robot (move ?u ?v ?w)))",
+	    	"(<= (movetype 3 ?w) (does robot (move ?u ?v ?w)))",
+	    	"(<= (goal robot 100) (row ?x))",
+	    	"(<= (goal robot 0) (not (row 1)) (not (row 2)) (not (row 3)))",
+	    	"(<= terminal (row ?x))",
+	    	"(<= terminal (true (step 7)))",
+	    	"(<= (row ?x) (true (p ?x)) (true (q ?x)) (true (r ?x)))",
+	    	"(successor 1 2)",
+	    	"(successor 2 3)",
+	    	"(successor 3 4)",
+	    	"(successor 4 5)",
+	    	"(successor 5 6)",
+	    	"(successor 6 7)" };
+
+        return KifFormat.genericStringsToRules(raw);
+    }
 
 	public static List<Rule> getConnectFour() {
 		String[] raw = {
@@ -354,5 +393,8 @@ public class SimpleGames {
 		
 		return KifFormat.genericStringsToRules(raw);
 	}
+	
+	
+	
 
 }
