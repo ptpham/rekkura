@@ -16,6 +16,7 @@ import rekkura.util.Synchron;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 /**
  * This class holds the two major layers in the GgpProtocol layer.
@@ -26,7 +27,7 @@ import com.google.common.collect.Lists;
  */
 public class GgpProtocol {
 
-	public static enum PlayerState { READY, BUSY, DONE }
+	public static enum PlayerState { READY, BUSY, DONE, ABORTED }
 	
 	public static class Start {
 		public final Game.Config config;
@@ -52,6 +53,8 @@ public class GgpProtocol {
 	public static String START_NAME = "start";
 	public static String PLAY_NAME = "play";
 	public static String STOP_NAME = "stop";
+	public static String ABORT_NAME = "abort";
+	public static String PING_NAME = "info";
 	public static String NIL_STRING = "nil";
 	
 	/**
@@ -164,7 +167,7 @@ public class GgpProtocol {
 		public Dob handlePlay(String match, List<Dob> moves) {
 			cleanPlayers();
 			GgpState state = this.players.get(match);
-			if (state == null) return new Dob("Ain't nobody playing that!");
+			if (state == null) return null;
 			state.touch();
 
 			// This condition is necessary because the first
@@ -186,15 +189,19 @@ public class GgpProtocol {
 		public PlayerState handleStop(String match, List<Dob> moves) {
 			cleanPlayers();
 			GgpState state = this.players.get(match);
-			if (state == null) return PlayerState.BUSY;
+			if (state == null) return PlayerState.DONE;
 			state.touch();
 
-			Map<Dob, Dob> actions = Game.convertMovesToActionMap(state.roles, moves);
-			state.player.complete(actions);
+			Map<Dob,Dob> actions = Maps.newHashMap();
+			try { actions = Game.convertMovesToActionMap(state.roles, moves); }
+			catch (Exception e) { e.printStackTrace(); }
+			
+			try { state.player.complete(actions); }
+			catch (Exception e) { e.printStackTrace(); }
 			
 			state.thread.interrupt();
 			this.players.remove(match);
-			
+
 			return PlayerState.DONE;
 		}
 		
@@ -239,6 +246,7 @@ public class GgpProtocol {
 			PLAYER_STATE_DOBS.put(PlayerState.READY, new Dob("ready"));
 			PLAYER_STATE_DOBS.put(PlayerState.BUSY, new Dob("busy"));
 			PLAYER_STATE_DOBS.put(PlayerState.DONE, new Dob("done"));
+			PLAYER_STATE_DOBS.put(PlayerState.ABORTED, new Dob("aborted"));
 		}
 		
 		private DefaultPlayerDemuxer(PlayerHandler handler) {
@@ -249,12 +257,15 @@ public class GgpProtocol {
 		public String handleMessage(String message) {
 			Dob dob = fmt.dobFromString(message);
 			String name = stringAt(dob, 0);
+			if (name.isEmpty()) name = dob.name;
 			
 			String result = "";
 			try {
 				if (name.equals(PLAY_NAME)) result = play(dob);
 				else if (name.equals(START_NAME)) result = start(dob);
 				else if (name.equals(STOP_NAME)) result = stop(dob);
+				else if (name.equals(ABORT_NAME)) result = abort(dob);
+				else if (name.equals(PING_NAME)) result = ping(dob);
 			} catch (Throwable t) { t.printStackTrace(); }
 			
 			return result;
@@ -274,7 +285,18 @@ public class GgpProtocol {
 		
 		private String play(Dob dob) {
 			GgpProtocol.Turn play = dobToTurn(dob);
-			return fmt.toString(handler.handlePlay(stringAt(dob, 1), play.moves));
+			Dob result = handler.handlePlay(stringAt(dob, 1), play.moves);
+			if (result == null) result = PLAYER_STATE_DOBS.get(PlayerState.BUSY);
+			return fmt.toString(result);
+		}
+
+		private String abort(Dob dob) {
+			handler.handleStop(dob.at(1).name, Lists.<Dob>newArrayList());
+			return fmt.toString(PLAYER_STATE_DOBS.get(PlayerState.ABORTED));
+		}
+		
+		private String ping(Dob dob) {
+			return fmt.toString(PLAYER_STATE_DOBS.get(PlayerState.READY));
 		}
 	}
 	
@@ -328,7 +350,8 @@ public class GgpProtocol {
 	}
 	
 	public static GgpProtocol.Turn dobToTurn(Dob dob) {
-		List<Dob> moves = dob.at(2).childCopy();
+		List<Dob> moves = dob.childCopy().subList(2, dob.size());
+		if (dob.toString().contains(NIL_STRING)) moves = Lists.newArrayList();
 		return new Turn(stringAt(dob, 1), moves);
 	}
 	

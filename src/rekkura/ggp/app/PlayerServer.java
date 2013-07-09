@@ -12,7 +12,7 @@ import com.sun.net.httpserver.HttpServer;
 public class PlayerServer {
 
 	public static void main(String args[]) throws IOException {
-		HttpServer server = HttpServer.create(new InetSocketAddress(9148), 32);
+		HttpServer server = HttpServer.create(new InetSocketAddress(9147), 32);
 		
 		server.createContext("/", new ServerHarness(Player.Legal.class));
 		server.setExecutor(Executors.newCachedThreadPool());

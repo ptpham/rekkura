@@ -24,7 +24,7 @@ public class GgpProtocolTest {
 		String start = "(start match_id 1000 ((<= hello)) 2000)";
 		demux.handleMessage(start);
 		
-		String stop = "(stop match_id ())";
+		String stop = "(stop match_id)";
 		demux.handleMessage(stop);
 	}
 	

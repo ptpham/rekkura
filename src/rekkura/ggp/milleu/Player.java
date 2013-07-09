@@ -119,7 +119,7 @@ public abstract class Player implements Runnable {
 		public final void run() {
 			while (!this.isStarted()) waitForInput();
 			this.machine = constructMachine(config.rules);
-			while (true) {
+			while (!isComplete()) {
 				updateState();
 				if (isTerminal()) break;
 				if (this.turn == 0) prepare();
@@ -138,7 +138,7 @@ public abstract class Player implements Runnable {
 				return;
 			}
 
-			while (validState()) waitForInput();
+			while (!isComplete() && validState()) waitForInput();
 			
 			while (!validState()) {
 				this.state = this.machine.nextState(state, getMemory(turn));
