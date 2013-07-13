@@ -19,7 +19,8 @@ public class GgpProtocolTest {
 
 	@Test
 	public void demuxStartAndStop() {
-		PlayerDemuxer demux = GgpProtocol.createDefaultPlayerDemuxer(Player.Legal.class);
+		PlayerDemuxer demux = GgpProtocol
+			.createDefaultPlayerDemuxer(Player.Legal.class, "Unamed");
 		
 		String start = "(start match_id 1000 ((<= hello)) 2000)";
 		demux.handleMessage(start);

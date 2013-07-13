@@ -17,9 +17,10 @@ public class ServerHarness implements HttpHandler {
 
 	public final GgpProtocol.PlayerDemuxer demuxer;
 	
-	public <U extends Player> ServerHarness(Class<U> player) { 
-		this(GgpProtocol.createDefaultPlayerDemuxer(player)); 
+	public <U extends Player> ServerHarness(Class<U> player, String name) { 
+		this(GgpProtocol.createDefaultPlayerDemuxer(player, name)); 
 	}
+	
 	public ServerHarness(GgpProtocol.PlayerDemuxer demuxer) {
 		this.demuxer = demuxer;
 	}

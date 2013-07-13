@@ -11,12 +11,17 @@ import com.sun.net.httpserver.HttpServer;
 
 public class PlayerServer {
 
-	public static void main(String args[]) throws IOException {
-		HttpServer server = HttpServer.create(new InetSocketAddress(9147), 32);
+	public static void runWith(Class<? extends Player> player, String name, int port) throws IOException {
+		HttpServer server = HttpServer.create(new InetSocketAddress(port), 32);
 		
-		server.createContext("/", new ServerHarness(Player.Legal.class));
+		server.createContext("/", new ServerHarness(player, name));
 		server.setExecutor(Executors.newCachedThreadPool());
 		server.start();
+
+	}
+	
+	public static void main(String args[]) throws IOException {
+		runWith(Player.Legal.class, "Rekkura-Legal", 9148);
 	}
 	
 }

@@ -1,6 +1,5 @@
 package rekkura.ggp.net;
 
-import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,10 @@ import com.google.common.collect.Maps;
  */
 public class GgpProtocol {
 
-	public static enum PlayerState { READY, BUSY, DONE, ABORTED }
+	public static enum PlayerState {
+		READY, BUSY, DONE, ABORTED, AVAILABLE;
+		public final Dob dob = new Dob(name().toLowerCase());
+	}
 	
 	public static class Start {
 		public final Game.Config config;
@@ -133,7 +135,7 @@ public class GgpProtocol {
 		public final Map<String, GgpState> players = Synchron.newHashmap();
 		
 		private DefaultPlayerHandler(Reffle.Factory<P> factory) { this.factory = factory; }
-		private static final int PLAY_EPSILON = 200;
+		private static final int PLAY_EPSILON = 500;
 		private static final int START_EPSILON = 500;
 		
 		@Override
@@ -239,25 +241,18 @@ public class GgpProtocol {
 	public static class DefaultPlayerDemuxer implements PlayerDemuxer {
 		private final KifFormat fmt = new KifFormat();
 		private PlayerHandler handler;
+		public final String name;
 		
-		public static EnumMap<PlayerState, Dob> PLAYER_STATE_DOBS = 
-			new EnumMap<PlayerState, Dob>(PlayerState.class);
-		{
-			PLAYER_STATE_DOBS.put(PlayerState.READY, new Dob("ready"));
-			PLAYER_STATE_DOBS.put(PlayerState.BUSY, new Dob("busy"));
-			PLAYER_STATE_DOBS.put(PlayerState.DONE, new Dob("done"));
-			PLAYER_STATE_DOBS.put(PlayerState.ABORTED, new Dob("aborted"));
-		}
-		
-		private DefaultPlayerDemuxer(PlayerHandler handler) {
+		private DefaultPlayerDemuxer(PlayerHandler handler, String name) {
 			this.handler = handler;
+			this.name = name;
 		}
 
 		@Override
-		public String handleMessage(String message) {
+		public String handleMessage(String message) {			
 			Dob dob = fmt.dobFromString(message);
-			String name = stringAt(dob, 0);
-			if (name.isEmpty()) name = dob.name;
+			String name = stringAt(dob, 0).toLowerCase();
+			if (name.isEmpty()) name = dob.name.toLowerCase();
 			
 			String result = "";
 			try {
@@ -274,35 +269,51 @@ public class GgpProtocol {
 		private String stop(Dob dob) {
 			GgpProtocol.Turn stop = dobToTurn(dob);
 			PlayerState state = handler.handleStop(stop.match, stop.moves);
-			return fmt.toString(PLAYER_STATE_DOBS.get(state));
+			return fmt.toString(state.dob);
 		}
 
 		private String start(Dob dob) {
 			GgpProtocol.Start config = toStart(dob);
 			PlayerState state = handler.handleStart(config.match, config.role, config.config);
-			return fmt.toString(PLAYER_STATE_DOBS.get(state));
+			return fmt.toString(state.dob);
 		}
 		
 		private String play(Dob dob) {
 			GgpProtocol.Turn play = dobToTurn(dob);
 			Dob result = handler.handlePlay(stringAt(dob, 1), play.moves);
-			if (result == null) result = PLAYER_STATE_DOBS.get(PlayerState.BUSY);
+			if (result == null) result = PlayerState.BUSY.dob;
 			return fmt.toString(result);
 		}
 
 		private String abort(Dob dob) {
 			handler.handleStop(dob.at(1).name, Lists.<Dob>newArrayList());
-			return fmt.toString(PLAYER_STATE_DOBS.get(PlayerState.ABORTED));
+			return fmt.toString(PlayerState.ABORTED.dob);
 		}
 		
 		private String ping(Dob dob) {
-			return fmt.toString(PLAYER_STATE_DOBS.get(PlayerState.READY));
+			Dob namePair = makePair("name", name);
+			Dob statusPair = makePair("status", PlayerState.AVAILABLE.dob);
+			return fmt.toString(new Dob(namePair, statusPair));
 		}
 	}
 	
-	public static <P extends Player> DefaultPlayerDemuxer createDefaultPlayerDemuxer(Class<P> type) {
+	public static Dob makePair(String first, String second) {
+		return new Dob(new Dob(first), new Dob(second));
+	}
+	
+	public static Dob makePair(String first, Dob second) {
+		return new Dob(new Dob(first), second);
+	}
+	
+	public static <P extends Player> DefaultPlayerDemuxer
+	createDefaultPlayerDemuxer(Class<P> type) {
+		return createDefaultPlayerDemuxer(type, "Rekkura-" + type.getCanonicalName());
+	}
+	
+	public static <P extends Player> DefaultPlayerDemuxer
+	createDefaultPlayerDemuxer(Class<P> type, String name) {
 		Reffle.Factory<P> factory = Reffle.createFactory(type);
-		return new DefaultPlayerDemuxer(new DefaultPlayerHandler<P>(factory));
+		return new DefaultPlayerDemuxer(new DefaultPlayerHandler<P>(factory), name);
 	}
 	
 	public static <P extends Player> DefaultPlayerHandler<P> createDefaultPlayerHandler(Class<P> type) {
@@ -350,8 +361,7 @@ public class GgpProtocol {
 	}
 	
 	public static GgpProtocol.Turn dobToTurn(Dob dob) {
-		List<Dob> moves = dob.childCopy().subList(2, dob.size());
-		if (dob.toString().contains(NIL_STRING)) moves = Lists.newArrayList();
+		List<Dob> moves = dob.at(2).childCopy();
 		return new Turn(stringAt(dob, 1), moves);
 	}
 	
