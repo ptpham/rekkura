@@ -50,6 +50,10 @@ public class GgpProtocol {
 			this.match = match;
 			this.moves = Lists.newArrayList(moves);
 		}
+		
+		@Override public String toString() {
+			return "[Match: " + match + ", Moves: " + moves + "]";
+		}
 	}
 	
 	public static String START_NAME = "start";
@@ -249,7 +253,7 @@ public class GgpProtocol {
 		}
 
 		@Override
-		public String handleMessage(String message) {			
+		public String handleMessage(String message) {
 			Dob dob = fmt.dobFromString(message);
 			String name = stringAt(dob, 0).toLowerCase();
 			if (name.isEmpty()) name = dob.name.toLowerCase();
@@ -281,6 +285,7 @@ public class GgpProtocol {
 		private String play(Dob dob) {
 			GgpProtocol.Turn play = dobToTurn(dob);
 			Dob result = handler.handlePlay(stringAt(dob, 1), play.moves);
+			
 			if (result == null) result = PlayerState.BUSY.dob;
 			return fmt.toString(result);
 		}
@@ -361,7 +366,9 @@ public class GgpProtocol {
 	}
 	
 	public static GgpProtocol.Turn dobToTurn(Dob dob) {
-		List<Dob> moves = dob.at(2).childCopy();
+		Dob raw = dob.at(2);
+		List<Dob> moves = raw.childCopy();
+		if (moves.isEmpty() && !raw.name.toLowerCase().equals(NIL_STRING)) moves.add(raw);
 		return new Turn(stringAt(dob, 1), moves);
 	}
 	
