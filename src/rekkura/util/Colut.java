@@ -378,5 +378,11 @@ public class Colut {
 		List<U> result = Lists.newArrayList();
 		for (U u : ordering) if (!remove.contains(u)) result.add(u);
 		return result;
+	}
+
+	public static <U,V> Map<V, U> uniqeMapInvert(Map<U,V> index) {
+		Map<V,U> result = Maps.newHashMap();
+		for (U u : index.keySet()) result.put(index.get(u), u);
+		return result;
 	}	
 }
