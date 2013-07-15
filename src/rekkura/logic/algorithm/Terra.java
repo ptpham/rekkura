@@ -74,24 +74,21 @@ public class Terra {
 	 * @param truths
 	 * @return
 	 */
-	public static Set<Dob> applyBodyExpansion(Rule rule, final ListMultimap<Atom, Dob> support, 
+	public static List<Map<Dob,Dob>> applyBodyExpansion(Rule rule, final ListMultimap<Atom, Dob> support, 
 			Pool pool, Set<Dob> truths) {
+		List<Map<Dob,Dob>> result = Lists.newArrayList();
+		
 		// This block deals with the vacuous rule special case ...
 		Dob varless = applyVarless(rule, truths);
-		if (varless != null) return Sets.newHashSet(pool.dobs.submerge(varless));
+		if (varless != null) {
+			result.add(Maps.<Dob,Dob>newHashMap());
+			return result;
+		}
 
-		// Sort the dimensions of the space so that the smallest ones come first.
-		List<Atom> positives = Atom.filterPositives(rule.body);
-		sortBySupportSize(positives, support);
-		
-		// Then greedily find a variable cover and resort for the final support
-		List<Atom> expanders = Terra.greedyVarCover(positives, rule.vars);
-		if (expanders == null) return Sets.newHashSet();
-		sortBySupportSize(expanders, support);
-
-		// Add all remaining positives and negatives to the list to be checked
-		List<Atom> check = Lists.newArrayList(rule.body);
-		check.removeAll(expanders);
+		// Split into expanders and checkers
+		List<Atom> expanders = getGreedyExpanders(rule, support);
+		if (expanders == null) return result;
+		List<Atom> check = Colut.deselect(rule.body, expanders);
 
 		// Construct iterator and expand
 		List<List<Unification>> space = constructUnificationSpace(rule, support, expanders);
@@ -99,10 +96,23 @@ public class Terra {
 		return expandBodyAssignments(rule, check, iterator, pool, truths);
 	}
 
-	public static Set<Dob> expandBodyAssignments(Rule rule, List<Atom> check,
+	public static List<Atom> getGreedyExpanders(Rule rule,
+			final ListMultimap<Atom, Dob> support) {
+		// Sort the dimensions of the space so that the smallest ones come first.
+		List<Atom> positives = Atom.filterPositives(rule.body);
+		sortBySupportSize(positives, support);
+		
+		// Then greedily find a variable cover and resort for the final support
+		List<Atom> expanders = Terra.greedyVarCover(positives, rule.vars);
+		if (expanders == null) return null;
+		sortBySupportSize(expanders, support);
+		return expanders;
+	}
+
+	public static List<Map<Dob, Dob>> expandBodyAssignments(Rule rule, List<Atom> check,
 		Cartesian.AdvancingIterator<Unification> iterator, Pool pool, Set<Dob> truths) {
 		
-		Set<Dob> result = Sets.newHashSet();
+		List<Map<Dob,Dob>> result = Lists.newArrayList();
 		Unification unify = Unification.from(rule.vars);
 		
 		while (iterator.hasNext()) {
@@ -127,10 +137,7 @@ public class Terra {
 			
 			// Final check for distincts before rendering head
 			if (converted != null && unify.isValid()) {
-				if (rule.evaluateDistinct(converted)) {
-					Dob generated = renderHead(converted, rule, pool);
-					result.add(generated);
-				}
+				if (rule.evaluateDistinct(converted)) result.add(converted);
 			} else if (failure >= 0) iterator.advance(failure);
 		}
 		return result;
@@ -187,6 +194,16 @@ public class Terra {
 	// TODO: Clean this up
 	public static Dob renderHead(Map<Dob, Dob> unify, Rule rule, Pool pool) {
 		return pool.dobs.submerge(Unifier.replace(rule.head.dob, unify));
+	}
+	
+	public static Dob renderGround(Dob dob, Map<Dob,Dob> unify, Pool pool) {
+		return pool.dobs.submerge(Unifier.replace(dob, unify));
+	}
+	
+	public static Set<Dob> renderHeads(Iterable<Map<Dob,Dob>> unifies, Rule rule, Pool pool) {
+		Set<Dob> result = Sets.newHashSet();
+		for (Map<Dob,Dob> unify : unifies) result.add(renderHead(unify, rule, pool));
+		return result;
 	}
 	
 	/**

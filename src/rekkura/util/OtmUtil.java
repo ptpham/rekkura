@@ -238,4 +238,10 @@ public class OtmUtil {
         }
 		return indexed;
 	}
+	
+	public static <U,V> List<List<V>> select(Multimap<U,V> base, Iterable<U> selection) {
+		List<List<V>> result = Lists.newArrayList();
+		for (U u : selection) result.add(Lists.newArrayList(base.get(u)));
+		return result;
+	}
 }

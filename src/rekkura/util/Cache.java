@@ -13,9 +13,10 @@ import com.google.common.collect.Maps;
 public class Cache<U, V> {
 
 	public final Map<U, V> stored = Maps.newHashMap();
-	private final Function<U, V> fn;
-	private final Function<V, Boolean> checker;
+	private Function<V, Boolean> checker;
+	private Function<U, V> fn;
 	
+	private Cache() { this(null, null); }
 	protected Cache(Function<U, V> fn) { this(fn, null); }
 	protected Cache(Function<U, V> fn, Function<V, Boolean> checker) {
 		this.checker = checker;
@@ -52,6 +53,16 @@ public class Cache<U, V> {
 	public static <U, V> Cache<U, V> create(Function<U, V> fn,
 		Function<V, Boolean> checker) {
 		return new Cache<U, V>(fn, checker);
+	}
+	
+	public static <U> Cache<U,Integer> createCounter() {
+		Cache<U,Integer> result = new Cache<U,Integer>();
+		result.fn = new Function<U,Integer>() {
+			int next = 0;
+			@Override public Integer apply(U u)
+			{ return next++; }
+		};
+		return result;
 	}
 	
 	public String toString() {

@@ -39,6 +39,7 @@ public class Ruletta {
 	 * Memory is O(R^2).
 	 */
 	public Multimap<Dob, Rule> bodyToGenRule;
+	public Multimap<Rule, Rule> ruleToDescRule;
 
 	/**
 	 * result holds the set of rules that may generate dobs for the body
@@ -109,10 +110,10 @@ public class Ruletta {
 			}
 		}
 		
-		Multimap<Rule, Rule> ruleToDescRule = HashMultimap.create();
-		Multimaps.invertFrom(result.ruleToGenRule, ruleToDescRule);
+		result.ruleToDescRule = HashMultimap.create();
+		Multimaps.invertFrom(result.ruleToGenRule, result.ruleToDescRule);
 		
-		result.ruleOrder = Topper.generalTopSort(ruleToDescRule, result.ruleRoots);
+		result.ruleOrder = Topper.generalTopSort(result.ruleToDescRule, result.ruleRoots);
 		return result;
 	}
 	

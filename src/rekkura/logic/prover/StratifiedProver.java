@@ -1,6 +1,8 @@
 package rekkura.logic.prover;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import rekkura.logic.algorithm.Terra;
@@ -78,7 +80,8 @@ public abstract class StratifiedProver {
 	public static Set<Dob> expandRule(Rule rule, Set<Dob> truths, Cachet cachet, Pool pool) {
 		// Prepare the domains of each positive body in the rule
 		ListMultimap<Atom, Dob> assignments = Terra.getBodySpace(rule, cachet);
-		return Terra.applyBodyExpansion(rule, assignments, pool, truths);
+		List<Map<Dob,Dob>> unifies = Terra.applyBodyExpansion(rule, assignments, pool, truths);
+		return Terra.renderHeads(unifies, rule, pool);
 	}
 	
 	public static interface Factory { StratifiedProver create(Collection<Rule> rules); }

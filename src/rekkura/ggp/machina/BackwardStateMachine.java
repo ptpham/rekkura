@@ -46,7 +46,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 
 	@Override
 	public Set<Dob> getInitial() {
-		return extractTrues(proverPass(EMPTY_STATE, INIT_QUERY, INIT_UNIFY));
+		return extract(TRUE_QUERY, proverPass(EMPTY_STATE, INIT_QUERY, INIT_UNIFY));
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	@Override
 	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
 		Iterable<Dob> complete = Iterables.concat(state, actions.values());
-		return extractTrues(proverPass(complete, NEXT_QUERY, NEXT_UNIFY));
+		return extract(TRUE_QUERY, proverPass(complete, NEXT_QUERY, NEXT_UNIFY));
 	}
 
 	@Override

@@ -367,4 +367,16 @@ public class Colut {
 		}
 		return result;
 	}
+
+	public static <U> List<U> select(List<U> ordering, Collection<U> keep) {
+		List<U> result = Lists.newArrayList();
+		for (U u : ordering) if (keep.contains(u)) result.add(u);
+		return result;
+	}
+
+	public static <U> List<U> deselect(List<U> ordering, Collection<U> remove) {
+		List<U> result = Lists.newArrayList();
+		for (U u : ordering) if (!remove.contains(u)) result.add(u);
+		return result;
+	}	
 }
