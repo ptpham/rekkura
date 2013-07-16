@@ -1,6 +1,7 @@
 package rekkura.util;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 import com.google.common.base.Joiner;
 
@@ -20,6 +21,11 @@ public class Reffle {
 	 * @param <U>
 	 */
 	public interface Factory<U> { U create(Object... args); }
+	
+	public static Object lightInvoke(Method method, Object target, Object... args) {
+		try { return method.invoke(target, args); }
+		catch (Exception e) { return e; }
+	}
 	
 	/**
 	 * This method finds the constructor that satisfies the given prototype.

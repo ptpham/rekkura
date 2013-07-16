@@ -384,5 +384,11 @@ public class Colut {
 		Map<V,U> result = Maps.newHashMap();
 		for (U u : index.keySet()) result.put(index.get(u), u);
 		return result;
-	}	
+	}
+	
+	public static <U> boolean equals(U first, U second) {
+		if (first == null ^ second == null) return false;
+		if (first == second) return true;
+		return first.equals(second);
+	}
 }

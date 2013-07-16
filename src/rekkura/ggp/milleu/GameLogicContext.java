@@ -124,7 +124,7 @@ public class GameLogicContext {
 		return this.pool.dobs.submerge(new Dob(name));
 	}
 	
-	public Map<Dob, Integer> extractGoals(Set<Dob> dobs) {
+	public Map<Dob, Integer> extractGoals(Iterable<Dob> dobs) {
 		Map<Dob, Integer> result = Maps.newHashMap();
 		for (Dob dob : dobs) {
 			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, pool.context.getAll());
