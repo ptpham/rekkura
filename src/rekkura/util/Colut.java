@@ -134,7 +134,7 @@ public class Colut {
 	}
 	
 	public static <U, V> V get(Map<U, V> map, U val, V def) {
-		if (map == null) return def;
+		if (map == null || val == null) return def;
 		if (!map.containsKey(val)) return def;
 		return map.get(val);
 	}
@@ -390,5 +390,12 @@ public class Colut {
 		if (first == null ^ second == null) return false;
 		if (first == second) return true;
 		return first.equals(second);
+	}
+
+	public static <U,V> List<V> getAll(Map<U,V> map, Iterable<U> keys) {
+		List<V> result = Lists.newArrayList();
+		if (map == null || keys == null) return result;
+		for (U u : keys) result.add(map.get(u));
+		return result;
 	}
 }

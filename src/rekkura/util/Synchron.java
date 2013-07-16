@@ -1,5 +1,8 @@
 package rekkura.util;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,5 +81,9 @@ public class Synchron {
 	public static boolean lightJoin(Thread thread) {
 		try { thread.join(); return true; }
 		catch (InterruptedException e) { return false; }
+	}
+
+	public static <U> List<U> newList() {
+		return Collections.synchronizedList(new ArrayList<U>());
 	}
 }
