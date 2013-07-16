@@ -30,7 +30,11 @@ public class ServerHarness implements HttpHandler {
 		InputStream in = exchange.getRequestBody();
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		
-		String message = reader.readLine();
+		String message = "", next = reader.readLine();
+		while (next != null) {
+			message += next;
+			next = reader.readLine();
+		}
 		String response = this.demuxer.handleMessage(message);
 		if (response == null || response.isEmpty()) response = "Invalid Protocol Exception";
 		in.close();
