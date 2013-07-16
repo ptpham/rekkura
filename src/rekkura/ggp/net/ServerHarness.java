@@ -32,7 +32,7 @@ public class ServerHarness implements HttpHandler {
 		
 		String message = "", next = reader.readLine();
 		while (next != null) {
-			message += next;
+			message += " " + next;
 			next = reader.readLine();
 		}
 		String response = this.demuxer.handleMessage(message);
