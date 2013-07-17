@@ -49,6 +49,7 @@ public class GameLogicContext {
 	public final Map<Dob, Dob> EMTPY_UNIFY = Maps.newHashMap();
     public final Map<Dob, Dob> BASE_UNIFY = Maps.newHashMap(); // for propnet
     public final Map<Dob, Dob> INPUT_UNIFY = Maps.newHashMap(); // for propnet
+    public final ImmutableList<Dob> GENERIC_VAR_LIST;
 	
 	public final String ROLE_VAR_NAME = "[GLC_ROLE]";
 	public final String GENERIC_VAR_NAME = "[GLC_GEN]";
@@ -87,6 +88,7 @@ public class GameLogicContext {
 
 		this.ROLE_VAR = getTerminalDob(ROLE_VAR_NAME);
 		this.GENERIC_VAR = getTerminalDob(GENERIC_VAR_NAME);
+		this.GENERIC_VAR_LIST = ImmutableList.of(ROLE_VAR, GENERIC_VAR);
 		
 		pool.allVars.add(ROLE_VAR);
 		pool.allVars.add(GENERIC_VAR);
@@ -122,7 +124,7 @@ public class GameLogicContext {
 		return this.pool.dobs.submerge(new Dob(name));
 	}
 	
-	public Map<Dob, Integer> extractGoals(Set<Dob> dobs) {
+	public Map<Dob, Integer> extractGoals(Iterable<Dob> dobs) {
 		Map<Dob, Integer> result = Maps.newHashMap();
 		for (Dob dob : dobs) {
 			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, pool.context.getAll());
@@ -141,12 +143,12 @@ public class GameLogicContext {
 		return result;
 	}
 	
-	public Set<Dob> extractTrues(Set<Dob> dobs) {
+	public Set<Dob> extract(Dob query, Set<Dob> dobs) {
 		Set<Dob> result = Sets.newHashSetWithExpectedSize(dobs.size());
 		for (Dob dob : dobs) {
-			boolean keep = !dob.isTerminal() 
-				&& dob.size() > 0 && dob.at(0) == this.TRUE;
-			if (keep) result.add(dob);
+			if (Unifier.unifyVars(query, dob, GENERIC_VAR_LIST) != null) {
+				result.add(dob);
+			}
 		}
 		return result;
 	}
@@ -154,8 +156,7 @@ public class GameLogicContext {
 	public ListMultimap<Dob, Dob> extractActions(Collection<Dob> truths) {
 		ListMultimap<Dob, Dob> result = ArrayListMultimap.create();
 		for (Dob dob : truths) {
-			if (dob.size() < 3) continue;
-			if (dob.at(0) != this.DOES) continue;
+			if (Unifier.unifyVars(DOES_QUERY, dob, GENERIC_VAR_LIST) == null) continue;
 			result.put(dob.at(1), dob);
 		}
 		return result;
@@ -174,10 +175,8 @@ public class GameLogicContext {
 		List<Dob> queries = Lists.newArrayList(INIT_QUERY,
 			NEXT_QUERY, GOAL_QUERY, LEGAL_QUERY, TRUE_QUERY, 
 			DOES_QUERY, BASE_QUERY, INPUT_QUERY);
-		List<Dob> vars = Lists.newArrayList(ROLE_VAR, GENERIC_VAR);
-		
 		List<Rule> result = Lists.newArrayList();
-		for (Dob dob : queries) result.add(Rule.asVacuous(dob, vars));
+		for (Dob dob : queries) result.add(Rule.asVacuous(dob, GENERIC_VAR_LIST));
 		return result;
 	}
 }

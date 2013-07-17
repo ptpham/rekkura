@@ -1,12 +1,25 @@
 package rekkura.state.algorithm;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 import rekkura.util.UnionFind;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * This class may move in the future. It contains very general
@@ -314,13 +327,17 @@ public class Topper {
 		
 		return result;
 	}
+
+	public static <U> boolean hasCycle(Multimap<U, U> edges) {
+		Set<U> all = Colut.union(edges.keySet(), edges.values());
+		return topSort(edges, findRoots(edges)).elementSet().size() < all.size();
+	}
 	
 	private static <U> Set<U> degeneratedOuts(Multimap<U, U> edges) {
 		Set<U> result = Sets.newHashSet();
 		for (U u : edges.keySet()) if (edges.get(u).size() == 1) result.add(u);
 		return result;
 	}
-	
 }
 
 

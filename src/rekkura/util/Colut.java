@@ -134,7 +134,7 @@ public class Colut {
 	}
 	
 	public static <U, V> V get(Map<U, V> map, U val, V def) {
-		if (map == null) return def;
+		if (map == null || val == null) return def;
 		if (!map.containsKey(val)) return def;
 		return map.get(val);
 	}
@@ -365,6 +365,37 @@ public class Colut {
 			if (remove.contains(key)) continue;
 			result.put(key, map.get(key));
 		}
+		return result;
+	}
+
+	public static <U> List<U> select(List<U> ordering, Collection<U> keep) {
+		List<U> result = Lists.newArrayList();
+		for (U u : ordering) if (keep.contains(u)) result.add(u);
+		return result;
+	}
+
+	public static <U> List<U> deselect(List<U> ordering, Collection<U> remove) {
+		List<U> result = Lists.newArrayList();
+		for (U u : ordering) if (!remove.contains(u)) result.add(u);
+		return result;
+	}
+
+	public static <U,V> Map<V, U> uniqeMapInvert(Map<U,V> index) {
+		Map<V,U> result = Maps.newHashMap();
+		for (U u : index.keySet()) result.put(index.get(u), u);
+		return result;
+	}
+	
+	public static <U> boolean equals(U first, U second) {
+		if (first == null ^ second == null) return false;
+		if (first == second) return true;
+		return first.equals(second);
+	}
+
+	public static <U,V> List<V> getAll(Map<U,V> map, Iterable<U> keys) {
+		List<V> result = Lists.newArrayList();
+		if (map == null || keys == null) return result;
+		for (U u : keys) result.add(map.get(u));
 		return result;
 	}
 }

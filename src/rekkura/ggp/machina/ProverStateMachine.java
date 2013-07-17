@@ -31,7 +31,7 @@ public class ProverStateMachine extends GameLogicContext implements GgpStateMach
 	
 	@Override
 	public Set<Dob> getInitial() {
-		return extractTrues(proverPass(Lists.<Dob>newArrayList(), INIT_UNIFY));
+		return extract(TRUE_QUERY, proverPass(Lists.<Dob>newArrayList(), INIT_UNIFY));
 	}
 
 	@Override public boolean isTerminal(Set<Dob> dobs) {
@@ -46,7 +46,7 @@ public class ProverStateMachine extends GameLogicContext implements GgpStateMach
 	@Override
 	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
 		Iterable<Dob> truths = Iterables.concat(state, actions.values());
-		return extractTrues(proverPass(truths, NEXT_UNIFY));
+		return extract(TRUE_QUERY, proverPass(truths, NEXT_UNIFY));
 	}
 
 	@Override
