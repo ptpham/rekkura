@@ -48,7 +48,6 @@ public class MonteCarloPlayer extends ProverBased {
 		Multiset<Dob> goals = HashMultiset.create();
 		
 		RankedCarry<Integer, Dob> best = RankedCarry.createReverseNatural(-Integer.MIN_VALUE, null);
-		
 		while (validState()) {
 			if (!computeWave(playerActions, goals)) break;
 			

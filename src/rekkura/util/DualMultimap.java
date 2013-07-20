@@ -30,6 +30,10 @@ public class DualMultimap<U, V> {
 		removeValueFrom(v, forward.entries().iterator());
 	}
 	
+	public boolean putDual(U u, V v) {
+		return forward.put(u, v) || backward.put(v, u);
+	}
+	
 	private static <U, V> void removeValueFrom(U u, Iterator<Map.Entry<V, U>> iterator) {
 		while (iterator.hasNext()) {
 			U value = iterator.next().getValue();

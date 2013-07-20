@@ -27,7 +27,7 @@ public class Cartesian {
 			{ return asIterator(candidates); }
 		};
 	}
-	
+
 	public static <U> MultimapIterator<U> asIterator(Multimap<U,U> edges, List<U> roots, int limit) {
 		return new MultimapIterator<U>(edges, roots, limit);
 	}

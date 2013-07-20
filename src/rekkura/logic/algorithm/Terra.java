@@ -74,7 +74,7 @@ public class Terra {
 	 * @param truths
 	 * @return
 	 */
-	public static List<Map<Dob,Dob>> applyBodyExpansion(Rule rule, final ListMultimap<Atom, Dob> support, 
+	public static List<Map<Dob,Dob>> applyBodyExpansion(Rule rule, ListMultimap<Atom, Dob> support, 
 			Pool pool, Set<Dob> truths) {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
 		
@@ -302,4 +302,5 @@ public class Terra {
 		if (!checkAtoms(unify, body, truths, pool)) return null;
 		return unify;
 	}
+
 }

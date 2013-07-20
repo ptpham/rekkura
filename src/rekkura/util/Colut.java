@@ -143,7 +143,7 @@ public class Colut {
 		return get(map, val, null);
 	}
 	
-	public static <U> Set<U> intersection(Collection<U> first, Collection<U> second) {
+	public static <U> Set<U> intersection(Iterable<U> first, Collection<U> second) {
 		Set<U> result = Sets.newHashSet(first);
 		result.retainAll(second);
 		return result;
@@ -187,6 +187,10 @@ public class Colut {
 	public static <U> U randomSelection(List<U> vals, Random rand) {
 		int index = rand.nextInt(vals.size());
 		return vals.get(index);
+	}
+	
+	public static <U> U randomSelection(List<U> vals) {
+		return randomSelection(vals, new Random());
 	}
 	
 	public static <U> List<U> newArrayListOfNulls(int num) {
@@ -397,5 +401,10 @@ public class Colut {
 		if (map == null || keys == null) return result;
 		for (U u : keys) result.add(map.get(u));
 		return result;
+	}
+
+	public static <U> U firstIn(Iterable<U> elems, Collection<U> s) {
+		for (U u : elems) if (contains(s, u)) return u;
+		return null;
 	}
 }

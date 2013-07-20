@@ -60,8 +60,8 @@ public class KifFormat extends LogicFormat {
 		s = s.trim();
 		
 		if (!s.startsWith("(") || !s.endsWith(")")) return new Dob(s);
-		
 		s = s.substring(1, s.length() - 1);
+		if (!s.contains(" ") && !s.contains("(") && !s.contains(")")) return new Dob(s);
 		
 		List<Dob> children = Lists.newArrayList();
 		String[] parts = s.split("\\s+");
@@ -84,7 +84,6 @@ public class KifFormat extends LogicFormat {
 			}
 		}
 		
-		if (children.size() == 1) return children.get(0);
 		return new Dob(children);
 	}
 

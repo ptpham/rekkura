@@ -1,9 +1,24 @@
 package rekkura.util;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
 
 import com.google.common.base.Function;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 
 /**
  * (One-to-Many Utilities)
@@ -242,6 +257,13 @@ public class OtmUtil {
 	public static <U,V> List<List<V>> select(Multimap<U,V> base, Iterable<U> selection) {
 		List<List<V>> result = Lists.newArrayList();
 		for (U u : selection) result.add(Lists.newArrayList(base.get(u)));
+		return result;
+	}
+
+	public static <U,V> Multimap<V,U> invertMap(Map<U, V> raw) {
+		if (raw == null) return null;
+		Multimap<V,U> result = HashMultimap.create();
+		Multimaps.invertFrom(Multimaps.forMap(raw), result);
 		return result;
 	}
 }

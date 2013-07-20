@@ -53,9 +53,17 @@ public class KifFormatTest {
 	}
 	
 	@Test
-	public void dobCompression() {
+	public void dobSingleParen() {
 		String raw = "(proposition)";
 		Dob proposition = fmt.dobFromString(raw);
 		assertEquals(raw, proposition.toString());
 	}
+	
+	@Test
+	public void dobDoubleParen() {
+		String raw = "((proposition))";
+		Dob proposition = fmt.dobFromString(raw);
+		assertEquals(raw, proposition.toString());
+	}
+
 }

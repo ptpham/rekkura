@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import rekkura.logic.algorithm.Gondwana;
 import rekkura.logic.algorithm.Terra;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
@@ -80,7 +81,8 @@ public abstract class StratifiedProver {
 	public static Set<Dob> expandRule(Rule rule, Set<Dob> truths, Cachet cachet, Pool pool) {
 		// Prepare the domains of each positive body in the rule
 		ListMultimap<Atom, Dob> assignments = Terra.getBodySpace(rule, cachet);
-		List<Map<Dob,Dob>> unifies = Terra.applyBodyExpansion(rule, assignments, pool, truths);
+//		List<Map<Dob,Dob>> unifies = Terra.applyBodyExpansion(rule, assignments, pool, truths);
+		List<Map<Dob,Dob>> unifies = Gondwana.applyLinearJoin(rule, assignments, pool, truths);
 		return Terra.renderHeads(unifies, rule, pool);
 	}
 	

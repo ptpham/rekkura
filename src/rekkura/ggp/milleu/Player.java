@@ -13,7 +13,7 @@ import rekkura.util.Colut;
 import rekkura.util.Synchron;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.ListMultimap;
 
 /**
  * A {@link Player} instance is responsible for playing
@@ -111,8 +111,8 @@ public abstract class Player implements Runnable {
 		
 		protected Game.Decision anyDecision() {
 			Game.Turn turn = this.getTurn();
-			Multimap<Dob, Dob> actions = this.machine.getActions(turn.state);
-			return new Game.Decision(turn.turn, Colut.any(actions.get(this.role))); 
+			ListMultimap<Dob, Dob> actions = this.machine.getActions(turn.state);
+			return new Game.Decision(turn.turn, Colut.randomSelection(actions.get(this.role))); 
 		}
 		
 		@Override
