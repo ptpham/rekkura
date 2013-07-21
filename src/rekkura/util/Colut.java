@@ -379,6 +379,7 @@ public class Colut {
 	}
 
 	public static <U> List<U> deselect(List<U> ordering, Collection<U> remove) {
+		if (remove == null) return Lists.newArrayList(ordering);
 		List<U> result = Lists.newArrayList();
 		for (U u : ordering) if (!remove.contains(u)) result.add(u);
 		return result;

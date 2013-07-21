@@ -53,6 +53,7 @@ public class Cartesian {
 	
 	public static interface AdvancingIterator<U> extends Iterator<List<U>> {
 		public void advance(int dim);
+		public int traversed();
 	}
 	
 	/**
@@ -68,6 +69,7 @@ public class Cartesian {
 		private final List<List<U>> candidates;
 		private List<U> prepared;
 		private boolean hasPrepared;
+		private int traversed;
 
 		private ListListIterator(List<List<U>> candidates) {
 			this.candidates = candidates;
@@ -99,6 +101,7 @@ public class Cartesian {
 			if (!hasNext()) throw new NoSuchElementException();
 			List<U> result = Lists.newArrayList(prepared);
 			this.hasPrepared = false;
+			traversed++;
 			return result;
 		}
 		
@@ -134,6 +137,9 @@ public class Cartesian {
 
 		@Override public void remove() 
 		{ throw new IllegalAccessError("Remove not allowed!"); }
+
+		@Override public int traversed() { return traversed; }
+		
 	}
 	
 	public static class MultimapIterator<U> implements AdvancingIterator<U> {
@@ -142,6 +148,7 @@ public class Cartesian {
 		private final Multimap<U,U> edges;
 		
 		private List<U> next;
+		private int traversed;
 
 		public MultimapIterator(Multimap<U,U> edges, List<U> roots, int limit) {
 			Preconditions.checkArgument(limit >= 0);
@@ -165,6 +172,7 @@ public class Cartesian {
 			if (!hasNext()) throw new NoSuchElementException();
 			List<U> result = this.next;
 			next = null;
+			traversed++;
 			return result;
 		}
 		
@@ -206,6 +214,8 @@ public class Cartesian {
 		
 		@Override public void remove() 
 		{ throw new IllegalAccessError("Remove not allowed!"); }
+
+		@Override public int traversed() { return traversed; }
 	}
 	
 	/**
@@ -238,5 +248,10 @@ public class Cartesian {
 		for (int i = dim + 1; i < pos.length; i++) {
 			pos[i] = sizes[i] - 1;
 		}
+	}
+
+	public static <U> AdvancingIterator<U> emptyIterator() {
+		List<List<U>> dummy = Lists.newArrayList();
+		return asIterator(dummy);
 	}
 }

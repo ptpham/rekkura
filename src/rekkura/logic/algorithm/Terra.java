@@ -13,6 +13,7 @@ import rekkura.logic.model.Unification;
 import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
+import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.RankedCarry;
 
@@ -74,8 +75,18 @@ public class Terra {
 	 * @param truths
 	 * @return
 	 */
-	public static List<Map<Dob,Dob>> applyBodyExpansion(Rule rule, ListMultimap<Atom, Dob> support, 
-			Pool pool, Set<Dob> truths) {
+	public static AdvancingIterator<Unification> applyBodyExpansion(Rule rule,
+		List<Atom> expanders, ListMultimap<Atom, Dob> support, Set<Dob> truths) {
+		if (rule.vars.size() == 0) return Cartesian.emptyIterator();
+		if (expanders == null) return Cartesian.emptyIterator();
+
+		// Construct iterator and expand
+		List<List<Unification>> space = constructUnificationSpace(rule, support, expanders);
+		return Cartesian.asIterator(space);
+	}
+	
+	public static List<Map<Dob,Dob>> applyExpansion(Rule rule, 
+		AdvancingIterator<Unification> iterator, List<Atom> check, Pool pool, Set<Dob> truths) {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
 		
 		// This block deals with the vacuous rule special case ...
@@ -84,15 +95,7 @@ public class Terra {
 			result.add(Maps.<Dob,Dob>newHashMap());
 			return result;
 		}
-
-		// Split into expanders and checkers
-		List<Atom> expanders = getGreedyExpanders(rule, support);
-		if (expanders == null) return result;
-		List<Atom> check = Colut.deselect(rule.body, expanders);
-
-		// Construct iterator and expand
-		List<List<Unification>> space = constructUnificationSpace(rule, support, expanders);
-		Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(space);
+		
 		return expandBodyAssignments(rule, check, iterator, pool, truths);
 	}
 

@@ -8,11 +8,10 @@ import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.model.Unification;
-import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
+import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.DualMultimap;
-import rekkura.util.Cartesian.AdvancingIterator;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
@@ -40,28 +39,24 @@ public class Gondwana {
 		return result;
 	}
 	
-	public static List<Map<Dob,Dob>> applyLinearJoin(Rule rule, 
-			ListMultimap<Atom, Dob> support, Pool pool, Set<Dob> truths) {
-		List<Map<Dob,Dob>> result = applyLinearJoinInternal(rule, support, pool, truths);
-		if (result == null) return Terra.applyBodyExpansion(rule, support, pool, truths);
+	public static Cartesian.AdvancingIterator<Unification> applyLinearJoin(Rule rule, 
+			List<Atom> expanders, ListMultimap<Atom, Dob> support, Set<Dob> truths) {
+		AdvancingIterator<Unification> result = applyLinearJoinInternal(rule, support, truths);
+		if (result == null) return Terra.applyBodyExpansion(rule, expanders, support, truths);
 		return result;
 	}
 	
-	private static List<Map<Dob,Dob>> applyLinearJoinInternal(Rule rule, 
-		ListMultimap<Atom, Dob> support, Pool pool, Set<Dob> truths) {
+	private static AdvancingIterator<Unification> applyLinearJoinInternal(Rule rule, 
+		ListMultimap<Atom, Dob> support, Set<Dob> truths) {
 
 		// If we have a cover with a single term, we are not interested
 		// in doing the linear join dance.
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		Terra.sortBySupportSize(positives, support);
-		List<Atom> cover = Terra.greedyVarCover(positives, rule.vars);
+		List<Atom> cover = Terra.getGreedyExpanders(rule, support);
 		if (cover == null || cover.size() < 2) return null;
 		List<List<Dob>> schemas = linearOverlaps(cover, rule.vars);
-		
-		// Construct the multimap space of unifications and wrap up
-		List<Atom> check = rule.body;
-		AdvancingIterator<Unification> iterator = generateUnificationSpace(rule, support, cover, schemas);
-		return Terra.expandBodyAssignments(rule, check, iterator, pool, truths);
+		return generateUnificationSpace(rule, support, cover, schemas);
 	}
 
 	private static AdvancingIterator<Unification> generateUnificationSpace(
