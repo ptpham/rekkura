@@ -1,5 +1,6 @@
 package rekkura.logic.prover;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -13,7 +14,11 @@ import rekkura.logic.model.Rule;
 import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.logic.structure.Ruletta;
+import rekkura.stats.algorithm.Ucb;
+import rekkura.stats.algorithm.Ucb.Suggestor;
+import rekkura.util.Cache;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
@@ -73,15 +78,48 @@ public abstract class StratifiedProver {
 		for (Dob dob : truths) preserveTruth(dob);
 	}
 	
-	/**
-	 * So basically the whole system exists to support this method.
-	 * @param rule
-	 * @return
-	 */
-	public static Set<Dob> expandRule(Rule rule, Set<Dob> truths, Cachet cachet, Pool pool) {
-		// Prepare the domains of each positive body in the rule
+	private static enum Method {
+		BODY_SPACE,
+		LINEAR_JOIN
+	}
+	
+	private Cache<Rule, Ucb.Suggestor<Method>> suggestors = 
+		Cache.create(new Function<Rule,Ucb.Suggestor<Method>>() {
+			@Override public Suggestor<Method> apply(Rule rule) {
+				return new Ucb.Suggestor<Method>(Arrays.asList(Method.values()), 30);
+			}
+		});
+	
+	protected Set<Dob> expandRule(Rule rule,
+		Set<Dob> truths, Cachet cachet, Pool pool) {
+		Ucb.Suggestor<Method> suggestor = suggestors.get(rule);
+		
+		Method method = suggestor.suggest();
+		long begin = System.currentTimeMillis();
+		Set<Dob> generated = expandRuleWithMethod(rule, truths, cachet, pool, method);
+		double value = 1.0/(System.currentTimeMillis() - begin);
+		if (Double.isInfinite(value) && method != Method.BODY_SPACE) value = 0;
+		suggestor.inform(method, value);
+		
+		return generated;
+	}
+	
+	public static Set<Dob> expandRuleWithMethod(Rule rule, Set<Dob> truths, Cachet cachet, Pool pool, Method method) {
+		ListMultimap<Atom, Dob> support = Terra.getBodySpace(rule, cachet);
+		List<Map<Dob,Dob>> unifies = null;
+		switch (method) {
+		case BODY_SPACE:
+			unifies = Terra.applyBodyExpansion(rule, support, pool, truths);
+			break;
+		case LINEAR_JOIN:
+			unifies = Gondwana.applyLinearJoin(rule, support, pool, truths);
+			break;
+		}
+		return Terra.renderHeads(unifies, rule, pool);
+	}
+	
+	public static Set<Dob> expandWithLinearJoin(Rule rule, Set<Dob> truths, Cachet cachet, Pool pool) {
 		ListMultimap<Atom, Dob> assignments = Terra.getBodySpace(rule, cachet);
-//		List<Map<Dob,Dob>> unifies = Terra.applyBodyExpansion(rule, assignments, pool, truths);
 		List<Map<Dob,Dob>> unifies = Gondwana.applyLinearJoin(rule, assignments, pool, truths);
 		return Terra.renderHeads(unifies, rule, pool);
 	}
