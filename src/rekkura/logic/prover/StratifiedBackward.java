@@ -2,13 +2,21 @@ package rekkura.logic.prover;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import rekkura.logic.algorithm.Terra;
+import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.state.algorithm.BackwardTraversal;
+import rekkura.state.algorithm.Topper;
+import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
@@ -23,11 +31,19 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	
 	private final BackwardTraversal<Rule, Dob> traversal;
 	private final BackwardTraversal.Visitor<Rule, Dob> visitor;
+	private final Multimap<Rule,Dob> processed = HashMultimap.create();
+	
+	/**
+	 * This multimap stores the previous supports of recursive rules.
+	 */
+	private final Map<Rule,ListMultimap<Atom,Dob>> previous = Maps.newHashMap();
+	private final Set<Rule> recursives;
 	
 	public StratifiedBackward(Collection<Rule> rules) {
 		super(rules);
 		this.visitor = createVisitor();
 		this.traversal = new BackwardTraversal<Rule,Dob>(visitor, this.rta.ruleToGenRule);
+		this.recursives = Sets.newHashSet(Colut.flatten(Topper.stronglyConnected(rta.ruleToGenRule)));
 		clear();
 	}
 	
@@ -35,6 +51,8 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	
 	public void clear() {
 		this.truths.clear();
+		this.previous.clear();
+		this.processed.clear();
 		this.cachet.formToGrounds.clear();
 		this.traversal.clear();
 	}
@@ -80,7 +98,8 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	}
 	
 	protected Set<Dob> standardRuleExpansion(Rule rule) {
-		Set<Dob> generated = expandRule(rule, truths, cachet, pool);
+		ListMultimap<Atom, Dob> support = Terra.getBodySpace(rule, cachet);
+		Set<Dob> generated = expandRule(rule, truths, support, pool);
 		for (Dob dob : generated) preserveTruth(dob);
 		return generated;
 	}

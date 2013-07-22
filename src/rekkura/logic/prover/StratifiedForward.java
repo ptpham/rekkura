@@ -6,10 +6,13 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import rekkura.logic.algorithm.Terra;
+import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.util.Colut;
 
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -102,7 +105,8 @@ public class StratifiedForward extends StratifiedProver {
 		if (!hasMore()) throw new NoSuchElementException();
 		Rule rule = Colut.popAny(this.pendingRules.values());
 		
-		Set<Dob> generated = expandRule(rule, truths, cachet, pool);
+		ListMultimap<Atom, Dob> support = Terra.getBodySpace(rule, cachet);
+		Set<Dob> generated = expandRule(rule, truths, support, pool);
 		
 		// Submerge all of the newly generated dobs
 		List<Dob> result = Lists.newArrayListWithCapacity(generated.size());

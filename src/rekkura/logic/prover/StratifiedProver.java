@@ -76,9 +76,7 @@ public abstract class StratifiedProver {
 	}
 	
 	protected Set<Dob> expandRule(Rule rule,
-		Set<Dob> truths, Cachet cachet, Pool pool) {
-
-		ListMultimap<Atom, Dob> support = Terra.getBodySpace(rule, cachet);
+		Set<Dob> truths, ListMultimap<Atom,Dob> support, Pool pool) {
 		List<Atom> expanders = Terra.getGreedyExpanders(rule, support);
 		List<Atom> check = Colut.deselect(rule.body, expanders);
 		Cartesian.AdvancingIterator<Unification> iterator =
