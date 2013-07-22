@@ -1,24 +1,9 @@
 package rekkura.util;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.base.Function;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * (One-to-Many Utilities)
@@ -266,4 +251,18 @@ public class OtmUtil {
 		Multimaps.invertFrom(Multimaps.forMap(raw), result);
 		return result;
 	}
+	
+	public static <U,V> Multimap<U,V> diffSelective(Collection<U> selected, 
+		Multimap<U,V> current, Multimap<U,V> previous) {
+		Multimap<U,V> diff = HashMultimap.create();
+		for (U key : current.keySet()) {
+			if (!selected.contains(key)) {
+				diff.putAll(key, current.get(key));
+			} else {
+				diff.putAll(key, Colut.difference(current.get(key), previous.get(key)));
+			}
+		}
+		return diff;
+	}
+
 }

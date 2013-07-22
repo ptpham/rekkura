@@ -1,10 +1,6 @@
 package rekkura.logic.algorithm;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
@@ -17,11 +13,7 @@ import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.RankedCarry;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This class holds a collection of utilities for generating
@@ -76,7 +68,7 @@ public class Terra {
 	 * @return
 	 */
 	public static AdvancingIterator<Unification> applyBodyExpansion(Rule rule,
-		List<Atom> expanders, ListMultimap<Atom, Dob> support, Set<Dob> truths) {
+		List<Atom> expanders, Multimap<Atom, Dob> support, Set<Dob> truths) {
 		if (rule.vars.size() == 0) return Cartesian.emptyIterator();
 		if (expanders == null) return Cartesian.emptyIterator();
 
@@ -100,7 +92,7 @@ public class Terra {
 	}
 
 	public static List<Atom> getGreedyExpanders(Rule rule,
-			final ListMultimap<Atom, Dob> support) {
+			final Multimap<Atom, Dob> support) {
 		// Sort the dimensions of the space so that the smallest ones come first.
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		sortBySupportSize(positives, support);
@@ -247,10 +239,10 @@ public class Terra {
 	}
 	
 	private static List<List<Unification>> constructUnificationSpace(Rule rule,
-			final ListMultimap<Atom, Dob> support, List<Atom> positives) {
+			final Multimap<Atom, Dob> support, List<Atom> positives) {
 		List<List<Unification>> space = Lists.newArrayList();
 		for (Atom atom : positives) {
-			List<Dob> grounds = support.get(atom);
+			Collection<Dob> grounds = support.get(atom);
 			List<Unification> unifies = Lists.newArrayList();
 			for (Dob ground : grounds) {
 				Map<Dob, Dob> unify = Unifier.unifyVars(atom.dob, ground, rule.vars);
@@ -269,7 +261,7 @@ public class Terra {
 	 * @param support
 	 */
 	public static void sortBySupportSize(List<Atom> positives,
-			final ListMultimap<Atom, Dob> support) {
+			final Multimap<Atom, Dob> support) {
 		Collections.sort(positives, new Comparator<Atom>() {
 			@Override public int compare(Atom first, Atom second) {
 				int firstSize = support.get(first).size();

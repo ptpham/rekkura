@@ -14,11 +14,7 @@ import rekkura.state.algorithm.Topper;
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This prover tries to do the minimum amount of work to 
@@ -36,7 +32,7 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	/**
 	 * This multimap stores the previous supports of recursive rules.
 	 */
-	private final Map<Rule,ListMultimap<Atom,Dob>> previous = Maps.newHashMap();
+	private final Map<Rule,Multimap<Atom,Dob>> previous = Maps.newHashMap();
 	private final Set<Rule> recursives;
 	
 	public StratifiedBackward(Collection<Rule> rules) {
@@ -99,11 +95,36 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	
 	protected Set<Dob> standardRuleExpansion(Rule rule) {
 		ListMultimap<Atom, Dob> support = Terra.getBodySpace(rule, cachet);
-		Set<Dob> generated = expandRule(rule, truths, support, pool);
+		Set<Dob> generated = expandRecursiveRule(rule, support);
+		if (generated == null) generated = expandRule(rule, truths, support, pool);
 		for (Dob dob : generated) preserveTruth(dob);
 		return generated;
 	}
 	
+	/**
+	 * This method performs a more efficient recursive expansion by diffing the 
+	 * previous support with the current one in each term.
+	 * @param rule
+	 * @param current
+	 * @return
+	 */
+	protected Set<Dob> expandRecursiveRule(Rule rule, ListMultimap<Atom,Dob> current) {
+		if (!this.recursives.contains(rule)) return null;
+		Multimap<Atom,Dob> old = this.previous.get(rule);
+		
+		Set<Dob> generated = null;
+		if (old != null) {
+			generated = Sets.newHashSet();
+			for (Atom atom : current.keySet()) {
+				List<Atom> selected = Lists.newArrayList(atom);
+				Multimap<Atom,Dob> diff = OtmUtil.diffSelective(selected, current, old);
+				generated.addAll(expandRule(rule, truths, diff, pool));
+			}
+		}
+		this.previous.put(rule, HashMultimap.create(current));
+		return generated;
+	}
+
 	public static class Standard extends StratifiedBackward {
 		public Standard(Collection<Rule> rules) { super(rules); }
 

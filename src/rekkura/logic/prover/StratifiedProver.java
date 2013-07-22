@@ -17,7 +17,7 @@ import rekkura.util.Cartesian;
 import rekkura.util.Colut;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -76,7 +76,7 @@ public abstract class StratifiedProver {
 	}
 	
 	protected Set<Dob> expandRule(Rule rule,
-		Set<Dob> truths, ListMultimap<Atom,Dob> support, Pool pool) {
+		Set<Dob> truths, Multimap<Atom,Dob> support, Pool pool) {
 		List<Atom> expanders = Terra.getGreedyExpanders(rule, support);
 		List<Atom> check = Colut.deselect(rule.body, expanders);
 		Cartesian.AdvancingIterator<Unification> iterator =
