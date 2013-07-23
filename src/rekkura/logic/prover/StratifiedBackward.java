@@ -94,7 +94,7 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	}
 	
 	protected Set<Dob> standardRuleExpansion(Rule rule) {
-		ListMultimap<Atom, Dob> support = Terra.getBodySpace(rule, cachet);
+		ListMultimap<Atom, Dob> support = Terra.getBodyAssignments(rule, cachet);
 		Set<Dob> generated = expandRecursiveRule(rule, support);
 		if (generated == null) generated = expandRule(rule, truths, support, pool);
 		for (Dob dob : generated) preserveTruth(dob);

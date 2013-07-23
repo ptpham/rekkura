@@ -43,7 +43,7 @@ public class Terra {
 	 * @param dob
 	 * @return
 	 */
-	public static ListMultimap<Atom, Dob> getBodySpace(Rule rule, Cachet cachet) {
+	public static ListMultimap<Atom, Dob> getBodyAssignments(Rule rule, Cachet cachet) {
 		ListMultimap<Atom, Dob> candidates = ArrayListMultimap.create();
 		
 		for (int i = 0; i < rule.body.size(); i++) {
@@ -67,13 +67,13 @@ public class Terra {
 	 * @param truths
 	 * @return
 	 */
-	public static AdvancingIterator<Unification> applyBodyExpansion(Rule rule,
+	public static AdvancingIterator<Unification> getBodySpaceIterator(Rule rule,
 		List<Atom> expanders, Multimap<Atom, Dob> support, Set<Dob> truths) {
 		if (rule.vars.size() == 0) return Cartesian.emptyIterator();
 		if (expanders == null) return Cartesian.emptyIterator();
 
 		// Construct iterator and expand
-		List<List<Unification>> space = constructUnificationSpace(rule, support, expanders);
+		List<List<Unification>> space = getUnificationSpace(rule, support, expanders);
 		return Cartesian.asIterator(space);
 	}
 	
@@ -88,7 +88,7 @@ public class Terra {
 			return result;
 		}
 		
-		return expandBodyAssignments(rule, check, iterator, pool, truths);
+		return expandUnifications(rule, check, iterator, pool, truths);
 	}
 
 	public static List<Atom> getGreedyExpanders(Rule rule,
@@ -98,13 +98,13 @@ public class Terra {
 		sortBySupportSize(positives, support);
 		
 		// Then greedily find a variable cover and resort for the final support
-		List<Atom> expanders = Terra.greedyVarCover(positives, rule.vars);
+		List<Atom> expanders = Terra.getGreedyVarCover(positives, rule.vars);
 		if (expanders == null) return null;
 		sortBySupportSize(expanders, support);
 		return expanders;
 	}
 
-	public static List<Map<Dob, Dob>> expandBodyAssignments(Rule rule, List<Atom> check,
+	public static List<Map<Dob, Dob>> expandUnifications(Rule rule, List<Atom> check,
 		Cartesian.AdvancingIterator<Unification> iterator, Pool pool, Set<Dob> truths) {
 		
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
@@ -145,7 +145,7 @@ public class Terra {
 	 * @param vars
 	 * @return
 	 */
-	public static List<Atom> greedyVarCover(Iterable<Atom> atoms, Iterable<Dob> vars) {
+	public static List<Atom> getGreedyVarCover(Iterable<Atom> atoms, Iterable<Dob> vars) {
 		List<Dob> remaining = Lists.newArrayList(vars);
 		List<Atom> result = Lists.newArrayList();
 		
@@ -238,7 +238,7 @@ public class Terra {
 		return true;
 	}
 	
-	private static List<List<Unification>> constructUnificationSpace(Rule rule,
+	private static List<List<Unification>> getUnificationSpace(Rule rule,
 			final Multimap<Atom, Dob> support, List<Atom> positives) {
 		List<List<Unification>> space = Lists.newArrayList();
 		for (Atom atom : positives) {
@@ -295,6 +295,7 @@ public class Terra {
 		}
 		
 		if (!checkAtoms(unify, body, truths, pool)) return null;
+		if (!rule.evaluateDistinct(unify)) return null;
 		return unify;
 	}
 

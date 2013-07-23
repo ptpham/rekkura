@@ -105,7 +105,7 @@ public class StratifiedForward extends StratifiedProver {
 		if (!hasMore()) throw new NoSuchElementException();
 		Rule rule = Colut.popAny(this.pendingRules.values());
 		
-		ListMultimap<Atom, Dob> support = Terra.getBodySpace(rule, cachet);
+		ListMultimap<Atom, Dob> support = Terra.getBodyAssignments(rule, cachet);
 		Set<Dob> generated = expandRule(rule, truths, support, pool);
 		
 		// Submerge all of the newly generated dobs

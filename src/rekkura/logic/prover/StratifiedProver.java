@@ -80,7 +80,7 @@ public abstract class StratifiedProver {
 		List<Atom> expanders = Terra.getGreedyExpanders(rule, support);
 		List<Atom> check = Colut.deselect(rule.body, expanders);
 		Cartesian.AdvancingIterator<Unification> iterator =
-			Terra.applyBodyExpansion(rule, expanders, support, truths);
+			Terra.getBodySpaceIterator(rule, expanders, support, truths);
 		
 		List<Map<Dob,Dob>> unifies = Terra.applyExpansion(rule, iterator, check, pool, truths);
 		return Terra.renderHeads(unifies, rule, pool);
