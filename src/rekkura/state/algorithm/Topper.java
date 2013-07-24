@@ -167,9 +167,13 @@ public class Topper {
 		if (edges == null || edges.size() == 0) return Lists.newArrayList();
 		
 		UnionFind<U> ufind = new UnionFind<U>();
-		Map<U, Integer> seen = Maps.newHashMap();
+		Map<U, Integer> depth = Maps.newHashMap();
+		Set<U> seen = Sets.newHashSet();
 		
-		for (U root : roots) stronglyConnectedFrom(root, edges, seen, ufind);
+		for (U root : roots) {
+			depth.clear();
+			stronglyConnectedFrom(root, edges, depth, ufind, seen);
+		}
 		
 		List<Set<U>> result = Lists.newArrayList();
 		HashMultimap<U, U> map = ufind.asBackwardMap();
@@ -183,22 +187,23 @@ public class Topper {
 	}
 	
 	private static <U> int stronglyConnectedFrom(U node, Multimap<U, U> edges, 
-			Map<U, Integer> seen, UnionFind<U> ufind) {
-		if (seen.containsKey(node)) return seen.get(node);
+			Map<U, Integer> depth, UnionFind<U> ufind, Set<U> seen) {
+		if (depth.containsKey(node)) return depth.get(node);
+		if (seen.contains(node)) return Integer.MAX_VALUE;
 
-		int index = seen.size();
-		seen.put(node, index);
+		int index = depth.size();
+		depth.put(node, index);
 		
 		int result = index;
 		for (U adjacent : edges.get(node)) {
-			int lowest = stronglyConnectedFrom(adjacent, edges, seen, ufind);
+			int lowest = stronglyConnectedFrom(adjacent, edges, depth, ufind, seen);
 			if (lowest <= index) {
 				ufind.union(node, adjacent);
 				result = Math.min(lowest, result);
 			}
 		}
 		
-		seen.put(node, Integer.MAX_VALUE);
+		depth.put(node, Integer.MAX_VALUE);
 			
 		return result;
 	}

@@ -1,13 +1,16 @@
 package rekkura.state.algorithm;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import rekkura.util.Colut;
+import rekkura.util.OtmUtil;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
 /**
@@ -28,120 +31,72 @@ public class BackwardTraversal<N, D> {
 	 * This should be the directed graph that gives for each node,
 	 * the nodes it depends on.
 	 */
-	public final Multimap<N, N> graph;
+	public final Multimap<N, N> backward;
+	public final Multimap<N, N> forward;
 	
 	/**
 	 * The prover will not expand any node that has non-zero entries here.
 	 */
 	public final HashMultimap<N, D> known = HashMultimap.create();
-	
-	public final HashMultimap<N, D> pending = HashMultimap.create();
-	
-	/**
-	 * This multiset gives the index of the strongly connected component
-	 * the node belongs to.
-	 */
-	public final Map<N, Integer> indices = Maps.newHashMap();
-	
-	/**
-	 * This maintains the strongly connected component sets. This
-	 * set does not include nodes that are not in a strongly connected
-	 * component.
-	 */
-	public final List<Set<N>> components;
-	
-	/**
-	 * This array is used to coordinate across a strongly connected
-	 * component. The first node reached in the component becomes the 
-	 * root of the component and continues to ask into the component
-	 * as long as new data are being generated.
-	 */
-	private final boolean[] rooted;
-	private final Set<N> asking = Sets.newHashSet();
-	
+	public final Map<N, Set<N>> components = Maps.newHashMap();
 	private final Visitor<N,D> visitor;
 	
 	public BackwardTraversal(Visitor<N,D> visitor, Multimap<N,N> graph) {
-		this.graph = graph;
+		this.backward = graph;
 		this.visitor = visitor;
-		this.components = Topper.stronglyConnected(graph);
+		
+		this.forward = HashMultimap.create();
+		Multimaps.invertFrom(graph, forward);
+		List<Set<N>> components = Topper.stronglyConnected(graph);
 		for (int i = 0; i < components.size(); i++) {
 			Set<N> cycle = components.get(i);
-			for (N node : cycle) indices.put(node, i);
+			for (N node : cycle) this.components.put(node, cycle);
 		}
-		
-		rooted = new boolean[components.size()];
 	}
 
-	public void clear() {
-		this.pending.clear();
-		this.asking.clear();
-		this.known.clear();
-		
-		Arrays.fill(rooted, false);
-	}
-
+	public void clear() { this.known.clear(); }
 	public boolean ask(N node, Set<D> result) {
 		if (known.containsKey(node)) {
 			result.addAll(known.get(node));
 			return false;
 		}
 		
-		boolean inComponent = this.indices.containsKey(node);
-		if (inComponent) {
-			int index = this.indices.get(node);
-			return expandComponentNode(node, result, index);
-		} else return expandNodeToMap(node, result, this.known);
+		Set<N> component = this.components.get(node);
+		if (component != null) return expandComponent(component, result);
+		else return expandNodeRecursive(node, result);
 	}
 
-	private boolean expandComponentNode(N node, Set<D> result, int index) {
-		boolean root = !this.rooted[index];
-		if (!this.asking.add(node)) return false;
-		
+	private boolean expandComponent(Set<N> component, Set<D> result) {
 		boolean expanded = false;
-		if (root) expanded = expandNodeAsRoot(node, result, index);
-		else expanded = expandNodeToMap(node, result, this.pending);
 		
-		this.asking.remove(node);
-		return expanded;
-	}
-
-	/**
-	 * The root (the first node reached in this strongly connected
-	 * component) acts as the base for a loop that continues
-	 * as long as new data are being generated. Once everything 
-	 * has been generated, the data in pending are move to known
-	 * for the entire component.
-	 * @param node
-	 * @param result
-	 * @param index
-	 * @return
-	 */
-	private boolean expandNodeAsRoot(N node, Set<D> result, int index) {
-		boolean expanded = false;
-
-		this.rooted[index] = true;
-		while (true) {
-			boolean current = expandNodeToMap(node, result, this.pending);
+		// First ask beyond the of the component
+		Set<N> beyond = Sets.newHashSet(OtmUtil.getAll(backward, component).values());
+		beyond.removeAll(component);
+		for (N node : beyond) expanded |= ask(node, result);
+		
+		// Now loop inside of the component until nothing new is generated
+		Set<N> explore = Sets.newHashSet(component);
+		while (explore.size() > 0) {
+			N node = Colut.popAny(explore);
+			boolean current = expandNode(node, result);
+			if (current) explore.addAll(forward.get(node));
 			expanded |= current;
-			if (!current) break;
-		}
-		this.rooted[index] = false;
-		
-		for (N member : this.components.get(index)) {
-			this.known.putAll(member, this.pending.get(member));
-			this.pending.removeAll(member);
 		}
 		
 		return expanded;
 	}
 
-	private boolean expandNodeToMap(N node, Set<D> result, Multimap<N, D> map) {
+	private boolean expandNodeRecursive(N node, Set<D> result) {
 		boolean expanded = false;
-		for (N parent : this.graph.get(node)) expanded |= ask(parent, result);
-		
+		for (N parent : this.backward.get(node)) expanded |= ask(parent, result);
+		expanded |= expandNode(node, result);
+		return expanded;
+	}
+
+	private boolean expandNode(N node, Set<D> result) {
+		boolean expanded = false;
 		Set<D> generated = this.visitor.expandNode(node);
-		map.putAll(node, generated);
+		this.known.putAll(node, generated);
 		expanded |= result.addAll(generated);
 		return expanded;
 	}

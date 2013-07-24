@@ -318,11 +318,11 @@ public class SimpleGames {
 			"(<= (adjacent ?i ?j ?i ?n) (board_succ ?n ?j) (index ?i))",
 
 			"(<= (same_height ?i ?j ?m ?n) (true (cell ?i ?j ?h)) (true (cell ?m ?n ?h)))",
-			"(<= (same_height ?i ?j ?m ?n) (not (has_height ?i ?j)) (not (has_height ?m ?n)))",
+			"(<= (same_height ?i ?j ?m ?n) (index ?i) (index ?j) (index ?m) (index ?n) (not (has_height ?i ?j)) (not (has_height ?m ?n)))",
 			"(<= (next_height ?i ?j ?m ?n) (true (cell ?i ?j ?g)) (true (cell ?m ?n ?h)) (height_succ ?g ?h))",
 			"(<= (next_height ?i ?j ?m ?n) (true (cell ?i ?j ?g)) (true (cell ?m ?n ?h)) (height_succ ?h ?g))",
-			"(<= (next_height ?i ?j ?m ?n) (not (has_height ?i ?j)) (true (cell ?m ?n 1)))",
-			"(<= (next_height ?i ?j ?m ?n) (not (has_height ?m ?n)) (true (cell ?i ?j 1)))",
+			"(<= (next_height ?i ?j ?m ?n) (index ?i) (index ?j) (not (has_height ?i ?j)) (true (cell ?m ?n 1)))",
+			"(<= (next_height ?i ?j ?m ?n) (index ?m) (index ?n) (not (has_height ?m ?n)) (true (cell ?i ?j 1)))",
 
 			"(<= (has_height ?i ?j) (true (cell ?i ?j ?h)))",
 
