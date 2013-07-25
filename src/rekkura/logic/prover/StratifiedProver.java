@@ -40,7 +40,7 @@ public abstract class StratifiedProver {
 	public abstract Set<Dob> proveAll(Iterable<Dob> truths);
 
 	public StratifiedProver(Collection<Rule> rules) {
-		this.rta = Ruletta.create(pool.rules.submerge(rules), pool);
+		this.rta = Ruletta.create(rules, pool);
 		for (Rule rule : rta.allRules) {
 			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
 		}

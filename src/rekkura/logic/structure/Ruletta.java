@@ -75,7 +75,7 @@ public class Ruletta {
 	
 	public static Ruletta create(Collection<Rule> rules, Pool pool) {
 		Ruletta result = new Ruletta();
-		result.allRules.addAll(rules);
+		result.allRules.addAll(pool.rules.submerge(rules));
 		
 		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) {
 			if (atom.truth) result.posDobs.add(atom.dob);

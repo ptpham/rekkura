@@ -408,4 +408,10 @@ public class Colut {
 		for (U u : elems) if (contains(s, u)) return u;
 		return null;
 	}
+	
+	public static <U> Set<String> stringify(Set<U> elems) {
+		Set<String> result = Sets.newHashSet();
+		for (U u : elems) result.add(u.toString());
+		return result;
+	}
 }

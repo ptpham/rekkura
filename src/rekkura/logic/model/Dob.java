@@ -1,10 +1,6 @@
 package rekkura.logic.model;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 import rekkura.logic.format.StandardFormat;
 import rekkura.util.CachingSupplier;
@@ -139,4 +135,9 @@ public class Dob {
 		@Override public Dob create() { return new Dob("[" + prefix + current++ + "]"); }
 	};
 	
+	public static List<Dob> sortByStructure(Iterable<Dob> dobs) {
+		List<Dob> result = Lists.newArrayList(dobs);
+		Collections.sort(result, getComparator());
+		return result;
+	}
 }

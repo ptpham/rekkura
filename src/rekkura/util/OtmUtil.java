@@ -264,5 +264,39 @@ public class OtmUtil {
 		}
 		return diff;
 	}
+	
+	public static <U,V> Multimap<U,V> intersection(Multimap<U,V> first, Multimap<U,V> second) {
+		Multimap<U,V> result = HashMultimap.create();
+		for (U u : first.keySet()) {
+			for (V v : first.get(u)) {
+				if (second.containsEntry(u, v)) result.put(u,v);
+			}
+		}
+		return result;
+	}
+	
+	public static <U,V> boolean removeAll(Multimap<U,V> target, Multimap<U,V> remove) {
+		boolean result = false;
+		for (U u : remove.keySet()) {
+			for (V v : remove.get(u)) {
+				result |= target.remove(u, v);
+			}
+		}
+		return result;
+	}
+	
+	public static <U,V> Multimap<U,V> symmetricDifference(Multimap<U,V> first, Multimap<U,V> second) {
+		Multimap<U,V> result = HashMultimap.create(), inter = intersection(first, second);
+		result.putAll(first);
+		result.putAll(second);
+		removeAll(result, inter);
+		return result;
+	}
+	
+	public static <U,V> Multimap<String,String> stringify(Multimap<U,V> map) {
+		Multimap<String,String> result = HashMultimap.create();
+		for (U u : map.keySet()) for (V v : map.get(u)) result.put(u.toString(), v.toString());
+		return result;
+	}
 
 }
