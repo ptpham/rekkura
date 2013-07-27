@@ -20,29 +20,65 @@ import com.google.common.collect.Sets;
 public class TopperTest {
 	
 	@Test
-	public void stronglyConnected() {
-		Set<Integer> roots = Sets.newHashSet(1);
+	public void stronglyConnectedBasic() {
 		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
-			{0, 1}, {1, 2}, {1, 6}, {2, 3}, 
+			{0, 1}, {1, 2}, {2, 1}, {1, 3}, {3, 1}, {6, 5}, {5, 6}, {5, 1}});
+		
+		Set<HashSet<Integer>> expected = Sets.newHashSet();
+		expected.add(Sets.newHashSet(1, 2, 3));
+		expected.add(Sets.newHashSet(5, 6));
+		
+		Set<Set<Integer>> actual = Sets.newHashSet(Topper.stronglyConnected(edges));
+		assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void stronglyConnectedRing() {
+		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
+			{0, 1}, {1, 2}, {2, 3}, {3, 0}});
+		
+		Set<HashSet<Integer>> expected = Sets.newHashSet();
+		expected.add(Sets.newHashSet(0, 1, 2, 3));
+		
+		Set<Set<Integer>> actual = Sets.newHashSet(Topper.stronglyConnected(edges));
+		assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void stronglyConnectedFigureEight() {
+		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
+			{0, 1}, {1, 2}, {2, 0}, {2, 3}, {3, 4}, {4, 2}});
+		
+		Set<HashSet<Integer>> expected = Sets.newHashSet();
+		expected.add(Sets.newHashSet(0, 1, 2, 3, 4));
+		
+		Set<Set<Integer>> actual = Sets.newHashSet(Topper.stronglyConnected(edges));
+		assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void stronglyConnectedComplex() {
+		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
+			{0, 1}, {1, 2}, {1, 6}, {6, 21}, {2, 3}, 
 			{2, 4}, {4, 5}, {5, 2}, {3, 1}, {4, 7}, 
 			{7, 8}, {8, 9}, {9,7}, {9, 10}, {10, 11}, {11, 10},
 			{10, 12}, {12, 13}, {13, 14}, {14, 15}, 
 			{13, 12}, {12, 16}, {16, 12}, {13, 2}, {15, 17},
 			{17, 18}, {18, 15}, {18, 19}, {19, 20}, {20, 19}});
 		
-		List<HashSet<Integer>> expected = Lists.newArrayList();
+		Set<HashSet<Integer>> expected = Sets.newHashSet();
 		expected.add(Sets.newHashSet(17, 18, 15));
 		expected.add(Sets.newHashSet(1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 16));
 		expected.add(Sets.newHashSet(19, 20));
 		
-		List<Set<Integer>> actual = Topper.stronglyConnected(edges, roots);
+		Set<Set<Integer>> actual = Sets.newHashSet(Topper.stronglyConnected(edges));
 		assertEquals(expected, actual);
 	}
+	
 	
 	@Test
 	public void singleNodeStronglyConnected() {
 		Multimap<Integer, Integer> edges = HashMultimap.create();
-		Set<Integer> roots = Sets.newHashSet(0);
 		
 		int[][] edgesRaw = { {0, 0} };
 		for (int[] edge : edgesRaw) { edges.put(edge[0], edge[1]); }
@@ -50,7 +86,7 @@ public class TopperTest {
 		List<HashSet<Integer>> expected = Lists.newArrayList();
 		expected.add(Sets.newHashSet(0));
 
-		List<Set<Integer>> actual = Topper.stronglyConnected(edges, roots);
+		List<Set<Integer>> actual = Topper.stronglyConnected(edges);
 		assertEquals(expected, actual);
 	}
 	

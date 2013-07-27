@@ -299,4 +299,10 @@ public class OtmUtil {
 		return result;
 	}
 
+	public static <U> Set<U> allNodes(Multimap<U,U> edges) {
+		Set<U> result = Sets.newHashSet();
+		result.addAll(edges.values());
+		result.addAll(edges.keySet());
+		return result;
+	}
 }

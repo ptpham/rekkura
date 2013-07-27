@@ -20,6 +20,7 @@ public class UnionFind<U> {
 		private int depth;
 		
 		public Node(U value) { this.value = value; }
+		@Override public String toString() { return "[Node: " + value + "]"; }
 	}
 	
 	private Cache<U, Node> objectLookup = Cache.create(new Function<U, Node>() {
@@ -47,10 +48,16 @@ public class UnionFind<U> {
 		return node;
 	}
 	
-	public void union(U first, U second) {
+	/**
+	 * @param first
+	 * @param second
+	 * @return the node that is no longer the representative
+	 * of any set or null if first and second were in the same set.
+	 */
+	public Node union(U first, U second) {
 		Node top = find(first);
 		Node bottom = find(second);
-		if (top == bottom) return;
+		if (top == bottom) return null;
 		
 		if (top.depth > bottom.depth) {
 			Node temp = bottom;
@@ -60,6 +67,7 @@ public class UnionFind<U> {
 		
 		bottom.parent = top;
 		top.depth = Math.max(top.depth, bottom.depth + 1);
+		return bottom;
 	}
 	
 	/**

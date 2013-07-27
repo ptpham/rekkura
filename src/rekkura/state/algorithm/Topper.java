@@ -1,25 +1,12 @@
 package rekkura.state.algorithm;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 import rekkura.util.UnionFind;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This class may move in the future. It contains very general
@@ -64,7 +51,7 @@ public class Topper {
 	private static <U> Multiset<U> computeGeneralTopSort(Multimap<U, U> edges, Set<U> roots) {
 		Multiset<U> result = HashMultiset.create();
 		Set<U> touched = Sets.newHashSet();
-		List<Set<U>> components = stronglyConnected(edges, roots);
+		List<Set<U>> components = stronglyConnected(edges);
 		
 		while (edges.size() > 0 && roots.size() > 0) {
 			// Peel back a well-ordered layer and append to our ordering
@@ -162,51 +149,65 @@ public class Topper {
 		working.putAll(edges);
 		return stronglyConnected(working);
 	}
-
-	public static <U> List<Set<U>> stronglyConnected(Multimap<U, U> edges, Set<U> roots) {
+	
+	public static <U> List<Set<U>> stronglyConnected(Multimap<U, U> edges) {
 		if (edges == null || edges.size() == 0) return Lists.newArrayList();
+		Multimap<U,U> copy = HashMultimap.create(edges);
 		
-		UnionFind<U> ufind = new UnionFind<U>();
-		Map<U, Integer> depth = Maps.newHashMap();
-		Set<U> seen = Sets.newHashSet();
-		
-		for (U root : roots) {
-			depth.clear();
-			stronglyConnectedFrom(root, edges, depth, ufind, seen);
+		UnionFind<U> uf = new UnionFind<U>();
+		while (copy.size() > 0) {
+			U node = Colut.any(copy.keySet());
+			stronglyConnectedFrom(copy, node, uf);
 		}
 		
 		List<Set<U>> result = Lists.newArrayList();
-		HashMultimap<U, U> map = ufind.asBackwardMap();
+		HashMultimap<U,U> map = uf.asBackwardMap();
 		for (U key : map.keySet()) result.add(map.get(key));
 		return result;
 	}
 	
+	private static <U> void stronglyConnectedFrom(Multimap<U,U> edges, U root, UnionFind<U> uf) {
+		Multiset<UnionFind<U>.Node> active = HashMultiset.create();
+		Set<U> passed = Sets.newHashSet();
+		Stack<U> stack = new Stack<U>();
 
-	public static <U> List<Set<U>> stronglyConnected(Multimap<U, U> edges) {
-		return stronglyConnected(edges, edges.keySet());
-	}
-	
-	private static <U> int stronglyConnectedFrom(U node, Multimap<U, U> edges, 
-			Map<U, Integer> depth, UnionFind<U> ufind, Set<U> seen) {
-		if (depth.containsKey(node)) return depth.get(node);
-		if (seen.contains(node)) return Integer.MAX_VALUE;
-
-		int index = depth.size();
-		depth.put(node, index);
+		stack.push(root);
+		passed.add(root);
 		
-		int result = index;
-		for (U adjacent : edges.get(node)) {
-			int lowest = stronglyConnectedFrom(adjacent, edges, depth, ufind, seen);
-			if (lowest <= index) {
-				ufind.union(node, adjacent);
-				result = Math.min(lowest, result);
+		while (stack.size() > 0) {
+			U node = stack.peek(), next = Colut.any(edges.get(node));
+			if (next != null) {
+				edges.remove(node, next);
+				stack.add(next);
+				
+				boolean added = passed.add(next);
+				boolean existing = uf.contains(next) && active.contains(uf.find(next));
+				if (!added || existing) mergeSets(node, next, active, uf);
+				if (!added) active.add(uf.find(node));
+			} else {
+				stack.pop();
+				passed.remove(node);		
+				if (stack.size() > 0 && uf.contains(node) && active.count(uf.find(node)) > 0) {
+					mergeSets(stack.peek(), node, active, uf);
+					UnionFind<U>.Node rep = uf.find(node);
+					active.remove(rep);
+				}
 			}
 		}
-		
-		depth.put(node, Integer.MAX_VALUE);
-			
-		return result;
 	}
+
+	private static <U> UnionFind<U>.Node mergeSets(U node, U next,
+			Multiset<UnionFind<U>.Node> active, UnionFind<U> uf) {
+		UnionFind<U>.Node lost = uf.union(node, next);
+		UnionFind<U>.Node present = uf.find(node);
+		if (lost == null) return present;
+		
+		int outstanding = active.count(lost);
+		active.remove(lost, outstanding);
+		active.add(present, outstanding + 1);
+		return present;
+	}
+
 	
 	/**
 	 * This returns a set of edges pointing toward the origin.
