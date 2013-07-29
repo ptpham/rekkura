@@ -168,7 +168,7 @@ public class Topper {
 	
 	private static <U> void stronglyConnectedFrom(Multimap<U,U> edges, U root, UnionFind<U> uf) {
 		Multiset<UnionFind<U>.Node> active = HashMultiset.create();
-		Set<U> passed = Sets.newHashSet();
+		Set<U> passed = Sets.newHashSet(), marked = Sets.newHashSet();
 		Stack<U> stack = new Stack<U>();
 
 		stack.push(root);
@@ -182,15 +182,22 @@ public class Topper {
 				
 				boolean added = passed.add(next);
 				boolean existing = uf.contains(next) && active.contains(uf.find(next));
-				if (!added || existing) mergeSets(node, next, active, uf);
-				if (!added) active.add(uf.find(node));
+				if (!added || existing) {
+					int increment = 0;
+					increment += marked.add(node) ? 1 : 0;
+					increment += marked.add(next) ? 2 : 1;
+					UnionFind<U>.Node rep = mergeSets(node, next, active, uf);
+					active.add(rep, increment);
+				}
 			} else {
+				UnionFind<U>.Node rep = uf.softFind(node);
+				if (marked.contains(node)) active.remove(rep);
+				
 				stack.pop();
 				passed.remove(node);		
+				
 				if (stack.size() > 0 && uf.contains(node) && active.count(uf.find(node)) > 0) {
 					mergeSets(stack.peek(), node, active, uf);
-					UnionFind<U>.Node rep = uf.find(node);
-					active.remove(rep);
 				}
 			}
 		}
@@ -204,7 +211,7 @@ public class Topper {
 		
 		int outstanding = active.count(lost);
 		active.remove(lost, outstanding);
-		active.add(present, outstanding + 1);
+		active.add(present, outstanding);
 		return present;
 	}
 

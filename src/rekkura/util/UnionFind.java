@@ -35,6 +35,11 @@ public class UnionFind<U> {
 		Node node = objectLookup.get(value);
 		return find(node);
 	}
+	
+	public Node softFind(U value) {
+		if (!contains(value)) return null;
+		return find(value);
+	}
 
 	private Node find(Node node) {
 		List<Node> seen = Lists.newArrayList();

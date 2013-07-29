@@ -176,22 +176,21 @@ public class Rule {
 	 * @param second
 	 * @return
 	 */
-	public static boolean orderedStructEq(Rule first, Rule second) {
-		if (first.vars.size() != second.vars.size()) return false;
-		if (first.body.size() != second.body.size()) return false;
-		if (first.distinct.size() != second.distinct.size()) return false;
+	public static int compareOrderedStructural(Rule first, Rule second) {
+		int compare = compareSizes(first, second);
+		if (compare != 0) return compare;
 		
 		Set<Dob> vars = Sets.newHashSet(first.vars);
 		vars.addAll(second.vars);
 		
-		int compare = Dob.compareStructure(first.head.dob, second.head.dob, vars);
-		if (compare != 0) return false;
+		compare = Dob.compareStructure(first.head.dob, second.head.dob, vars);
+		if (compare != 0) return compare;
 		
 		for (int i = 0; i < first.body.size(); i++) {
 			Atom firstAtom = first.body.get(i);
 			Atom secondAtom = second.body.get(i);
 			compare = Dob.compareStructure(firstAtom.dob, secondAtom.dob, vars);
-			if (compare != 0) return false;
+			if (compare != 0) return compare;
 		}
 		
 		for (int i = 0; i < first.distinct.size(); i++) {
@@ -200,10 +199,33 @@ public class Rule {
 			compare = Distinct.compare(left, right, vars);
 		}
 		
-		return true;
+		return 0;
 	}
-	
 
+	public static int compareSizes(Rule first, Rule second) {
+		int left, right;
+		
+		left = first.vars.size();
+		right = second.vars.size();
+		if (left != right) return left - right;
+		
+		left = first.body.size();
+		right = second.body.size();
+		if (left != right) return left - right;
+		
+		left = first.distinct.size();
+		right = second.distinct.size();
+		if (left != right) return left - right;
+		
+		return 0;
+	}
+
+	public static final Comparator<Rule> COMPARATOR_ORDERED_STRUCTURAL = 
+		new Comparator<Rule>() {
+			@Override public int compare(Rule first, Rule second)
+			{ return compareOrderedStructural(first, second); }
+		};
+	
 	/**
 	 * This method creates a new copy of the rule such that the constituent
 	 * components are ordered and referentially duplicate elements are removed.

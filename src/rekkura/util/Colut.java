@@ -313,7 +313,7 @@ public class Colut {
 		return list.set(pos, elem);
 	}
 	
-	public static <U> List<U> flatten(Collection<? extends Collection<U>> data) {
+	public static <U> List<U> flatten(Iterable<? extends Collection<U>> data) {
 		List<U> result = Lists.newArrayList();
 		if (data == null) return result;
 		for (Collection<U> collection : data) Colut.addAll(result, collection);
@@ -403,6 +403,13 @@ public class Colut {
 		for (U u : keys) result.add(map.get(u));
 		return result;
 	}
+	
+	public static <U> List<U> getAll(List<U> list, Iterable<Integer> keys) {
+		List<U> result = Lists.newArrayList();
+		if (list == null || keys == null) return result;
+		for (Integer i : keys) result.add(list.get(i));
+		return result;
+	}
 
 	public static <U> U firstIn(Iterable<U> elems, Collection<U> s) {
 		for (U u : elems) if (contains(s, u)) return u;
@@ -412,6 +419,18 @@ public class Colut {
 	public static <U> Set<String> stringify(Set<U> elems) {
 		Set<String> result = Sets.newHashSet();
 		for (U u : elems) result.add(u.toString());
+		return result;
+	}
+	
+	public static <U> Map<U,Integer> invertList(List<U> list) {
+		Map<U, Integer> result = Maps.newHashMap();
+		for (int i = 0; i < list.size(); i++) result.put(list.get(i), i);
+		return result;
+	}
+	
+	public static <U> List<U> sortBy(Iterable<U> elems, Comparator<U> comp) {
+		List<U> result = Lists.newArrayList(elems);
+		Collections.sort(result, comp);
 		return result;
 	}
 }

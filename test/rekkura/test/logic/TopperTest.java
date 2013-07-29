@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 import rekkura.state.algorithm.Topper;
@@ -54,6 +56,17 @@ public class TopperTest {
 		
 		Set<Set<Integer>> actual = Sets.newHashSet(Topper.stronglyConnected(edges));
 		assertEquals(expected, actual);
+	}
+	
+	@Test
+	public void stronglyConnectedClique() {
+		Multimap<Integer, Integer> edges = HashMultimap.create();
+		for (int i = 0; i < 100; i++) edges.put(i + 100, i/2);
+		for (int i = 0; i < 50; i++) for (int j = 0; j < 50; j++) edges.put(i, j);
+		
+		List<Set<Integer>> comps = Topper.stronglyConnected(edges);
+		Assert.assertEquals(1, comps.size());
+		Assert.assertEquals(50, comps.get(0).size());
 	}
 	
 	@Test
