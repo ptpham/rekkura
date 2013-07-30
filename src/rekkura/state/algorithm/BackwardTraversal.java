@@ -75,11 +75,18 @@ public class BackwardTraversal<N, D> {
 		while (explore.size() > 0) {
 			N node = Colut.popAny(explore);
 			boolean current = expandNode(node, result);
-			if (current) explore.addAll(forward.get(node));
+			if (current) pushForward(component, explore, node);
 			expanded |= current;
 		}
 		
 		return expanded;
+	}
+
+	private void pushForward(Set<N> component, Set<N> explore, N node) {
+		for (N child : forward.get(node)) {
+			if (!component.contains(child)) continue;
+			explore.add(child);
+		}
 	}
 
 	private boolean expandNodeRecursive(N node, Set<D> result) {

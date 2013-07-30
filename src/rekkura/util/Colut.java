@@ -362,13 +362,11 @@ public class Colut {
 		return result;
 	}
 
-	public static <U,V> Map<U, V> removeAll(Collection<U> remove, Map<U, V> map) {
-		if (map == null) return null;
-		Map<U,V> result = Maps.newHashMap();
-		for (U key : map.keySet()) {
-			if (remove.contains(key)) continue;
-			result.put(key, map.get(key));
-		}
+	public static <U,V> List<V> removeAll(Collection<U> remove, Map<U, V> map) {
+		if (map == null) return Lists.newArrayList();
+		
+		List<V> result = Lists.newArrayList();
+		for (U key : map.keySet()) result.add(map.remove(key));
 		return result;
 	}
 
