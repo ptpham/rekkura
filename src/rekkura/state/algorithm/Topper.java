@@ -169,16 +169,16 @@ public class Topper {
 	private static <U> void stronglyConnectedFrom(Multimap<U,U> edges, U root, UnionFind<U> uf) {
 		Multiset<UnionFind<U>.Node> active = HashMultiset.create();
 		Set<U> passed = Sets.newHashSet(), marked = Sets.newHashSet();
-		Stack<U> stack = new Stack<U>();
+		Deque<U> stack = new ArrayDeque<U>();
 
-		stack.push(root);
+		stack.addLast(root);
 		passed.add(root);
 		
 		while (stack.size() > 0) {
-			U node = stack.peek(), next = Colut.any(edges.get(node));
+			U node = stack.peekLast(), next = Colut.any(edges.get(node));
 			if (next != null) {
 				edges.remove(node, next);
-				stack.add(next);
+				stack.addLast(next);
 				
 				boolean added = passed.add(next);
 				boolean existing = uf.contains(next) && active.contains(uf.find(next));
@@ -192,12 +192,11 @@ public class Topper {
 			} else {
 				UnionFind<U>.Node rep = uf.softFind(node);
 				if (marked.contains(node)) active.remove(rep);
-				
-				stack.pop();
-				passed.remove(node);		
+				passed.remove(node);
+				stack.pollLast();
 				
 				if (stack.size() > 0 && uf.contains(node) && active.count(uf.find(node)) > 0) {
-					mergeSets(stack.peek(), node, active, uf);
+					mergeSets(stack.peekLast(), node, active, uf);
 				}
 			}
 		}

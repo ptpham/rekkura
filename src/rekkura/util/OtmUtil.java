@@ -309,7 +309,7 @@ public class OtmUtil {
 	public static <U, V> Multimap<V,V> replace(Multimap<U,U> original, Map<U,V> conversion) {
 		Multimap<V,V> result = HashMultimap.create();
 		for (U key : original.keySet()) {
-			for (U value : original.values()) {
+			for (U value : original.get(key)) {
 				V convKey = conversion.get(key);
 				V convValue = conversion.get(value);
 				if (convKey == null || convValue == null) continue;
