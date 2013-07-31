@@ -74,6 +74,7 @@ public class GgpProtocol {
 		PlayerState handleStart(String match, Dob role, Game.Config config);
 		Dob handlePlay(String match, List<Dob> moves);
 		PlayerState handleStop(String match, List<Dob> moves);
+		PlayerState handlePing();
 	}
 	
 	/**
@@ -137,8 +138,10 @@ public class GgpProtocol {
 	public static class DefaultPlayerHandler<P extends Player> implements PlayerHandler {
 		public final Reffle.Factory<P> factory;
 		public final Map<String, GgpState> players = Synchron.newHashmap();
+		public final int max;
 		
-		private DefaultPlayerHandler(Reffle.Factory<P> factory) { this.factory = factory; }
+		private DefaultPlayerHandler(Reffle.Factory<P> factory, int max)
+		{ this.factory = factory; this.max = max; }
 		private static final int PLAY_EPSILON = 500;
 		private static final int START_EPSILON = 500;
 		
@@ -221,6 +224,12 @@ public class GgpProtocol {
 				if (state.isExpired()) iterator.remove();
 			}
 		}
+
+		@Override
+		public PlayerState handlePing() {
+			cleanPlayers();
+			return (this.players.size() >= max) ? PlayerState.BUSY : PlayerState.AVAILABLE;
+		}
 	}
 		
 	/**
@@ -297,7 +306,8 @@ public class GgpProtocol {
 		
 		private String ping(Dob dob) {
 			Dob namePair = makePair("name", name);
-			Dob statusPair = makePair("status", PlayerState.AVAILABLE.dob);
+			PlayerState state = handler.handlePing();
+			Dob statusPair = makePair("status", state.dob);
 			return fmt.toString(new Dob(namePair, statusPair));
 		}
 	}
@@ -318,12 +328,12 @@ public class GgpProtocol {
 	public static <P extends Player> DefaultPlayerDemuxer
 	createDefaultPlayerDemuxer(Class<P> type, String name) {
 		Reffle.Factory<P> factory = Reffle.createFactory(type);
-		return new DefaultPlayerDemuxer(new DefaultPlayerHandler<P>(factory), name);
+		return new DefaultPlayerDemuxer(new DefaultPlayerHandler<P>(factory, 1), name);
 	}
 	
-	public static <P extends Player> DefaultPlayerHandler<P> createDefaultPlayerHandler(Class<P> type) {
+	public static <P extends Player> DefaultPlayerHandler<P> createDefaultPlayerHandler(Class<P> type, int max) {
 		Reffle.Factory<P> factory = Reffle.createFactory(type);
-		return new DefaultPlayerHandler<P>(factory);
+		return new DefaultPlayerHandler<P>(factory, max);
 	}
 	
 	public static GgpProtocol.Start toStart(Dob dob) {

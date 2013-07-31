@@ -32,7 +32,7 @@ public class GgpProtocolTest {
 	@Test
 	public void handlerStartAndStop() {
 		DefaultPlayerHandler<Player.Legal> handler = 
-				GgpProtocol.createDefaultPlayerHandler(Player.Legal.class);
+				GgpProtocol.createDefaultPlayerHandler(Player.Legal.class, 1);
 		
 		String match = "match";
 		Dob role = new Dob("role");
