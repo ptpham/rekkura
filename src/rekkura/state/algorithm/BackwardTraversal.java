@@ -99,8 +99,8 @@ public class BackwardTraversal<N, D> {
 	private boolean expandNode(N node, Set<D> result) {
 		boolean expanded = false;
 		Set<D> generated = this.visitor.expandNode(node);
-		this.known.putAll(node, generated);
-		expanded |= result.addAll(generated);
+		expanded |= this.known.putAll(node, generated);
+		result.addAll(generated);
 		return expanded;
 	}
 }

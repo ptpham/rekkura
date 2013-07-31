@@ -256,11 +256,8 @@ public class OtmUtil {
 		Multimap<U,V> current, Multimap<U,V> previous) {
 		Multimap<U,V> diff = HashMultimap.create();
 		for (U key : current.keySet()) {
-			if (!selected.contains(key)) {
-				diff.putAll(key, current.get(key));
-			} else {
-				diff.putAll(key, Colut.difference(current.get(key), previous.get(key)));
-			}
+			if (!selected.contains(key)) diff.putAll(key, current.get(key));
+			else diff.putAll(key, Colut.difference(current.get(key), previous.get(key)));
 		}
 		return diff;
 	}
