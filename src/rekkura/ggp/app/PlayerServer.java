@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.ggp.base.util.http.HttpReader;
@@ -27,22 +28,27 @@ public class PlayerServer {
 	}
 	
 	public static void runWithGgpBaseHttp(Class<? extends Player> player, String name, int port) throws IOException {
-		ServerSocket server = new ServerSocket(port);
 		GgpProtocol.PlayerDemuxer demux = GgpProtocol.createDefaultPlayerDemuxer(player, name);
-		
+		ExecutorService service = Executors.newFixedThreadPool(32);
+		ServerSocket server = new ServerSocket(port);
 		while (true) {
-			try { ggpBaseHttpInternal(server, demux); }
-			catch (Exception e) { e.printStackTrace(); }
+			final Socket socket = server.accept();
+			ggpBaseExecuteRequest(demux, socket, service);
 		}
 	}
 
-	private static void ggpBaseHttpInternal(ServerSocket server,
-			GgpProtocol.PlayerDemuxer demux) throws IOException {
-		Socket socket = server.accept();
-		String message = HttpReader.readAsServer(socket);
-		String response = demux.handleMessage(message);
-		HttpWriter.writeAsServer(socket, response);
-		socket.close();
+	private static void ggpBaseExecuteRequest(
+			final GgpProtocol.PlayerDemuxer demux, final Socket socket, ExecutorService service) {
+		service.execute(new Runnable() { public void run() { ggpBaseHandleRequest(demux, socket); } });
+	}
+
+	private static void ggpBaseHandleRequest(GgpProtocol.PlayerDemuxer demux, Socket socket) {
+		try {
+			String message = HttpReader.readAsServer(socket);
+			String response = demux.handleMessage(message);
+			HttpWriter.writeAsServer(socket, response);
+			socket.close(); 
+		} catch (Exception e) { e.printStackTrace(); }
 	}
 	
 	public static void main(String args[]) throws IOException {
