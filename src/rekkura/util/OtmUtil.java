@@ -321,4 +321,8 @@ public class OtmUtil {
 		while (iterator.hasNext()) if (remove.contains(iterator.next().getValue())) iterator.remove();
 	}
 	
+	public static <U, V> void addAllEdges(Multimap<U,V> map, Iterable<U> keys, Iterable<V> values) {
+		if (map == null || keys == null || values == null) return;
+		for (U key : keys) for (V value : values) map.put(key, value);
+	}
 }

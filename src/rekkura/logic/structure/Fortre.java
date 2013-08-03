@@ -137,6 +137,7 @@ public class Fortre {
 		
 		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
 		for (Dob first : allForms) {
+			if (Colut.containsNone(first.fullIterable(), allVars)) continue;
 			for (Dob second : allForms) {
 				if (first == second) continue;
 				if (Unifier.isSymmetricPair(first, second, context)) { 

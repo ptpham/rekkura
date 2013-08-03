@@ -82,7 +82,7 @@ public class StandardFormat extends LogicFormat {
 				else created = new Dob(curList);
 				dobs.peek().add(created);
 				builder = new StringBuilder();
-			} else if (Character.isLetterOrDigit(curChar)) {
+			} else if (isValidDobChar(curChar)) {
 				builder.append(curChar);
 			}
 		}
@@ -92,6 +92,10 @@ public class StandardFormat extends LogicFormat {
 		
 		if (result.size() != 1) dobParseError(s);
 		return result.get(0);
+	}
+
+	private boolean isValidDobChar(char curChar) {
+		return Character.isLetterOrDigit(curChar) || curChar == '?';
 	}
 	
 	@Override

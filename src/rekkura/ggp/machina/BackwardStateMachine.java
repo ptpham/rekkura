@@ -9,9 +9,15 @@ import rekkura.ggp.milleu.GameLogicContext;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.prover.StratifiedBackward;
+import rekkura.logic.prover.StratifiedBackward.Standard;
 import rekkura.logic.structure.Pool;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * This state machine leverages the proving style of the backward prover
@@ -26,13 +32,14 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		
 	public final Multimap<Rule, Dob> knownStatic = HashMultimap.create();
 	public final Set<Rule> queryRules = Sets.newHashSet();
-	
-	private BackwardStateMachine(StratifiedBackward prover) {
+
+	public BackwardStateMachine(Standard prover, Multimap<Rule, Dob> knownStatics) {
 		super(prover.pool, prover.rta);
 		this.prover = prover;
 		this.pool = prover.pool;
 		
 		// Store the subset of known that will never change
+		this.prover.putKnown(pool.submerge(knownStatics));
 		prover.proveAll(Lists.<Dob>newArrayList());
 
 		// Construct and add query rules
@@ -76,7 +83,12 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 	}
 
 	public static BackwardStateMachine createForRules(Collection<Rule> rules) {
-		return new BackwardStateMachine(createProverForRules(rules));
+		return createWithStatics(rules, HashMultimap.<Rule,Dob>create());
+	}
+	
+	public static BackwardStateMachine createWithStatics(Collection<Rule> rules,
+		Multimap<Rule,Dob> knownStatics) {
+		return new BackwardStateMachine(createProverForRules(rules), knownStatics);
 	}
 
 	public static List<Rule> augmentWithQueryRules(Collection<Rule> rules) {

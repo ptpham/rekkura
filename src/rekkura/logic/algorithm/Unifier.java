@@ -9,9 +9,11 @@ import rekkura.logic.model.*;
 import rekkura.logic.model.Rule.Distinct;
 import rekkura.util.Colut;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -285,5 +287,27 @@ public class Unifier {
 		Map<Dob, Dob> unify = Unifier.unifyList(bodies, dobs);
 		if (!Colut.containsAll(Colut.keySet(unify), vars)) return null;
 		return unify;
+	}
+	
+	/**
+	 * Computes for each target dob the set of source dobs that unify with it.
+	 * @param dobs
+	 * @param vars
+	 * @param fortre 
+	 * @return
+	 */
+	public static Multimap<Dob, Dob> nonConflicting(Iterable<Dob> targetDobs, 
+			Iterable<Dob> sourceDobs, Collection<Dob> vars) {
+		Multimap<Dob, Dob> result = HashMultimap.create();
+		
+		for (Dob target : targetDobs) {
+			for (Dob source : sourceDobs) {
+				if (Unifier.unifyVars(target, source, vars) == null 
+					&& Unifier.unifyVars(source, target, vars) == null) continue;
+				result.put(target, source);
+			}
+		}
+		
+		return result;
 	}
 }

@@ -13,8 +13,10 @@ import rekkura.logic.model.Vars;
 import rekkura.util.CachingSupplier;
 import rekkura.util.Submerger;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -27,7 +29,8 @@ import com.google.common.collect.Sets;
  *
  */
 public class Pool {
-	private CachingSupplier<Dob> vargen = new Dob.PrefixedSupplier("PLG");
+	public final CachingSupplier<Dob> vargen = new Dob.PrefixedSupplier("PGV");
+	public final CachingSupplier<Dob> constgen = new Dob.PrefixedSupplier("PGC");
 	
 	public final LogicFormat fmt = new StandardFormat();
 	public final Submerger<Dob> dobs = createDobSubmerger();
@@ -125,5 +128,15 @@ public class Pool {
 		Dob second = dobs.submerge(distinct.second);
 		if (first == distinct.first && second == distinct.second) return distinct;
 		return new Rule.Distinct(first, second);
+	}
+
+	public Multimap<Rule, Dob> submerge(Multimap<Rule, Dob> map) {
+		Multimap<Rule, Dob> result = HashMultimap.create();
+		for (Rule rule : map.keySet()) {
+			for (Dob dob : map.get(rule)) {
+				result.put(rules.submerge(rule), dobs.submerge(dob));
+			}
+		}
+		return result;
 	}
 }

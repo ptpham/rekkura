@@ -47,11 +47,11 @@ public class Atom {
 		return Dob.compare(arg0.dob, arg1.dob);
 	}
 	
-	public static Iterator<Dob> dobIteratorFromAtoms(final Iterable<Atom> atoms) {
-		return dobIteratorFromAtoms(atoms.iterator());
+	public static Iterator<Dob> asDobIterator(final Iterable<Atom> atoms) {
+		return asDobIterator(atoms.iterator());
 	}
 	
-	public static Iterator<Dob> dobIteratorFromAtoms(final Iterator<Atom> atoms) {
+	public static Iterator<Dob> asDobIterator(final Iterator<Atom> atoms) {
 		return new Iterator<Dob>() {
 			Iterator<Atom> inner = atoms;
 			@Override public boolean hasNext()  { return inner.hasNext(); }
@@ -60,14 +60,14 @@ public class Atom {
 		};
 	}
 	
-	public static Iterable<Dob> dobIterableFromAtoms(final Iterable<Atom> atoms) {
+	public static Iterable<Dob> asDobIterable(final Iterable<Atom> atoms) {
 		return new Iterable<Dob>() {
-			@Override public Iterator<Dob> iterator() { return dobIteratorFromAtoms(atoms); }
+			@Override public Iterator<Dob> iterator() { return asDobIterator(atoms); }
 		};
 	}
 	
 	public static List<Dob> asDobList(Iterable<Atom> atoms) {
-		return Lists.newArrayList(dobIterableFromAtoms(atoms));
+		return Lists.newArrayList(asDobIterable(atoms));
 	}
 
 	public static List<Atom> filterPositives(Collection<Atom> atoms) {

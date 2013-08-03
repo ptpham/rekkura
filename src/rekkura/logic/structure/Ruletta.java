@@ -77,7 +77,7 @@ public class Ruletta {
 		Ruletta result = new Ruletta();
 		result.allRules.addAll(pool.rules.submerge(rules));
 		
-		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) {
+		for (Atom atom : Rule.asAtomIterator(result.allRules)) {
 			if (atom.truth) result.posDobs.add(atom.dob);
 			else result.negDobs.add(atom.dob);
 		}
@@ -87,18 +87,18 @@ public class Ruletta {
 		
 		// Extract all terms
 		Set<Dob> allTerms = Sets.newHashSet();
-		for (Atom atom : Rule.atomIterableFromRules(result.allRules)) { allTerms.add(atom.dob); }
+		for (Atom atom : Rule.asAtomIterator(result.allRules)) { allTerms.add(atom.dob); }
 		result.fortre = new Fortre(allTerms, pool);
 
 		// Prepare data structures to compute dependencies
 		for (Rule rule : result.allRules) { 
 			result.headToRule.put(result.fortre.getTrunkEnd(rule.head.dob), rule);
-			for (Dob body : Atom.dobIterableFromAtoms(rule.body)) {
+			for (Dob body : Atom.asDobIterable(rule.body)) {
 				result.bodyToRule.put(result.fortre.getTrunkEnd(body), rule);	
 			}
 		}
 		
-		result.bodyToGenHead = dependencies(result.bodyToRule.keySet(), 
+		result.bodyToGenHead = Unifier.nonConflicting(result.bodyToRule.keySet(), 
 				result.headToRule.keySet(), pool.allVars);
 		
 		result.bodyToGenRule = OtmUtil.joinRight(result.bodyToGenHead, result.headToRule);
@@ -141,28 +141,6 @@ public class Ruletta {
 	 */
 	public Iterable<Rule> getSpineRules(Dob query, Multimap<Dob, Rule> map) {
 		return OtmUtil.valueIterable(map, this.fortre.getCognateSpine(query));
-	}
-	
-	/**
-	 * Computes for each target dob the set of source dobs that unify with it.
-	 * @param dobs
-	 * @param vars
-	 * @param fortre 
-	 * @return
-	 */
-	public static Multimap<Dob, Dob> dependencies(Collection<Dob> targetDobs, 
-			Collection<Dob> sourceDobs, Set<Dob> vars) {
-		Multimap<Dob, Dob> result = HashMultimap.create(targetDobs.size(), sourceDobs.size());
-		
-		for (Dob target : targetDobs) {
-			for (Dob source : sourceDobs) {
-				if (Unifier.unifyVars(target, source, vars) == null 
-					&& Unifier.unifyVars(source, target, vars) == null) continue;
-				result.put(target, source);
-			}
-		}
-		
-		return result;
 	}
 	
 	/**

@@ -114,6 +114,17 @@ public class Rule {
 			compare = Dob.compareStructure(left.second, right.second, vars);
 			return compare;
 		}
+		
+		public static List<Distinct> keepUnrelated(Iterable<Distinct> distincts,
+				Collection<Dob> diff) {
+			List<Distinct> filtered = Lists.newArrayList();
+			for (Distinct distinct : distincts) {
+				if (diff.contains(distinct.first)) continue;
+				if (diff.contains(distinct.second)) continue;
+				filtered.add(distinct);
+			}
+			return filtered;
+		}
 	}
 	
 	/**
@@ -251,9 +262,21 @@ public class Rule {
 	}
 	
 	public Set<Dob> getVariablesOf(Dob dob) {
+		return getVariablesOf(dob, this.vars);
+	}
+	
+	public static Set<Dob> getVariablesOf(Dob dob, Collection<Dob> vars) {
 		Set<Dob> result = Sets.newHashSet(dob.fullIterable());
-		result.retainAll(this.vars);
+		result.retainAll(vars);
 		return result;
+	}
+	
+	public static Set<Dob> getVariablesOf(Iterable<Atom> atoms, Collection<Dob> allVars) {
+		Set<Dob> vars = Sets.newHashSet();
+		for (Dob dob : Atom.asDobIterable(atoms)) {
+			vars.addAll(Rule.getVariablesOf(dob, allVars));
+		}
+		return vars;
 	}
 	
 	public static Rule asVacuous(Dob dob) {
@@ -269,32 +292,40 @@ public class Rule {
 			Lists.<Atom>newArrayList(), vars);
 	}
 	
-	public static Iterator<Atom> atomIteratorFromRule(final Rule rule) {
+	public static Iterator<Atom> asAtomIterator(final Rule rule) {
 		return Iterators.concat(rule.body.iterator(), Iterators.forArray(rule.head));
 	}
 	
-	public static Iterator<Atom> atomIteratorFromRules(final Iterator<Rule> rules) {
+	public static Iterator<Atom> asAtomIterator(final Iterator<Rule> rules) {
 		return new NestedIterator<Rule, Atom>(rules) {
-			@Override protected Iterator<Atom> prepareNext(Rule u) { return atomIteratorFromRule(u); }
+			@Override protected Iterator<Atom> prepareNext(Rule u) { return asAtomIterator(u); }
 		};
 	}
 	
-	public static Iterator<Atom> atomIteratorFromRules(final Collection<Rule> rules) {
-		return atomIteratorFromRules(rules.iterator());
+	public static Iterable<Atom> asAtomIterable(Rule rule) {
+		return asAtomIterator(Lists.newArrayList(rule));
 	}
 	
-	public static Iterable<Atom> atomIterableFromRule(Rule rule) {
-		return atomIterableFromRules(Lists.newArrayList(rule));
-	}
-	
-	public static Iterable<Atom> atomIterableFromRules(final Collection<Rule> rules) {
+	public static Iterable<Atom> asAtomIterator(final Iterable<Rule> rules) {
 		return new Iterable<Atom>() {
-			@Override public Iterator<Atom> iterator() { return atomIteratorFromRules(rules); }
+			@Override public Iterator<Atom> iterator() { return asAtomIterator(rules.iterator()); }
+		};
+	}
+	
+	public static Iterator<Atom> asHeadIterator(final Iterator<Rule> rules) {
+		return new NestedIterator<Rule, Atom>(rules) {
+			@Override protected Iterator<Atom> prepareNext(Rule u) { return Iterators.forArray(u.head); }
+		};
+	}
+	
+	public static Iterable<Atom> asHeadIterator(final Iterable<Rule> rules) {
+		return new Iterable<Atom>() {
+			@Override public Iterator<Atom> iterator() { return asHeadIterator(rules.iterator()); }
 		};
 	}
 	
 	public static Iterable<Dob> dobIterableFromRule(Rule rule) {
-		return Atom.dobIterableFromAtoms(atomIterableFromRule(rule));
+		return Atom.asDobIterable(asAtomIterable(rule));
 	}
 	
 	@Override public String toString() { return StandardFormat.inst.toString(this); }
