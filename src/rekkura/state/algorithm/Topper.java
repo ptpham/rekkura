@@ -143,11 +143,9 @@ public class Topper {
 	}
 	
 	public static <U> List<Set<U>> connected(Multimap<U, U> edges) {
-		// TODO: This implementation is currently super lazy/inefficient.
-		Multimap<U, U> working = HashMultimap.create();
-		Multimaps.invertFrom(working, edges);
-		working.putAll(edges);
-		return stronglyConnected(working);
+		UnionFind<U> uf = new UnionFind<U>();
+		for (Map.Entry<U,U> entry : edges.entries()) uf.union(entry.getKey(), entry.getValue());
+		return uf.asListOfSets();
 	}
 	
 	public static <U> List<Set<U>> stronglyConnected(Multimap<U, U> edges) {
@@ -160,12 +158,9 @@ public class Topper {
 			stronglyConnectedFrom(copy, node, uf);
 		}
 		
-		List<Set<U>> result = Lists.newArrayList();
-		HashMultimap<U,U> map = uf.asBackwardMap();
-		for (U key : map.keySet()) result.add(map.get(key));
-		return result;
+		return uf.asListOfSets();
 	}
-	
+
 	private static <U> void stronglyConnectedFrom(Multimap<U,U> edges, U root, UnionFind<U> uf) {
 		Multiset<UnionFind<U>.Node> active = HashMultiset.create();
 		Set<U> passed = Sets.newHashSet(), marked = Sets.newHashSet();

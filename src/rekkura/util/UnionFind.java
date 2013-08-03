@@ -1,6 +1,7 @@
 package rekkura.util;
 
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
@@ -87,6 +88,13 @@ public class UnionFind<U> {
 			result.put(parent.value, node.value);
 		}
 		
+		return result;
+	}
+	
+	public List<Set<U>> asListOfSets() {
+		List<Set<U>> result = Lists.newArrayList();
+		HashMultimap<U,U> map = asBackwardMap();
+		for (U key : map.keySet()) result.add(map.get(key));
 		return result;
 	}
 }
