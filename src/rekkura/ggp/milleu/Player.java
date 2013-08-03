@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import rekkura.ggp.machina.BackwardStateMachine;
 import rekkura.logic.model.Dob;
@@ -34,6 +36,8 @@ public abstract class Player implements Runnable {
 	private final Vector<Dob> moves = Synchron.newVector();
 	private final Vector<Map<Dob, Dob>> history = Synchron.newVector();
 	private volatile boolean started = false, complete = false;
+	
+	public volatile Logger logger = null;
 	
 	/**
 	 * A player may only be started once.
@@ -117,6 +121,14 @@ public abstract class Player implements Runnable {
 		
 		@Override
 		public final void run() {
+			try {
+				runInternal();
+			} catch (Exception e) {
+				if (logger != null) logger.log(Level.SEVERE, e.toString());
+			}
+		}
+		
+		private void runInternal() {
 			while (!this.isStarted()) waitForInput();
 			this.machine = constructMachine(config.rules);
 			while (!isComplete()) {
