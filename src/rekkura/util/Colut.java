@@ -16,6 +16,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
+import com.google.common.collect.Ranges;
 import com.google.common.collect.Sets;
 
 /**
@@ -429,6 +430,12 @@ public class Colut {
 	public static <U> List<U> sortBy(Iterable<U> elems, Comparator<U> comp) {
 		List<U> result = Lists.newArrayList(elems);
 		Collections.sort(result, comp);
+		return result;
+	}
+	
+	public static List<Integer> listInts(int begin, int end) {
+		List<Integer> result = Lists.newArrayList();
+		for (int i = begin; i < end; i++) result.add(i);
 		return result;
 	}
 }

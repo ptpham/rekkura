@@ -212,7 +212,6 @@ public class Fortre {
 			if (Colut.empty(curChildren)) break;
 			cur = downwardUnify(dob, curChildren, allVars);
 		}
-		
 		return path;
 	}
 	

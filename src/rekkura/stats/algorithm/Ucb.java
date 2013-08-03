@@ -22,12 +22,17 @@ public class Ucb {
 		}
 		
 		public synchronized double expected() { return cumulative/count; }
+		
+		public synchronized void clear() {
+			this.cumulative = 0;
+			this.count = 0;
+		}
 	}
 	
 	public static class Suggestor<U> {
-		private final Map<U, Entry> entries = Maps.newHashMap();
 		private int total = 1;
 		public final double c;
+		public final Map<U, Entry> entries = Maps.newHashMap();
 		
 		public Suggestor(Iterable<U> actions, double c) {
 			for (U action : actions) entries.put(action, new Entry());
@@ -53,6 +58,10 @@ public class Ucb {
 				best.consider(entry.getValue().expected(), entry.getKey());
 			}
 			return best.getCarry();
+		}
+
+		public void clear() {
+			for (Entry entry : entries.values()) entry.clear();
 		}
 	}
 
