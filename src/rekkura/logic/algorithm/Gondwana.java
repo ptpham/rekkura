@@ -14,7 +14,6 @@ import rekkura.util.Colut;
 import rekkura.util.DualMultimap;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -39,28 +38,27 @@ public class Gondwana {
 		return result;
 	}
 	
-	public static Cartesian.AdvancingIterator<Unification> applyLinearJoin(Rule rule, 
-			List<Atom> expanders, ListMultimap<Atom, Dob> support, Set<Dob> truths) {
-		AdvancingIterator<Unification> result = applyLinearJoinInternal(rule, support, truths);
-		if (result == null) return Terra.applyBodyExpansion(rule, expanders, support, truths);
+	public static Cartesian.AdvancingIterator<Unification> getLinearJoinIterator(Rule rule, 
+			List<Atom> expanders, Multimap<Atom, Dob> support, Set<Dob> truths) {
+		AdvancingIterator<Unification> result = getLinearJoinInternal(rule, expanders, support, truths);
+		if (result == null) return Terra.getBodySpaceIterator(rule, expanders, support, truths);
 		return result;
 	}
 	
-	private static AdvancingIterator<Unification> applyLinearJoinInternal(Rule rule, 
-		ListMultimap<Atom, Dob> support, Set<Dob> truths) {
+	private static AdvancingIterator<Unification> getLinearJoinInternal(Rule rule, 
+		List<Atom> expanders, Multimap<Atom, Dob> support, Set<Dob> truths) {
 
 		// If we have a cover with a single term, we are not interested
 		// in doing the linear join dance.
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		Terra.sortBySupportSize(positives, support);
-		List<Atom> cover = Terra.getGreedyExpanders(rule, support);
-		if (cover == null || cover.size() < 2) return null;
-		List<List<Dob>> schemas = linearOverlaps(cover, rule.vars);
-		return generateUnificationSpace(rule, support, cover, schemas);
+		if (expanders == null || expanders.size() < 2) return null;
+		List<List<Dob>> schemas = linearOverlaps(expanders, rule.vars);
+		return generateUnificationSpace(rule, support, expanders, schemas);
 	}
 
 	private static AdvancingIterator<Unification> generateUnificationSpace(
-			Rule rule, ListMultimap<Atom, Dob> support, List<Atom> cover,
+			Rule rule, Multimap<Atom, Dob> support, List<Atom> cover,
 			List<List<Dob>> schemas) {
 		Map<Map<Dob,Dob>, Unification> bridges = buildLinearBridges(rule, support, cover, schemas);
 		Multimap<Unification,Unification> space = HashMultimap.create();
@@ -98,7 +96,7 @@ public class Gondwana {
 	}
 
 	private static Map<Map<Dob,Dob>, Unification> buildLinearBridges(Rule rule,
-			ListMultimap<Atom, Dob> support, List<Atom> cover,
+			Multimap<Atom, Dob> support, List<Atom> cover,
 			List<List<Dob>> expanders) {
 		Map<Map<Dob,Dob>, Unification> bridges = Maps.newHashMap();
 		for (int i = 1; i < cover.size(); i++) {

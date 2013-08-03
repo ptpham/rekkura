@@ -31,10 +31,11 @@ public class PlayerServer {
 		GgpProtocol.PlayerDemuxer demux = GgpProtocol.createDefaultPlayerDemuxer(player, name);
 		ExecutorService service = Executors.newFixedThreadPool(32);
 		ServerSocket server = new ServerSocket(port);
-		while (true) {
+		while (!Thread.interrupted()) {
 			final Socket socket = server.accept();
 			ggpBaseExecuteRequest(demux, socket, service);
 		}
+		server.close();
 	}
 
 	private static void ggpBaseExecuteRequest(
