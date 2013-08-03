@@ -10,11 +10,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import rekkura.state.algorithm.Topper;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
 public class TopperTest {
@@ -103,10 +103,33 @@ public class TopperTest {
 	
 	@Test
 	public void generalTopSort() {
-		// TODO: write a better test
-		throw new NotImplementedException();
+		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
+			{0, 1}, {1, 2}, {1, 6}, {6, 21}, {2, 3}, 
+			{2, 4}, {4, 5}, {5, 2}, {3, 1}, {4, 7}, 
+			{7, 8}, {8, 9}, {9,7}, {9, 10}, {10, 11}, {11, 10},
+			{10, 12}, {12, 13}, {13, 14}, {14, 15}, 
+			{13, 12}, {12, 16}, {16, 12}, {13, 2}, {15, 17},
+			{17, 18}, {18, 15}, {18, 19}, {19, 20}, {20, 19}});
+		
+		Set<Integer> second = Sets.newHashSet(17, 18, 15);
+		Set<Integer> first = Sets.newHashSet(1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 16);
+		Set<Integer> third = Sets.newHashSet(19, 20);
+		
+		Multiset<Integer> actual = Topper.generalTopSort(edges, Topper.findRoots(edges));
+		checkAfter(second, first, actual);
+		checkAfter(third, first, actual);
+		checkAfter(third, second, actual);
 	}
 	
+	private <U> void checkAfter(Set<U> second, Set<U> first,
+			Multiset<U> actual) {
+		for (U left : second) {
+			for (U right : first) {
+				Assert.assertTrue(actual.count(left) > actual.count(right));
+			}
+		}
+	}
+
 	@Test
 	public void reduceDirected() {
 		Multimap<Integer, Integer> edges = toMultimap(new int[][]{
