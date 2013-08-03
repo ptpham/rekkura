@@ -86,4 +86,13 @@ public class Synchron {
 	public static <U> List<U> newList() {
 		return Collections.synchronizedList(new ArrayList<U>());
 	}
+	
+	public static Thread selfInterrupt(final long delay) {
+		final Thread current = Thread.currentThread();
+		Thread result = new Thread(new Runnable() { public void run() {
+			if (lightSleep(delay)) current.interrupt();
+		}});
+		result.start();
+		return result;
+	}
 }

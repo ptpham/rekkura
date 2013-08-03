@@ -111,6 +111,7 @@ public class Terra {
 		Unification unify = Unification.from(rule.vars);
 		
 		while (iterator.hasNext()) {
+			if (Thread.interrupted()) throw new RuntimeException();
 			unify.clear();
 
 			// Dobs in the variable cover must contribute in a
