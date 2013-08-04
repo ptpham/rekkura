@@ -90,12 +90,6 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		Multimap<Rule,Dob> knownStatics) {
 		return new BackwardStateMachine(createProverForRules(rules), knownStatics);
 	}
-
-	public static List<Rule> augmentWithQueryRules(Collection<Rule> rules) {
-		List<Rule> augmented = Lists.newArrayList(rules);
-		augmented.addAll(GameLogicContext.getVacuousQueryRules());
-		return augmented;
-	}
 	
 	private Set<Dob> proverPass(Iterable<Dob> state, Dob query, Map<Dob, Dob> unify) {
 		prover.clear();

@@ -54,9 +54,7 @@ public class MonteCarloPlayerTest {
 		player.setMatch(role, config);
 		player.advance(actionMap);
 		
-		Thread thread = Player.start(player);
-		thread.start();
-		
+		Player.start(player);
 		while (player.getWavesComputed() < 1) { Synchron.lightSleep(50); }
 		
 		String taken = StandardFormat.inst.toString(player.getDecision(1));

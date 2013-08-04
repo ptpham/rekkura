@@ -179,4 +179,10 @@ public class GameLogicContext {
 		for (Dob dob : queries) result.add(Rule.asVacuous(dob, GENERIC_VAR_LIST));
 		return result;
 	}
+	
+	public static List<Rule> augmentWithQueryRules(Collection<Rule> rules) {
+		List<Rule> augmented = Lists.newArrayList(rules);
+		augmented.addAll(GameLogicContext.getVacuousQueryRules());
+		return augmented;
+	}
 }

@@ -38,6 +38,7 @@ public abstract class Player implements Runnable {
 	private volatile boolean started = false, complete = false;
 	
 	public volatile Logger logger = Logger.getGlobal();
+	{ logger.setUseParentHandlers(false); }
 	
 	/**
 	 * A player may only be started once.

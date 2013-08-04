@@ -41,6 +41,8 @@ public class DepthCharge<S,A> {
 			fixed = null;
 			
 			state = machine.nextState(state, joint);
+			result.add(state);
+			
 			if (++depth >= maxDepth) break;
 			if (System.currentTimeMillis() - begin > maxTime) break;
 		}
@@ -71,7 +73,7 @@ public class DepthCharge<S,A> {
 	 */
 	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine, 
 			Map<Dob, A> fixed, Random rand) {
-		DepthCharge<S, A> charger = new DepthCharge<>(machine);
+		DepthCharge<S, A> charger = new DepthCharge<S,A>(machine);
 		if (rand != null) charger.rand = rand;
 		charger.fixed = fixed;
 		return charger.fire(state);

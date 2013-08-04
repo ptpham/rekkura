@@ -53,10 +53,9 @@ public class MatchRunnable implements Runnable {
 		ProverStateMachine machine = ProverStateMachine.createWithStratifiedBackward(config.rules);
 		List<Dob> roles = Game.getRoles(config.rules);
 		Map<Player, Dob> playerRoles = Maps.newHashMap();
-		List<Thread> threads = preparePlayers(roles, playerRoles);
+		preparePlayers(roles, playerRoles);
 		
 		// Start players
-		for (Thread thread : threads) thread.start();
 		Synchron.lightSleep(config.startclock);
 		Event.post(bus, new StartEvent());
 		

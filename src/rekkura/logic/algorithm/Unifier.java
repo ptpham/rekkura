@@ -277,6 +277,7 @@ public class Unifier {
 			if (!leftVar && !rightVar) return null;
 			
 			if (leftVar) conflicts.add(left);
+			if (rightVar) conflicts.add(right);
 			Dob var = Vars.request(conflicts, pool.context);
 			unify.put(entry.getKey(), var);
 			conflicts.add(var);

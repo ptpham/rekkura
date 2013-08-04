@@ -1,6 +1,7 @@
 package rekkura.ggp.machina;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -8,6 +9,7 @@ import rekkura.ggp.milleu.GameLogicContext;
 import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
+import rekkura.logic.prover.StratifiedBackward;
 import rekkura.logic.prover.StratifiedForward;
 import rekkura.logic.prover.StratifiedProver;
 import rekkura.logic.structure.Pool;
@@ -68,12 +70,14 @@ public class ProverStateMachine extends GameLogicContext implements GgpStateMach
 		}
 		return advanced;
 	}
-
+	
 	public static ProverStateMachine createWithStratifiedForward(Collection<Rule> rules) {
-		return new ProverStateMachine(new StratifiedForward(rules));
+		List<Rule> augmented = augmentWithQueryRules(rules);
+		return new ProverStateMachine(new StratifiedForward(augmented));
 	}
 	
 	public static ProverStateMachine createWithStratifiedBackward(Collection<Rule> rules) {
-		return new ProverStateMachine(BackwardStateMachine.createProverForRules(rules));
+		List<Rule> augmented = augmentWithQueryRules(rules);
+		return new ProverStateMachine(new StratifiedBackward.Standard(augmented));
 	}
 }

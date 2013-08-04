@@ -147,9 +147,11 @@ public class Fortre {
 		Set<Dob> allVars, Pool pool) {		
 		
 		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
-		for (Dob first : allForms) {
+		for (int i = 0; i < allForms.size(); i++) {
+			Dob first = allForms.get(i);
 			if (Colut.containsNone(first.fullIterable(), allVars)) continue;
-			for (Dob second : allForms) {
+			for (int j = i + 1; j < allForms.size(); j++) {
+				Dob second = allForms.get(j);
 				if (first == second) continue;
 				if (Unifier.symmetrize(first, second, pool) != null) { 
 					symmetricEdges.put(first, second); 
