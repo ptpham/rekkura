@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import rekkura.ggp.machina.BackwardStateMachine;
@@ -38,7 +37,7 @@ public abstract class Player implements Runnable {
 	private final Vector<Map<Dob, Dob>> history = Synchron.newVector();
 	private volatile boolean started = false, complete = false;
 	
-	public volatile Logger logger = null;
+	public volatile Logger logger = Logger.getGlobal();
 	
 	/**
 	 * A player may only be started once.
@@ -78,7 +77,7 @@ public abstract class Player implements Runnable {
 	public final synchronized Dob getLatestDecision() { return Colut.end(moves); }
 	protected final synchronized void setDecision(int turn, Dob dob) { Colut.addAt(moves, turn, dob); }
 	protected final synchronized void setDecision(Game.Decision decision) { this.setDecision(decision.turn, decision.action); }
-	
+
 	private void appendToHistory(Map<Dob, Dob> actions) {
 		Colut.addAt(history, history.size(), actions);
 		this.notifyAll();
@@ -102,7 +101,7 @@ public abstract class Player implements Runnable {
 	 * @param <M>
 	 */
 	public static abstract class StateBased<M extends StateMachine<Set<Dob>, Dob>> extends Player {
-		private static final long DEFAULT_MAX_CONSTRUCTION_TIME = 30000;
+		private static final long DEFAULT_MAX_CONSTRUCTION_TIME = 40000;
 		private Set<Dob> state;
 		private int turn;
 		
@@ -122,22 +121,10 @@ public abstract class Player implements Runnable {
 		}
 		
 		@Override
-		public final void run() {
-			try {
-				runInternal();
-			} catch (Exception e) {
-				if (logger != null) logger.log(Level.SEVERE, e.toString());
-			}
-		}
-		
-		private void runInternal() {
+		public void run() {
 			while (!this.isStarted()) waitForInput();
 			
-			Thread interrupt = Synchron.selfInterrupt(DEFAULT_MAX_CONSTRUCTION_TIME);
-			this.machine = constructMachine(config.rules);
-			DepthCharge.fire(machine.getInitial(), machine);
-			interrupt.interrupt();
-			
+			if (!setup()) return;
 			while (!isComplete()) {
 				updateState();
 				if (isTerminal()) break;
@@ -145,6 +132,24 @@ public abstract class Player implements Runnable {
 				else move();
 			}
 			reflect();
+		}
+		
+		private boolean setup() {
+			logger.info("Starting machine construction ...");
+			Thread interrupt = Synchron.selfInterrupt(DEFAULT_MAX_CONSTRUCTION_TIME);
+			
+			// Make sure we can do a typical suite of actions
+			// in a reasonable time -- if not, just bail.
+			this.machine = constructMachine(config.rules);
+			try { DepthCharge.runBasicSuite(this.machine); }
+			catch (Exception e) {
+				logger.severe("Unable to complete machine construction");
+				return false;
+			}
+			
+			interrupt.interrupt();
+			logger.info("Finished machine construction.");
+			return true;
 		}
 		
 		private synchronized boolean isTerminal() {
@@ -199,8 +204,20 @@ public abstract class Player implements Runnable {
 		private void makeAnyMove() { setDecision(anyDecision()); }
 	}
 	
+	private static Runnable getWrappedPlayer(final Player player) {
+		return new Runnable() {
+			@Override public void run() {
+				try {
+					player.run();
+				} catch (Exception e) {
+					player.logger.severe(e.toString());
+				}
+			}
+		};
+	}
+	
 	public static Thread start(Player player) {
-		Thread thread = new Thread(player);
+		Thread thread = new Thread(getWrappedPlayer(player));
 		thread.start();
 		return thread;
 	}

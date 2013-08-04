@@ -105,7 +105,7 @@ public class MatchRunnable implements Runnable {
 		for (int i = 0; i < roles.size(); i++) playerRoles.put(players.get(i), roles.get(i));
 		
 		// Construct harnesses for players
-		for (Player player : players) threads.add(new Thread(player));
+		for (Player player : players) threads.add(Player.start(player));
 		
 		// Configure players
 		for (Player player : players) {

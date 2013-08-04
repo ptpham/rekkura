@@ -8,6 +8,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import rekkura.ggp.milleu.Game;
+import rekkura.ggp.milleu.Player;
 import rekkura.ggp.player.MonteCarloPlayer;
 import rekkura.logic.format.StandardFormat;
 import rekkura.logic.model.Dob;
@@ -53,7 +54,7 @@ public class MonteCarloPlayerTest {
 		player.setMatch(role, config);
 		player.advance(actionMap);
 		
-		Thread thread = new Thread(player);
+		Thread thread = Player.start(player);
 		thread.start();
 		
 		while (player.getWavesComputed() < 1) { Synchron.lightSleep(50); }

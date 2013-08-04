@@ -95,4 +95,10 @@ public class Synchron {
 		result.start();
 		return result;
 	}
+	
+	public static Thread startOnNewThread(Runnable runnable) {
+		Thread thread = new Thread(runnable);
+		thread.start();
+		return thread;
+	}
 }

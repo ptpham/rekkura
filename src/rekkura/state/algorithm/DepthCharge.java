@@ -13,7 +13,40 @@ import rekkura.util.Synchron;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
-public class DepthCharge {
+public class DepthCharge<S,A> {
+	
+	public final StateMachine<S,A> machine;
+	public Random rand = new Random();
+	public int maxDepth = Integer.MAX_VALUE;
+	public long maxTime = Long.MAX_VALUE;
+	Map<Dob, A> fixed = null;
+	
+	private DepthCharge(StateMachine<S,A> machine) {
+		this.machine = machine;
+	}
+	
+	public static <S,A> DepthCharge<S,A> create(StateMachine<S,A> machine) {
+		return new DepthCharge<S,A>(machine);
+	}
+	
+	public List<S> fire(S state) {
+		List<S> result = Lists.newArrayList();
+		result.add(state);
+		
+		int depth = 0;
+		long begin = System.currentTimeMillis();
+		while (!machine.isTerminal(state)) {
+			ListMultimap<Dob, A> actions = machine.getActions(state);
+			Map<Dob, A> joint = OtmUtil.randomAssignment(actions, fixed, rand);
+			fixed = null;
+			
+			state = machine.nextState(state, joint);
+			if (++depth >= maxDepth) break;
+			if (System.currentTimeMillis() - begin > maxTime) break;
+		}
+		
+		return result;
+	}
 
 	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine) {
 		return fire(state, machine, null, new Random());
@@ -38,19 +71,10 @@ public class DepthCharge {
 	 */
 	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine, 
 			Map<Dob, A> fixed, Random rand) {
-		List<S> result = Lists.newArrayList();
-		result.add(state);
-		
-		while (!machine.isTerminal(state)) {
-			ListMultimap<Dob, A> actions = machine.getActions(state);
-			Map<Dob, A> joint = OtmUtil.randomAssignment(actions, fixed, rand);
-			fixed = null;
-			
-			state = machine.nextState(state, joint);
-			result.add(state);
-		}
-		
-		return result;
+		DepthCharge<S, A> charger = new DepthCharge<>(machine);
+		if (rand != null) charger.rand = rand;
+		charger.fixed = fixed;
+		return charger.fire(state);
 	}
 	
 	public static <S,A> double measureCps(StateMachine<S,A> machine, int charges) {
@@ -81,5 +105,12 @@ public class DepthCharge {
 		while (threads.size() > 0) { Synchron.lightJoin(Colut.popAny(threads)); }
 		long interval = System.currentTimeMillis() - begin;
 		return 1000*machines.length*perMachine/(double)interval;
+	}
+	
+	public static <S, A> void runBasicSuite(StateMachine<S,A> machine) {
+		S initial = machine.getInitial();
+		Map<Dob, A> joint = OtmUtil.randomAssignment(machine.getActions(initial));
+		S next = machine.nextState(initial, joint);
+		machine.isTerminal(next);
 	}
 }
