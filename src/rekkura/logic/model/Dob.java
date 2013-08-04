@@ -43,6 +43,12 @@ public class Dob {
 	public Dob at(int pos) { return this.children.get(pos); }
 	public int size() { return this.children.size(); }
 	public List<Dob> childCopy() { return Lists.newArrayList(this.children); }
+	public Dob deepCopy() {
+		if (isTerminal()) return new Dob(name);
+		List<Dob> copied = Lists.newArrayList();
+		for (Dob dob : children) copied.add(dob.deepCopy());
+		return new Dob(copied);
+	}
 
 	public Iterator<Dob> fullIterator() {
 		return new Iterator<Dob>() {

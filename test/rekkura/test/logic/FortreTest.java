@@ -110,7 +110,7 @@ public class FortreTest {
 		
 		Multimap<Dob, Dob> edges = HashMultimap.create();
 		for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) edges.put(dobs.get(i), dobs.get(j));
-		Dob generalization = Fortre.computeGeneralization(dobs.get(0), edges, pool.context);
+		Dob generalization = Fortre.computeGeneralization(dobs.get(0), edges, pool);
 		assertNotNull(generalization);
 	}
 	
@@ -129,7 +129,9 @@ public class FortreTest {
 		assertNull(Fortre.downwardUnify(queryList.get(0), bodyList, Sets.newHashSet(varList)));
 	}
 	
-	private Map<String, List<Dob>> makeAndCheckTrunks(String[] rawVars, String[] rawDobs, String[] rawGenerated) {
+	private Map<String, List<Dob>> makeAndCheckTrunks(String[] rawVars,
+		String[] rawDobs, String[] rawGenerated) {
+		
 		LogicFormat fmt = new StandardFormat();
 		Pool pool = new Pool();
 		List<Dob> dobs = stringsToDobs(rawDobs, fmt, pool);

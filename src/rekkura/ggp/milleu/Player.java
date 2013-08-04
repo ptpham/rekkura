@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import rekkura.ggp.machina.BackwardStateMachine;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
+import rekkura.state.algorithm.DepthCharge;
 import rekkura.state.model.StateMachine;
 import rekkura.util.Colut;
 import rekkura.util.Synchron;
@@ -101,6 +102,7 @@ public abstract class Player implements Runnable {
 	 * @param <M>
 	 */
 	public static abstract class StateBased<M extends StateMachine<Set<Dob>, Dob>> extends Player {
+		private static final long DEFAULT_MAX_CONSTRUCTION_TIME = 30000;
 		private Set<Dob> state;
 		private int turn;
 		
@@ -130,7 +132,12 @@ public abstract class Player implements Runnable {
 		
 		private void runInternal() {
 			while (!this.isStarted()) waitForInput();
+			
+			Thread interrupt = Synchron.selfInterrupt(DEFAULT_MAX_CONSTRUCTION_TIME);
 			this.machine = constructMachine(config.rules);
+			DepthCharge.fire(machine.getInitial(), machine);
+			interrupt.interrupt();
+			
 			while (!isComplete()) {
 				updateState();
 				if (isTerminal()) break;
@@ -159,7 +166,7 @@ public abstract class Player implements Runnable {
 		}
 		
 		protected synchronized boolean validState() { 
-			return this.turn == getHistoryExtent(); 
+			return this.turn == getHistoryExtent() && !this.isComplete(); 
 		}
 	}
 	

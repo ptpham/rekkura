@@ -1,15 +1,26 @@
 package rekkura.logic.structure;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.Stack;
 
 import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.model.Dob;
-import rekkura.logic.model.Vars;
 import rekkura.state.algorithm.Topper;
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 
 /**
  * (Form tree) This class is responsible for making it easy to 
@@ -67,7 +78,7 @@ public class Fortre {
 		Set<Dob> symmetrized = Sets.newHashSet(filteredForms);
 		for (Set<Dob> component : symmetrizingComponents) {
 			if (component.size() < 2) continue;
-			Dob generalization = computeGeneralization(Colut.any(component), symmetricEdges, pool.context);
+			Dob generalization = computeGeneralization(Colut.any(component), symmetricEdges, pool);
 
 			symmetrized.removeAll(component);
 			symmetrized.add(pool.dobs.submerge(generalization));
@@ -101,7 +112,7 @@ public class Fortre {
 	}
 
 	public static Dob computeGeneralization(Dob root, 
-			Multimap<Dob, Dob> edges, Vars.Context context) {
+			Multimap<Dob, Dob> edges, Pool pool) {
 		Dob generalization = root;
 		Stack<Dob> working = new Stack<Dob>();
 		Set<Dob> seen = Sets.newHashSet(generalization);
@@ -112,7 +123,7 @@ public class Fortre {
 			if (seen.contains(next)) continue;
 			seen.add(next);
 			
-			generalization = Unifier.symmetrizeBothSides(generalization, next, context);
+			generalization = Unifier.symmetrize(generalization, next, pool);
 			working.addAll(edges.get(next));
 		}
 		
@@ -132,15 +143,15 @@ public class Fortre {
 		return cognateEdges;
 	}
 
-	public static Multimap<Dob, Dob> computeSymmetrizingEdges(List<Dob> allForms, Set<Dob> allVars, Pool pool) {
-		Vars.Context context = Vars.copy("tmp", pool.context);
+	public static Multimap<Dob, Dob> computeSymmetrizingEdges(List<Dob> allForms,
+		Set<Dob> allVars, Pool pool) {		
 		
 		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
 		for (Dob first : allForms) {
 			if (Colut.containsNone(first.fullIterable(), allVars)) continue;
 			for (Dob second : allForms) {
 				if (first == second) continue;
-				if (Unifier.isSymmetricPair(first, second, context)) { 
+				if (Unifier.symmetrize(first, second, pool) != null) { 
 					symmetricEdges.put(first, second); 
 					symmetricEdges.put(second, first);
 				}

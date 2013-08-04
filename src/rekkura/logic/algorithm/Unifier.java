@@ -5,12 +5,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.logic.model.*;
+import rekkura.logic.model.Atom;
+import rekkura.logic.model.Dob;
+import rekkura.logic.model.Rule;
+import rekkura.logic.model.Vars;
 import rekkura.logic.model.Rule.Distinct;
+import rekkura.logic.model.Unification;
+import rekkura.logic.structure.Pool;
 import rekkura.util.Colut;
 
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
@@ -183,61 +187,6 @@ public class Unifier {
 	}
 	
 	/**
-	 * Generates the unification that, when applied to the base dob that originally generated the 
-	 * unification, will yield a generalization of the base dob and the target dob. If we see
-	 * a variable as a value in the unify map twice, then this is not a valid symmetric unification.
-	 * @param unify
-	 * @param conflicts
-	 * @param vargen supplies new variables for the generalization
-	 * @return
-	 */
-	public static Map<Dob, Dob> symmetrize(Map<Dob, Dob> unify, 
-		Set<Dob> conflicts, Vars.Context context) {
-		
-		if (unify == null) return null;
-		Map<Dob, Dob> result = Maps.newHashMap();
-		
-		Collection<Dob> vars = context.getAll();
-		for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
-			Dob key = entry.getKey(), value = entry.getValue();
-			if (!vars.contains(key) && !vars.contains(value)) return null;
-			
-			Dob request = Vars.request(conflicts, context);
-			result.put(key, request);
-			conflicts.add(request);
-		}
-		
-		return result;
-	}
-	
-	public static boolean isSymmetricPair(Dob first, Dob second, Vars.Context context) {
-		return getSymmetrizer(first, second, context) != null;
-	}
-	
-	public static Dob symmetrizeBothSides(Dob first, Dob second, Vars.Context context) {
-		Dob result = symmetrize(first, second, context);
-		if (result == null) result = symmetrize(second, first, context);
-		return result;
-	}
-	
-	public static Dob symmetrize(Dob first, Dob second, Vars.Context context) {
-		Map<Dob, Dob> symmetrizer = getSymmetrizer(first, second, context);
-		return replace(first, symmetrizer);
-	}
-	
-	private static Map<Dob, Dob> getSymmetrizer(Dob first, Dob second, Vars.Context context) {
-		Map<Dob, Dob> unification = Unifier.unify(first, second);
-		
-		Set<Dob> allVars = context.getAll();
-		Set<Dob> conflicts = Sets.newHashSet(first.fullIterable());
-		Iterables.addAll(conflicts, second.fullIterable());
-		conflicts.retainAll(allVars);
-		
-		Map<Dob, Dob> symmetrizer = Unifier.symmetrize(unification, conflicts, context);
-		return symmetrizer;
-	}
-	
-	/**
 	 * Returns true if the src was successfully merged into the dst
 	 * unification and false otherwise.
 	 * @param dst
@@ -309,5 +258,30 @@ public class Unifier {
 		}
 		
 		return result;
+	}
+
+	public static Dob symmetrize(Dob first, Dob second, Pool pool) {
+		Dob deepFirst = first.deepCopy(), deepSecond = second.deepCopy();
+		Map<Dob,Dob> raw = unify(deepFirst, deepSecond);
+		if (raw == null) return null;
+		
+		Map<Dob,Dob> unify = Maps.newHashMap();
+		Set<Dob> conflicts = Sets.newHashSet();
+		for (Map.Entry<Dob,Dob> entry : raw.entrySet()) {
+			Dob left = pool.dobs.submerge(entry.getKey());
+			Dob right = pool.dobs.submerge(entry.getValue());
+			
+			if (left == right) continue;
+			boolean leftVar = pool.allVars.contains(left);
+			boolean rightVar = pool.allVars.contains(right);
+			if (!leftVar && !rightVar) return null;
+			
+			if (leftVar) conflicts.add(left);
+			Dob var = Vars.request(conflicts, pool.context);
+			unify.put(entry.getKey(), var);
+			conflicts.add(var);
+		}
+		
+		return pool.dobs.submerge(Unifier.replace(deepFirst, unify));
 	}
 }

@@ -199,8 +199,14 @@ public class GgpProtocol {
 			cleanPlayers();
 			GgpState state = this.players.get(match);
 			if (state == null) return PlayerState.DONE;
-			state.touch();
 
+			complete(moves, state);
+			this.players.remove(match);
+
+			return PlayerState.DONE;
+		}
+
+		private void complete(List<Dob> moves, GgpState state) {
 			Map<Dob,Dob> actions = Maps.newHashMap();
 			try { actions = Game.convertMovesToActionMap(state.roles, moves); }
 			catch (Exception e) { e.printStackTrace(); }
@@ -209,9 +215,6 @@ public class GgpProtocol {
 			catch (Exception e) { e.printStackTrace(); }
 			
 			state.thread.interrupt();
-			this.players.remove(match);
-
-			return PlayerState.DONE;
 		}
 		
 		/**
@@ -221,7 +224,10 @@ public class GgpProtocol {
 			Iterator<Map.Entry<String, GgpState>> iterator = this.players.entrySet().iterator();
 			while (iterator.hasNext()) {
 				GgpState state = iterator.next().getValue();
-				if (state.isExpired()) iterator.remove();
+				if (state.isExpired()) {
+					complete(Lists.<Dob>newArrayList(), state);
+					iterator.remove();
+				}
 			}
 		}
 
