@@ -8,8 +8,8 @@ import com.google.common.collect.Maps;
 
 public class Ucb {
 	public static class Entry {
-		private double cumulative;
-		private int count;
+		private volatile double cumulative;
+		private volatile int count;
 		
 		public synchronized void update(double value) {
 			cumulative += value;
@@ -30,7 +30,7 @@ public class Ucb {
 	}
 	
 	public static class Suggestor<U> {
-		private int total = 1;
+		private volatile int total = 1;
 		public final double c;
 		public final Map<U, Entry> entries = Maps.newHashMap();
 		
@@ -60,7 +60,7 @@ public class Ucb {
 			return best.getCarry();
 		}
 
-		public void clear() {
+		public synchronized void clear() {
 			for (Entry entry : entries.values()) entry.clear();
 		}
 	}

@@ -1,6 +1,8 @@
 package rekkura.util;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -344,4 +346,21 @@ public class OtmUtil {
 	public static <U, V> Map<U, V> randomAssignment(ListMultimap<U, V> actions) {
 		return OtmUtil.randomAssignment(actions, new Random());
 	}
+	
+	/**
+	 * Sorts in increasing order of support size.
+	 * @param positives
+	 * @param support
+	 */
+	public static <U,V> void sortByValueSize(List<U> positives,
+			final Multimap<U, V> support) {
+		Collections.sort(positives, new Comparator<U>() {
+			@Override public int compare(U first, U second) {
+				int firstSize = support.get(first).size();
+				int secondSize = support.get(second).size();
+				return firstSize - secondSize;
+			}
+		});
+	}
+	
 }

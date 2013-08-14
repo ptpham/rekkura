@@ -11,6 +11,7 @@ import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
 import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
+import rekkura.util.OtmUtil;
 import rekkura.util.RankedCarry;
 
 import com.google.common.collect.*;
@@ -95,12 +96,12 @@ public class Terra {
 			final Multimap<Atom, Dob> support) {
 		// Sort the dimensions of the space so that the smallest ones come first.
 		List<Atom> positives = Atom.filterPositives(rule.body);
-		sortBySupportSize(positives, support);
+		OtmUtil.sortByValueSize(positives, support);
 		
 		// Then greedily find a variable cover and resort for the final support
 		List<Atom> expanders = Terra.getGreedyVarCover(positives, rule.vars);
 		if (expanders == null) return null;
-		sortBySupportSize(expanders, support);
+		OtmUtil.sortByValueSize(expanders, support);
 		return expanders;
 	}
 
@@ -166,7 +167,7 @@ public class Terra {
 		
 		return result;
 	}
-
+	
 	/**
 	 * This method can be used to handle the vacuous/varless rule special case.
 	 * @param rule
@@ -254,25 +255,6 @@ public class Terra {
 		}
 		return space;
 	}
-
-	/**
-	 * Sorts in increasing order of support size except for a support size
-	 * of zero. These are placed at the end.
-	 * @param positives
-	 * @param support
-	 */
-	public static void sortBySupportSize(List<Atom> positives,
-			final Multimap<Atom, Dob> support) {
-		Collections.sort(positives, new Comparator<Atom>() {
-			@Override public int compare(Atom first, Atom second) {
-				int firstSize = support.get(first).size();
-				int secondSize = support.get(second).size();
-				if (firstSize == 0 && secondSize == 0) return 0;
-				if (firstSize == 0) return 1;
-				return firstSize - secondSize;
-			}
-		});
-	}
 	
 	/**
 	 * This method attempts to apply candidates as variables. The order used
@@ -300,4 +282,13 @@ public class Terra {
 		return unify;
 	}
 
+	public static HashMultimap<Dob,Dob> indexBy(Iterable<Dob> dobs, Collection<Dob> targets) {
+		HashMultimap<Dob,Dob> result = HashMultimap.create();
+		for (Dob dob : dobs) {
+			for (Dob child : dob.fullIterable()) {
+				if (targets.contains(child)) result.put(child, dob);
+			}
+		}
+		return result;
+	}
 }

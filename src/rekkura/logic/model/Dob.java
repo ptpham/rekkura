@@ -1,6 +1,11 @@
 package rekkura.logic.model;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Stack;
 
 import rekkura.logic.format.StandardFormat;
 import rekkura.util.CachingSupplier;
