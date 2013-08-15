@@ -1,13 +1,14 @@
 package rekkura.test.logic;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import rekkura.logic.format.LogicFormat;
@@ -17,13 +18,7 @@ import rekkura.logic.structure.Fortre;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Colut;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 public class FortreTest {
 	
@@ -48,7 +43,7 @@ public class FortreTest {
 		String[] rawDobs = { "((P)(X)(a))", "((P)(X)(Y))" };
 		String[] rawGenerated = { };
 		
-		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 2, rawDobs[1], 2);
+		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 3, rawDobs[1], 2);
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
 	}
@@ -82,7 +77,7 @@ public class FortreTest {
 		String[] rawDobs =  { "((P)(X)(b)(c))", "((P)(a)(Y)(c))", "((P)(a)(e)(Z))" };
 		String[] rawGenerated = { "((P)(X)(Y)(Z))" };
 
-		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 2, rawDobs[1], 2, rawDobs[2], 2, rawGenerated[0], 2);
+		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 4, rawDobs[1], 2, rawDobs[2], 4, rawGenerated[0], 2);
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
 	}
@@ -93,7 +88,7 @@ public class FortreTest {
 		String[] rawDobs =  { "((P)(1)(1)(Z))", "((P)(2)(2)(Z))", "((P)(X)(Y)(m))" };
 		String[] rawGenerated = { "((P)(X)(Y)(Z))" };
 
-		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 2, rawDobs[1], 2, rawDobs[2], 2, rawGenerated[0], 2);
+		Map<String, Integer> expected = ImmutableMap.of(rawDobs[0], 3, rawDobs[1], 3, rawDobs[2], 3, rawGenerated[0], 2);
 		Map<String, List<Dob>> trunks = makeAndCheckTrunks(rawVars, rawDobs, rawGenerated);
 		checkTrunkLengths(expected, trunks);
 	}
@@ -107,26 +102,25 @@ public class FortreTest {
 		Pool pool = new Pool();
 		List<Dob> dobs = pool.dobs.submergeStrings(raw);
 		pool.allVars.addAll(Colut.slice(dobs, 3, dobs.size()));
+		Dob var = dobs.get(3);
 		
 		Multimap<Dob, Dob> edges = HashMultimap.create();
 		for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) edges.put(dobs.get(i), dobs.get(j));
-		Dob generalization = Fortre.computeGeneralization(dobs.get(0), edges, pool);
-		assertNotNull(generalization);
+		Set<Dob> generalization = Fortre.computeGeneralization(dobs, var, pool);
+		Assert.assertTrue(generalization.size() > 0);
 	}
 	
 	@Test
 	public void multipleDownward() {
-		String[] variableDobs = { "(X)", "(Y)", "(Z)" };
 		String[] bodyDobs =  { "((P)(1)(X)(Y))", "((P)(X)(1)(Y))" };
 		String[] queryDobs = { "((P)(1)(1)(Z))" };
 		
 		LogicFormat fmt = new StandardFormat();
 		Pool pool = new Pool();
-		List<Dob> varList = stringsToDobs(variableDobs, fmt, pool);
 		List<Dob> bodyList = stringsToDobs(bodyDobs, fmt, pool);
 		List<Dob> queryList = stringsToDobs(queryDobs, fmt, pool);
 		
-		assertNull(Fortre.downwardUnify(queryList.get(0), bodyList, Sets.newHashSet(varList)));
+		assertNull(Fortre.downwardUnify(queryList.get(0), bodyList, pool));
 	}
 	
 	private Map<String, List<Dob>> makeAndCheckTrunks(String[] rawVars,

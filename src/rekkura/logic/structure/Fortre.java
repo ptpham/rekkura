@@ -1,12 +1,6 @@
 package rekkura.logic.structure;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.model.Dob;
@@ -14,13 +8,7 @@ import rekkura.state.algorithm.Topper;
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * (Form tree) This class is responsible for making it easy to 
@@ -35,7 +23,7 @@ public class Fortre {
 	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
 
-	private static final String ROOT_VAR_NAME = "[ROOT]";
+	private static final String ROOT_VAR_NAME = "[FR]";
 	
 	/**
 	 * This constructor requires the full set of variables that
@@ -47,56 +35,32 @@ public class Fortre {
 		this.pool = pool;
 		this.pool.allVars.add(root);
 
-		construct(Lists.newArrayList(allForms), pool);
+		construct(allForms, pool);
 	}
 	
-	private void construct(List<Dob> allForms, Pool pool) {
-		// Find cognates (forms that unify against each other)
-		Multimap<Dob, Dob> cognateEdges = computeCognateEdges(allForms, pool.allVars);
-		List<Set<Dob>> cognateComponents = Topper.stronglyConnected(cognateEdges);
-		
-		// Store cognates from strongly connected components
-		List<Dob> filteredForms = Lists.newArrayList();
-		Set<Dob> allCognates = Colut.union(cognateComponents);
-		
-		for (Dob dob : allForms) if (!allCognates.contains(dob)) filteredForms.add(dob);
-		for (Set<Dob> component : cognateComponents) {
-			Dob representative = Colut.any(component);
-			filteredForms.add(representative);
-			for (Dob other : component) {
-				if (representative == other) continue;
-				this.cognates.put(representative, other);
-			}
-		}
-		
+	private void construct(Iterable<Dob> raw, Pool pool) {
 		// Find the symmetrizing components
-		Set<Dob> allVars = pool.allVars;
-		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(filteredForms, allVars, pool);
+		List<Dob> allForms = Lists.newArrayList(Sets.newHashSet(homogenizeWith(raw, root, pool)));
+		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(allForms, root, pool);
 		List<Set<Dob>> symmetrizingComponents = Topper.stronglyConnected(symmetricEdges);
 		
 		// Create the generalization forms by compressing each component
-		Set<Dob> symmetrized = Sets.newHashSet(filteredForms);
+		Set<Dob> symmetrized = Sets.newHashSet(allForms);
 		for (Set<Dob> component : symmetrizingComponents) {
-			if (component.size() < 2) continue;
-			Dob generalization = computeGeneralization(Colut.any(component), symmetricEdges, pool);
-
-			symmetrized.removeAll(component);
-			symmetrized.add(pool.dobs.submerge(generalization));
+			symmetrized.addAll(computeGeneralization(component, root, pool));
 		}
 		
 		// Find subset relationships
+		this.cognates.putAll(computeCognates(symmetrized, pool));
+		Colut.set(symmetrized, this.cognates.keySet());
 		symmetrized.add(root);
-		Multimap<Dob, Dob> subsets = HashMultimap.create();
-		for (Dob child : symmetrized) {
-			for (Dob parent : symmetrized) {
-				if (parent == child) continue;
-				if (Unifier.unifyVars(parent, child, allVars) != null) {
-					subsets.put(parent, child);
-				}
-			}
-		}
 		
-		// Top sort and extract final tree
+		Multimap<Dob, Dob> subsets = computeSubsetEdges(pool, symmetrized);
+		this.allChildren.putAll(computeFormEdges(subsets, root));
+	}
+
+	public static Multimap<Dob, Dob> computeFormEdges(Multimap<Dob, Dob> subsets, Dob root) {
+		Multimap<Dob,Dob> result = HashMultimap.create();
 		Multiset<Dob> ordering = Topper.topSort(subsets, Sets.newHashSet(root));
 		Multimap<Integer,Dob> partitions = OtmUtil.invertMultiset(ordering);
 		int max = Collections.max(partitions.keySet());
@@ -105,32 +69,86 @@ public class Fortre {
 			Collection<Dob> children = partitions.get(i+1);
 			for (Dob parent : parents) {
 				for (Dob child : subsets.get(parent)) {
-					if (children.contains(child)) allChildren.put(parent, child);
+					if (children.contains(child)) result.put(parent, child);
 				}
 			}
 		}
+		return result;
 	}
 
-	public static Dob computeGeneralization(Dob root, 
-			Multimap<Dob, Dob> edges, Pool pool) {
-		Dob generalization = root;
-		Stack<Dob> working = new Stack<Dob>();
-		Set<Dob> seen = Sets.newHashSet(generalization);
-		working.addAll(edges.get(generalization));
+	public static Multimap<Dob, Dob> computeSubsetEdges(Pool pool,
+			Set<Dob> symmetrized) {
+		Multimap<Dob, Dob> subsets = HashMultimap.create();
+		for (Dob child : symmetrized) {
+			for (Dob parent : symmetrized) {
+				if (parent == child) continue;
+				if (Unifier.homogenousSubset(parent, child, pool)) {
+					subsets.put(parent, child);
+				}
+			}
+		}
+		return subsets;
+	}
+	
+	public static List<Dob> homogenizeWith(Iterable<Dob> dobs, Dob var, Pool pool) {
+		List<Dob> result = Lists.newArrayList();
+		for (Dob dob : dobs) result.add(pool.dobs.submerge(Unifier.homogenize(dob, var, pool.allVars)));
+		return result;
+	}
+
+	private static SetMultimap<Dob,Dob> computeCognates(Iterable<Dob> allForms, Pool pool) {
+		// Find cognates (forms that unify against each other)
+		SetMultimap<Dob,Dob> result = HashMultimap.create();
+		Multimap<Dob, Dob> cognateEdges = computeCognateEdges(allForms, pool.allVars);
+		List<Set<Dob>> cognateComponents = Topper.stronglyConnected(cognateEdges);
 		
-		while (working.size() > 0) {
-			Dob next = working.pop();
-			if (seen.contains(next)) continue;
-			seen.add(next);
-			
-			generalization = Unifier.symmetrize(generalization, next, pool);
-			working.addAll(edges.get(next));
+		// Store cognates from strongly connected components
+		List<Dob> filteredForms = Lists.newArrayList();
+		Set<Dob> allCognates = Colut.union(cognateComponents);
+		
+		// Store forms that do not belong to a cognate component
+		for (Dob dob : allForms) {
+			if (!allCognates.contains(dob)) {
+				filteredForms.add(dob);
+				result.put(dob, dob);
+			}
 		}
 		
-		return generalization;
+		// Store a representative from each cognate component
+		for (Set<Dob> component : cognateComponents) {
+			Dob representative = Colut.any(component);
+			filteredForms.add(representative);
+			for (Dob other : component) {
+				if (representative == other) continue;
+				result.put(representative, other);
+			}
+		}
+		return result;
 	}
 
-	public static Multimap<Dob, Dob> computeCognateEdges(List<Dob> allForms, Set<Dob> allVars) {
+	public static Set<Dob> computeGeneralization(Iterable<Dob> component, Dob var, Pool pool) {
+		Set<Dob> result = Sets.newHashSet(component);
+		Deque<Dob> working = new ArrayDeque<Dob>();
+		Iterables.addAll(working, component);
+		
+		while (working.size() > 0) {
+			Dob first = working.pop();
+			
+			Set<Dob> addition = Sets.newHashSet();
+			for (Dob second : result) {
+				Dob generated = pool.dobs.submerge(Unifier.symmetrize(first, second, var, pool));
+				if (generated != null && !result.contains(generated)) {
+					working.add(generated);
+					addition.add(generated);
+				}
+			}
+			result.addAll(addition);
+		}
+		
+		return result;
+	}
+
+	public static Multimap<Dob, Dob> computeCognateEdges(Iterable<Dob> allForms, Set<Dob> allVars) {
 		Multimap<Dob, Dob> cognateEdges = HashMultimap.create();
 		for (Dob first : allForms) {
 			for (Dob second : allForms) {
@@ -143,17 +161,15 @@ public class Fortre {
 		return cognateEdges;
 	}
 
-	public static Multimap<Dob, Dob> computeSymmetrizingEdges(List<Dob> allForms,
-		Set<Dob> allVars, Pool pool) {		
-		
+	public static Multimap<Dob, Dob> computeSymmetrizingEdges(List<Dob> allForms, Dob var, Pool pool) {		
 		Multimap<Dob, Dob> symmetricEdges = HashMultimap.create();
 		for (int i = 0; i < allForms.size(); i++) {
 			Dob first = allForms.get(i);
-			if (Colut.containsNone(first.fullIterable(), allVars)) continue;
+			if (Colut.containsNone(first.fullIterable(), pool.allVars)) continue;
 			for (int j = i + 1; j < allForms.size(); j++) {
 				Dob second = allForms.get(j);
 				if (first == second) continue;
-				if (Unifier.symmetrize(first, second, pool) != null) { 
+				if (Unifier.symmetrize(first, second, var, pool) != null) { 
 					symmetricEdges.put(first, second); 
 					symmetricEdges.put(second, first);
 				}
@@ -217,14 +233,13 @@ public class Fortre {
 		List<Dob> path = Lists.newArrayList();
 		Dob cur = this.root;
 		
-		Set<Dob> allVars = pool.allVars;
 		while (cur != null) {
 			path.add(cur);
-			if (Unifier.unifyVars(dob, cur, allVars) != null) break;
+			if (!Unifier.homogenousSubset(cur, dob, pool)) break;
 
 			Set<Dob> curChildren = this.allChildren.get(cur);
 			if (Colut.empty(curChildren)) break;
-			cur = downwardUnify(dob, curChildren, allVars);
+			cur = downwardUnify(dob, curChildren, pool);
 		}
 		return path;
 	}
@@ -278,7 +293,7 @@ public class Fortre {
 		return trunk == null || trunk.size() < 1;
 	}
 	
-	public Iterable<Dob> getCognateIterable(final Iterable<Dob> dobs) {
+	protected Iterable<Dob> getCognateIterable(final Iterable<Dob> dobs) {
 		return new Iterable<Dob>() {
 			@Override public Iterator<Dob> iterator() {
 				return new CognateIterator(dobs.iterator());
@@ -294,10 +309,10 @@ public class Fortre {
 	 * @param children
 	 * @return
 	 */
-	public static Dob downwardUnify(Dob dob, Collection<Dob> children, Set<Dob> vars) {
+	public static Dob downwardUnify(Dob dob, Collection<Dob> children, Pool pool) {
 		Dob result = null;
 		for (Dob child : children) {
-			if (Unifier.unifyVars(child, dob, vars) != null) {
+			if (Unifier.homogenousSubset(child, dob, pool)) {
 				if (result == null) result = child;
 				else return null;
 			}

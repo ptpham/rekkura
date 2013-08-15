@@ -92,14 +92,16 @@ public class Ruletta {
 
 		// Prepare data structures to compute dependencies
 		for (Rule rule : result.allRules) { 
-			result.headToRule.put(result.fortre.getTrunkEnd(rule.head.dob), rule);
+			Dob headForm = result.fortre.getTrunkEnd(rule.head.dob);
+			result.headToRule.put(headForm, rule);
 			for (Dob body : Atom.asDobIterable(rule.body)) {
-				result.bodyToRule.put(result.fortre.getTrunkEnd(body), rule);	
+				Dob bodyForm = result.fortre.getTrunkEnd(body);
+				result.bodyToRule.put(bodyForm, rule);	
 			}
 		}
 		
-		result.bodyToGenHead = Unifier.nonConflicting(result.bodyToRule.keySet(), 
-				result.headToRule.keySet(), pool.allVars);
+		result.bodyToGenHead = Unifier.nonConflicting(result.bodyToRule.keySet(),
+			result.headToRule.keySet(), pool);
 		
 		result.bodyToGenRule = OtmUtil.joinRight(result.bodyToGenHead, result.headToRule);
 		result.ruleToGenRule = OtmUtil.joinLeft(result.bodyToGenRule, result.bodyToRule);

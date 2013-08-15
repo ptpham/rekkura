@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import rekkura.logic.model.Dob;
+
 import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
@@ -436,5 +438,16 @@ public class Colut {
 		List<Integer> result = Lists.newArrayList();
 		for (int i = begin; i < end; i++) result.add(i);
 		return result;
+	}
+	
+	public static <U> void set(Collection<U> target, Iterable<U> source) {
+		if (target == null) return;
+		target.clear();
+		if (source != null) Iterables.addAll(target, source);
+	}
+
+	public static void put(Map<Dob, Dob> current, Dob base, Dob target) {
+		if (current == null) return;
+		current.put(base, target);
 	}
 }

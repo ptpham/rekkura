@@ -8,7 +8,6 @@ import java.util.Set;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.logic.model.Vars;
 import rekkura.logic.model.Rule.Distinct;
 import rekkura.logic.model.Unification;
 import rekkura.logic.structure.Pool;
@@ -18,7 +17,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 
 /**
  * This class describes how to transform one dob to match another dob.
@@ -246,13 +244,13 @@ public class Unifier {
 	 * @return
 	 */
 	public static Multimap<Dob, Dob> nonConflicting(Iterable<Dob> targetDobs, 
-			Iterable<Dob> sourceDobs, Collection<Dob> vars) {
+			Iterable<Dob> sourceDobs, Pool pool) {
 		Multimap<Dob, Dob> result = HashMultimap.create();
 		
 		for (Dob target : targetDobs) {
 			for (Dob source : sourceDobs) {
-				if (Unifier.unifyVars(target, source, vars) == null 
-					&& Unifier.unifyVars(source, target, vars) == null) continue;
+				if (!nonConflicting(target, source, pool)
+					|| !nonConflicting(source, target, pool)) continue;
 				result.put(target, source);
 			}
 		}
@@ -260,13 +258,12 @@ public class Unifier {
 		return result;
 	}
 
-	public static Dob symmetrize(Dob first, Dob second, Pool pool) {
+	public static Dob symmetrize(Dob first, Dob second, Dob var, Pool pool) {
 		Dob deepFirst = first.deepCopy(), deepSecond = second.deepCopy();
 		Map<Dob,Dob> raw = unify(deepFirst, deepSecond);
 		if (raw == null) return null;
 		
 		Map<Dob,Dob> unify = Maps.newHashMap();
-		Set<Dob> conflicts = Sets.newHashSet();
 		for (Map.Entry<Dob,Dob> entry : raw.entrySet()) {
 			Dob left = pool.dobs.submerge(entry.getKey());
 			Dob right = pool.dobs.submerge(entry.getValue());
@@ -276,13 +273,46 @@ public class Unifier {
 			boolean rightVar = pool.allVars.contains(right);
 			if (!leftVar && !rightVar) return null;
 			
-			if (leftVar) conflicts.add(left);
-			if (rightVar) conflicts.add(right);
-			Dob var = Vars.request(conflicts, pool.context);
 			unify.put(entry.getKey(), var);
-			conflicts.add(var);
 		}
 		
-		return pool.dobs.submerge(Unifier.replace(deepFirst, unify));
+		return Unifier.replace(deepFirst, unify);
+	}
+	
+	public static Map<Dob,Dob> homogenizer(Dob dob, Dob var, Set<Dob> vars) {
+		Map<Dob,Dob> result = Maps.newHashMap();
+		for (Dob child : dob.fullIterable()) {
+			if (Colut.contains(vars, child)) result.put(child, var);
+		}
+		return result;
+	}
+	
+	public static Dob homogenize(Dob dob, Dob var, Set<Dob> vars) {
+		return replace(dob, homogenizer(dob, var, vars));
+	}
+	
+	private static boolean conflictCheck(Dob first, Dob second, Pool pool, boolean checkSecond) {
+		Dob deepFirst = first.deepCopy(), deepSecond = second.deepCopy();
+		Map<Dob,Dob> unify = unify(deepFirst, deepSecond);
+		for (Map.Entry<Dob,Dob> entry : unify.entrySet()) {
+			Dob left = pool.dobs.submerge(entry.getKey());
+			Dob right = pool.dobs.submerge(entry.getValue());
+			if (left == right) continue;
+			
+			boolean varLeft = pool.allVars.contains(left);
+			boolean varRight = pool.allVars.contains(right);
+			if (!varLeft && (!checkSecond || !varRight)) return false;
+		}
+		
+		return true;
+	}
+
+	
+	public static boolean homogenousSubset(Dob base, Dob target, Pool pool) {
+		return conflictCheck(base, target, pool, false);
+	}
+	
+	public static boolean nonConflicting(Dob first, Dob second, Pool pool) {
+		return conflictCheck(first, second, pool, true);
 	}
 }

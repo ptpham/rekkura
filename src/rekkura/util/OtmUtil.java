@@ -206,6 +206,7 @@ public class OtmUtil {
 	
 	public static <U, V> Multimap<U, V> getAll(Multimap<U, V> map, Collection<U> keys) {
 		Multimap<U, V> result = HashMultimap.create();
+		if (keys == null) return result;
 		for (U key : keys) result.putAll(key, map.get(key));
 		return result;
 	}
@@ -363,4 +364,9 @@ public class OtmUtil {
 		});
 	}
 	
+	public static <U,V> long cartesianSize(Multimap<U,V> map) {
+		long result = 1;
+		for (U key : map.keySet()) result *= map.get(key).size();
+		return result;
+	}
 }

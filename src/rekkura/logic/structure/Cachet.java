@@ -74,12 +74,6 @@ public class Cachet {
 	 */
 	public final Multimap<Dob, Dob> formToGrounds = HashMultimap.create();
 	
-	public final Cache<Dob, List<Dob>> groundToForms = 
-		Cache.create(new Function<Dob, List<Dob>>() {
-			@Override public List<Dob> apply(Dob dob)
-			{ return getUnifiableForms(dob); }
-		});
-	
 	public final Ruletta rta;
 
 	public Cachet(Ruletta rta) { this.rta = rta; }
@@ -99,9 +93,8 @@ public class Cachet {
         for (Dob ground : grounds) storeGround(ground);
     }
 
-	public void storeGround(Dob dob) {
-		List<Dob> forms = this.groundToForms.get(dob);
-		for (Dob form : forms) this.storeGroundAt(dob, form);
+	public void storeGround(Dob ground) {
+		storeGroundAt(ground, canonicalForms.get(ground));
 	}
 	
 	public void storeGroundAt(Dob ground, Dob body) {

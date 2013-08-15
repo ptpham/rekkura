@@ -31,8 +31,7 @@ public class Terra {
 	 * @return
 	 */
 	public static Iterable<Dob> getGroundCandidates(Dob dob, final Cachet cachet) {
-		Dob canonical = cachet.canonicalForms.get(dob);
-		return cachet.formToGrounds.get(canonical);
+		return OtmUtil.valueIterable(cachet.formToGrounds, cachet.spines.get(dob));
 	}
 	
 	/**

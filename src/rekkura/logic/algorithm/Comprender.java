@@ -64,7 +64,7 @@ public class Comprender {
 			if (slicers.contains(rule)) continue;
 			
 			Multimap<Dob,Dob> edges = Unifier.nonConflicting(Atom.asDobIterable(rule.body),
-				Atom.asDobIterable(Rule.asHeadIterator(slicers)), rule.vars);
+				Atom.asDobIterable(Rule.asHeadIterator(slicers)), pool);
 			if (edges.size() == 0) continue;
 			
 			// Slice out the part of the rule covered by the statics
