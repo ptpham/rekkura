@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.format.LogicFormat;
 import rekkura.logic.format.StandardFormat;
 import rekkura.logic.model.Atom;
@@ -138,5 +139,9 @@ public class Pool {
 			}
 		}
 		return result;
+	}
+	
+	public Dob render(Dob dob, Map<Dob,Dob> unify) {
+		return dobs.submerge(Unifier.replace(dob, unify));
 	}
 }

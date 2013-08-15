@@ -450,4 +450,18 @@ public class Colut {
 		if (current == null) return;
 		current.put(base, target);
 	}
+
+	public static <U> List<U> sortByCount(final Multiset<U> data) {
+		List<U> result = Lists.newArrayList();
+		result.addAll(data.elementSet());
+		Collections.sort(result, getCountComparator(data));
+		return result;
+	}
+	
+	public static <U> Comparator<U> getCountComparator(final Multiset<U> data) {
+		return  new Comparator<U>() {
+			@Override public int compare(U o1, U o2)
+			{ return Integer.compare(data.count(o1), data.count(o2)); }
+		};
+	}
 }

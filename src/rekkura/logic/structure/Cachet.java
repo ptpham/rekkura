@@ -4,13 +4,17 @@ import java.util.List;
 import java.util.Set;
 
 import rekkura.logic.algorithm.Unifier;
+import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.util.Cache;
 import rekkura.util.Colut;
+import rekkura.util.OtmUtil;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
@@ -100,4 +104,36 @@ public class Cachet {
 	public void storeGroundAt(Dob ground, Dob body) {
 		formToGrounds.put(body, ground);
 	}
+	
+	/**
+	 * This method returns an iterable over all exhausted ground dobs 
+	 * that potentially unify with the given body term.
+	 * @param dob
+	 * @return
+	 */
+	public Iterable<Dob> getGroundCandidates(Dob dob) {
+		return OtmUtil.valueIterable(formToGrounds, spines.get(dob));
+	}
+	
+	
+	/**
+	 * Returns a list that contains the assignment domain of each positive
+	 * body term in the given rule assuming that we want to expand the given
+	 * dob at the given position.
+	 * @param rule
+	 * @param position
+	 * @param dob
+	 * @return
+	 */
+	public ListMultimap<Atom, Dob> getSupport(Rule rule) {
+		ListMultimap<Atom, Dob> candidates = ArrayListMultimap.create();
+		
+		for (int i = 0; i < rule.body.size(); i++) {
+			Atom atom = rule.body.get(i);
+			if (!atom.truth) continue;
+			candidates.putAll(atom, getGroundCandidates(atom.dob));
+		}
+		return candidates;
+	}
+	
 }

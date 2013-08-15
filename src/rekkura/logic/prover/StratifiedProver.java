@@ -1,23 +1,15 @@
 package rekkura.logic.prover;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import rekkura.logic.algorithm.Terra;
-import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.logic.model.Unification;
 import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.logic.structure.Ruletta;
-import rekkura.util.Cartesian;
-import rekkura.util.Colut;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 /**
@@ -74,19 +66,7 @@ public abstract class StratifiedProver {
 	public void preserveTruths(Iterable<Dob> truths) {
 		for (Dob dob : truths) preserveTruth(dob);
 	}
-	
-	protected Set<Dob> expandRule(Rule rule,
-		Set<Dob> truths, Multimap<Atom,Dob> support, Pool pool) {
-		List<Atom> expanders = Terra.getGreedyExpanders(rule, support);
-		List<Atom> check = Colut.deselect(rule.body, expanders);
-		Cartesian.AdvancingIterator<Unification> iterator =
-			Terra.getBodySpaceIterator(rule, expanders, support, truths);
-	
-		List<Map<Dob,Dob>> unifies = Terra.applyExpansion(rule, iterator, check, pool, truths);
-		return Terra.renderHeads(unifies, rule, pool);
-	}
-
-	
+		
 	public static interface Factory { StratifiedProver create(Collection<Rule> rules); }
 
 	public static Factory FORWARD_FACTORY = new Factory() {

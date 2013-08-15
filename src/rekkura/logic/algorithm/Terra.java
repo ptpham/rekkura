@@ -1,12 +1,14 @@
 package rekkura.logic.algorithm;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.model.Unification;
-import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
 import rekkura.util.Cartesian.AdvancingIterator;
@@ -25,39 +27,6 @@ import com.google.common.collect.*;
 public class Terra {
 	
 	/**
-	 * This method returns an iterable over all exhausted ground dobs 
-	 * that potentially unify with the given body term.
-	 * @param dob
-	 * @return
-	 */
-	public static Iterable<Dob> getGroundCandidates(Dob dob, final Cachet cachet) {
-		return OtmUtil.valueIterable(cachet.formToGrounds, cachet.spines.get(dob));
-	}
-	
-	/**
-	 * Returns a list that contains the assignment domain of each positive
-	 * body term in the given rule assuming that we want to expand the given
-	 * dob at the given position.
-	 * @param rule
-	 * @param position
-	 * @param dob
-	 * @return
-	 */
-	public static ListMultimap<Atom, Dob> getBodyAssignments(Rule rule, Cachet cachet) {
-		ListMultimap<Atom, Dob> candidates = ArrayListMultimap.create();
-		
-		for (int i = 0; i < rule.body.size(); i++) {
-			Atom atom = rule.body.get(i);
-			if (!atom.truth) continue;
-			
-			Iterable<Dob> grounds = getGroundCandidates(atom.dob, cachet);
-			List<Dob> next = Lists.newArrayList(grounds);
-			candidates.putAll(atom, next);
-		}
-		return candidates;
-	}
-	
-	/**
 	 * This method exposes an efficient rendering process for a collection of ground dobs.
 	 * If you want to apply a single assignment in a vaccuum, consider applyBodies.
 	 * To generate the support for this function, consider using getBodySpace.
@@ -67,7 +36,7 @@ public class Terra {
 	 * @param truths
 	 * @return
 	 */
-	public static AdvancingIterator<Unification> getBodySpaceIterator(Rule rule,
+	public static AdvancingIterator<Unification> getBodyUnifications(Rule rule,
 		List<Atom> expanders, Multimap<Atom, Dob> support, Set<Dob> truths) {
 		if (rule.vars.size() == 0) return Cartesian.emptyIterator();
 		if (expanders == null) return Cartesian.emptyIterator();
@@ -76,8 +45,21 @@ public class Terra {
 		List<List<Unification>> space = getUnificationSpace(rule, support, expanders);
 		return Cartesian.asIterator(space);
 	}
+
+	public static List<Atom> getGreedyVarCoverExpanders(Rule rule,
+			final Multimap<Atom, Dob> support) {
+		// Sort the dimensions of the space so that the smallest ones come first.
+		List<Atom> positives = Atom.filterPositives(rule.body);
+		OtmUtil.sortByValueSize(positives, support);
+		
+		// Then greedily find a variable cover and resort for the final support
+		List<Atom> expanders = Terra.getGreedyVarCover(positives, rule.vars);
+		if (expanders == null) return null;
+		OtmUtil.sortByValueSize(expanders, support);
+		return expanders;
+	}
 	
-	public static List<Map<Dob,Dob>> applyExpansion(Rule rule, 
+	public static List<Map<Dob,Dob>> applyUnifications(Rule rule, 
 		AdvancingIterator<Unification> iterator, List<Atom> check, Pool pool, Set<Dob> truths) {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
 		
@@ -89,19 +71,6 @@ public class Terra {
 		}
 		
 		return expandUnifications(rule, check, iterator, pool, truths);
-	}
-
-	public static List<Atom> getGreedyExpanders(Rule rule,
-			final Multimap<Atom, Dob> support) {
-		// Sort the dimensions of the space so that the smallest ones come first.
-		List<Atom> positives = Atom.filterPositives(rule.body);
-		OtmUtil.sortByValueSize(positives, support);
-		
-		// Then greedily find a variable cover and resort for the final support
-		List<Atom> expanders = Terra.getGreedyVarCover(positives, rule.vars);
-		if (expanders == null) return null;
-		OtmUtil.sortByValueSize(expanders, support);
-		return expanders;
 	}
 
 	public static List<Map<Dob, Dob>> expandUnifications(Rule rule, List<Atom> check,
@@ -186,19 +155,10 @@ public class Terra {
 		}
 		return true;
 	}
-
-	// TODO: Clean this up
-	public static Dob renderHead(Map<Dob, Dob> unify, Rule rule, Pool pool) {
-		return pool.dobs.submerge(Unifier.replace(rule.head.dob, unify));
-	}
-	
-	public static Dob renderGround(Dob dob, Map<Dob,Dob> unify, Pool pool) {
-		return pool.dobs.submerge(Unifier.replace(dob, unify));
-	}
 	
 	public static Set<Dob> renderHeads(Iterable<Map<Dob,Dob>> unifies, Rule rule, Pool pool) {
 		Set<Dob> result = Sets.newHashSet();
-		for (Map<Dob,Dob> unify : unifies) result.add(renderHead(unify, rule, pool));
+		for (Map<Dob,Dob> unify : unifies) result.add(pool.render(rule.head.dob, unify));
 		return result;
 	}
 	
@@ -218,7 +178,7 @@ public class Terra {
 		Map<Dob, Dob> unify = Unifier.unifyListVars(dobs, bodies, rule.vars);
 		if (!checkAtoms(unify, Atom.filterNegatives(rule.body), truths, pool)) return null;
 		if (!rule.evaluateDistinct(unify)) return null;
-		return renderHead(unify, rule, pool);
+		return pool.render(rule.head.dob, unify);
 	}
 
 	/**
