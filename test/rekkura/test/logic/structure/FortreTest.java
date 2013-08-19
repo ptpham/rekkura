@@ -1,4 +1,4 @@
-package rekkura.test.logic;
+package rekkura.test.logic.structure;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;

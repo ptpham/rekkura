@@ -25,18 +25,7 @@ import com.google.common.collect.*;
  *
  */
 public class Terra {
-	
-	/**
-	 * This method exposes an efficient rendering process for a collection of ground dobs.
-	 * If you want to apply a single assignment in a vaccuum, consider applyBodies.
-	 * To generate the support for this function, consider using getBodySpace.
-	 * @param rule
-	 * @param support
-	 * @param pool
-	 * @param truths
-	 * @return
-	 */
-	public static AdvancingIterator<Unification> getBodyUnifications(Rule rule,
+	public static AdvancingIterator<Unification> getUnificationIterator(Rule rule,
 		List<Atom> expanders, Multimap<Atom, Dob> support, Set<Dob> truths) {
 		if (rule.vars.size() == 0) return Cartesian.emptyIterator();
 		if (expanders == null) return Cartesian.emptyIterator();
@@ -59,6 +48,16 @@ public class Terra {
 		return expanders;
 	}
 	
+	/**
+	 * This method exposes an efficient rendering process for a collection of ground dobs.
+	 * If you want to apply a single assignment in a vaccuum, consider applyBodies.
+	 * To generate the support for this function, consider using getBodySpace.
+	 * @param rule
+	 * @param support
+	 * @param pool
+	 * @param truths
+	 * @return
+	 */
 	public static List<Map<Dob,Dob>> applyUnifications(Rule rule, 
 		AdvancingIterator<Unification> iterator, List<Atom> check, Pool pool, Set<Dob> truths) {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
@@ -199,10 +198,10 @@ public class Terra {
 		return true;
 	}
 	
-	private static List<List<Unification>> getUnificationSpace(Rule rule,
+	public static List<List<Unification>> getUnificationSpace(Rule rule,
 			final Multimap<Atom, Dob> support, List<Atom> positives) {
-		List<List<Unification>> space = Lists.newArrayList();
-		for (Atom atom : positives) {
+		List<List<Unification>> result = Lists.newArrayList();
+ 		for (Atom atom : positives) {
 			Collection<Dob> grounds = support.get(atom);
 			List<Unification> unifies = Lists.newArrayList();
 			for (Dob ground : grounds) {
@@ -210,9 +209,9 @@ public class Terra {
 				Unification wrapped = unify == null ? null : Unification.from(unify, rule.vars);
 				unifies.add(wrapped); 
 			}
-			space.add(unifies);
+			result.add(unifies);
 		}
-		return space;
+		return result;
 	}
 	
 	/**
@@ -247,6 +246,34 @@ public class Terra {
 			for (Dob child : dob.fullIterable()) {
 				if (targets.contains(child)) result.put(child, dob);
 			}
+		}
+		return result;
+	}
+	
+	public static ArrayListMultimap<Dob,Unification> indexBy(Iterable<Unification> slice, int pos) {
+		ArrayListMultimap<Dob,Unification> result = ArrayListMultimap.create();
+		for (Unification unify : slice) result.put(unify.assigned[pos], unify);
+		return result;
+	}
+	
+	/**
+	 * This method returns variables that are shared between at least two of the
+	 * given terms. They are sorted in decreasing order of overlap over terms and
+	 * variables with no overlap are not returned.
+	 * @param terms
+	 * @param vars
+	 * @return
+	 */
+	public static List<Dob> getPartitionCandidates(Iterable<Dob> terms, Collection<Dob> vars) {
+		Multiset<Dob> counts = HashMultiset.create();
+		for (Dob dob : terms) {
+			Set<Dob> all = Sets.newHashSet(dob.fullIterable());
+			for (Dob var : vars) if (all.contains(var)) counts.add(var);
+		}
+		
+		List<Dob> result = Lists.reverse(Colut.sortByCount(counts));
+		for (int i = result.size() - 1; i > 0; i--) {
+			if (counts.count(result.get(i)) < 2) result.remove(i);
 		}
 		return result;
 	}

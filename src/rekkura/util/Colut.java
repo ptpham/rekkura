@@ -1,24 +1,11 @@
 package rekkura.util;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import rekkura.logic.model.Dob;
 
 import com.google.common.base.Function;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * (Collection Utilities) These methods are supposed to be
@@ -27,8 +14,7 @@ import com.google.common.collect.Sets;
  * @author ptpham
  *
  */
-public class Colut {
-	
+public class Colut {	
 	public static <T> void addAt(List<T> target, int i, T t) {
 		if (target == null) return;
 		while (target.size() <= i) target.add(null);
@@ -464,4 +450,6 @@ public class Colut {
 			{ return Integer.compare(data.count(o1), data.count(o2)); }
 		};
 	}
+	
+
 }

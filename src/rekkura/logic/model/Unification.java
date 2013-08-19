@@ -17,14 +17,13 @@ import com.google.common.collect.Maps;
  */
 public class Unification {
 	public final ImmutableList<Dob> vars;
-	
-	private Dob[] bay;
+	public final Dob[] assigned;
 	
 	private Unification(Map<Dob, Dob> source, ImmutableList<Dob> ordering) {
 		this.vars = ordering;
-		bay = new Dob[ordering.size()];
+		assigned = new Dob[ordering.size()];
 		for (int i = 0; i < ordering.size(); i++) {
-			bay[i] = source.get(ordering.get(i));
+			assigned[i] = source.get(ordering.get(i));
 		}
 	}
 	
@@ -32,9 +31,14 @@ public class Unification {
 		this(EMPTY_MAP, vars);
 	}
 	
+	private Unification(Dob[] assigned, ImmutableList<Dob> vars) {
+		this.vars = vars;
+		this.assigned = assigned;
+	}
+	
 	public Unification copy() {
-		Unification result = new Unification(vars);
-		result.bay = Arrays.copyOf(this.bay, this.bay.length);
+		Dob[] copy = Arrays.copyOf(this.assigned, this.assigned.length);
+		Unification result = new Unification(copy, vars);
 		return result;
 	}
 	
@@ -52,10 +56,10 @@ public class Unification {
 	 * @return
 	 */
 	public boolean sloppyDirtyMergeWith(Unification other) {
-		if (other == null || other.bay.length != this.bay.length) return false;
-		for (int i = 0; i < this.bay.length; i++) {
-			if (this.bay[i] == null) this.bay[i] = other.bay[i];
-			else if (other.bay[i] != null && this.bay[i] != other.bay[i]) return false;
+		if (other == null || other.assigned.length != this.assigned.length) return false;
+		for (int i = 0; i < this.assigned.length; i++) {
+			if (this.assigned[i] == null) this.assigned[i] = other.assigned[i];
+			else if (other.assigned[i] != null && this.assigned[i] != other.assigned[i]) return false;
 		}
 		return true;
 	}
@@ -63,18 +67,19 @@ public class Unification {
 	public Map<Dob, Dob> toMap() {
 		Map<Dob, Dob> result = Maps.newHashMap();
 		for (int i = 0; i < vars.size(); i++) {
-			if (bay[i] == null) continue;
+			if (assigned[i] == null) continue;
 			Dob var = vars.get(i);
-			result.put(var, bay[i]);
+			result.put(var, assigned[i]);
 		}
 		return result;
 	}
-	
-	public boolean isValid() { return Colut.noNulls(this.bay); }
-	public void clear() { Colut.nullOut(this.bay); }
 
-	@Override public String toString() { return Arrays.toString(bay); }
+	public boolean isValid() { return Colut.noNulls(this.assigned); }
+	public void clear() { Colut.nullOut(this.assigned); }
+
+	@Override public String toString() { return Arrays.toString(assigned); }
 	
 	public static final ImmutableMap<Dob, Dob> EMPTY_MAP = ImmutableMap.of();
 	public static final Unification EMPTY_UNIFICATION = new Unification(ImmutableList.<Dob>of());
+
 }

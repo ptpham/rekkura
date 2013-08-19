@@ -14,11 +14,8 @@ import rekkura.logic.model.Vars;
 import rekkura.util.CachingSupplier;
 import rekkura.util.Submerger;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.*;
 
 /**
  * A pool represents a set of dobs that can be compared 
@@ -40,6 +37,9 @@ public class Pool {
 	public final Set<Dob> allVars = Sets.newHashSet();
 	public final Vars.Context context = Vars.asContext(allVars, vargen);
 	
+	private final Map<Class<?>, Submerger<?>> submergers = 
+		ImmutableMap.of(Dob.class, dobs, Atom.class, atoms, Rule.class, rules);
+		
 	public Map<Dob, Dob> submergeUnify(Map<Dob, Dob> unify) {
 		Map<Dob, Dob> result = Maps.newHashMap();
 		
@@ -51,15 +51,34 @@ public class Pool {
 		return result;
 	}
 	
-	public Map<Dob, Dob> submergeUnifyStrings(Map<String, String> unify) {
-		Map<Dob, Dob> result = Maps.newHashMap();
-		
-		for (Map.Entry<String, String> entry : unify.entrySet()) {
-			Dob key = dobs.submergeString(entry.getKey());
-			Dob value = dobs.submergeString(entry.getValue());
-			result.put(key, value);
+	public <U,V> Map<U, V> submergeStrings(Map<String, String> raw, Class<U> key, Class<V> value) {
+		Map<U, V> result = Maps.newHashMap();
+		Submerger<U> keySub = getSubmerger(key);
+		Submerger<V> valSub = getSubmerger(value);
+		for (Map.Entry<String, String> entry : raw.entrySet()) {
+			U u = keySub.submergeString(entry.getKey());
+			V v = valSub.submergeString(entry.getValue());
+			result.put(u, v);
 		}
 		return result;
+	}
+	
+	public <U,V> Multimap<U, V> submergeStrings(Multimap<String, String> raw, Class<U> key, Class<V> value) {
+		Multimap<U, V> result = HashMultimap.create();
+		Submerger<U> keySub = getSubmerger(key);
+		Submerger<V> valSub = getSubmerger(value);
+		for (Map.Entry<String, String> entry : raw.entries()) {
+			U u = keySub.submergeString(entry.getKey());
+			V v = valSub.submergeString(entry.getValue());
+			result.put(u, v);
+		}
+		return result;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private <U> Submerger<U> getSubmerger(Class<U> cls) {
+		Preconditions.checkArgument(this.submergers.containsKey(cls), "Invalid submersion class target!");
+		return (Submerger<U>)this.submergers.get(cls);
 	}
 	
 	private Submerger<Dob> createDobSubmerger() {

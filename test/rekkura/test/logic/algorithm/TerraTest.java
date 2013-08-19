@@ -1,4 +1,4 @@
-package rekkura.test.logic;
+package rekkura.test.logic.algorithm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -79,7 +79,7 @@ public class TerraTest {
 			assertNull(assignment);
 		} else {
 			assertNotNull(assignment);
-			Map<Dob, Dob> expected = pool.submergeUnifyStrings(rawExpected);
+			Map<Dob, Dob> expected = pool.submergeStrings(rawExpected, Dob.class, Dob.class);
 			assertEquals(expected, assignment);
 		}
 	}

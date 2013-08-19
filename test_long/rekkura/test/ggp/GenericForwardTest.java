@@ -1,4 +1,4 @@
-package rekkura.test.ggp.machina;
+package rekkura.test.ggp;
 
 import rekkura.ggp.machina.GgpStateMachine;
 import rekkura.ggp.machina.GgpStateMachine.Factory;

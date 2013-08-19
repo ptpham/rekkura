@@ -1,4 +1,4 @@
-package rekkura.test.logic;
+package rekkura.test.state.algorithm;
 
 import static org.junit.Assert.assertEquals;
 

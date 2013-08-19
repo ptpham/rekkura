@@ -1,4 +1,4 @@
-package rekkura.test.ggp.machina;
+package rekkura.test.ggp;
 
 import static org.junit.Assert.*;
 
