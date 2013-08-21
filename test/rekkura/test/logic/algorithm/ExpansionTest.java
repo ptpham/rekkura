@@ -77,6 +77,23 @@ public abstract class ExpansionTest {
 		runTest(rawRule, rawInputs, rawOutputs);
 	}
 	
+	@Test
+	public void joinSimple() {
+		String rawRule = "{(X)(Y)|<((Q)(X)(Y)),true> :- <((P)(X)(Y)),true><((R)(Y)),true>}";
+		List<String> rawInputs = Lists.newArrayList("((P)(a)(b))", "((P)(b)(b))", "((R)(a))", "((R)(b))");
+		List<String> rawOutputs = Lists.newArrayList("((Q)(a)(b))","((Q)(b)(b))");
+		runTest(rawRule, rawInputs, rawOutputs);
+	}
+	
+	@Test
+	public void joinComplex() {
+		String rawRule = "{(X)(Y)(Z)|<((Q)(X)(Y)),true> :- <((P)(X)(Y)(Z)),true><((R)(X)),true><((S)(X)(Y)),true>}";
+		List<String> rawInputs = Lists.newArrayList("((P)(a)(b)(c))", "((P)(b)(a)(c))", "((P)(c)(a)(b))",
+			"((R)(a))", "((R)(b))", "((S)(a)(b))", "((S)(b)(c))", "((S)(c)(b))", "((S)(b)(a))");
+		List<String> rawOutputs = Lists.newArrayList("((Q)(a)(b))", "((Q)(b)(a))");
+		runTest(rawRule, rawInputs, rawOutputs);
+	}
+	
 	private void runTest(String rawRule, List<String> rawInputs, List<String> rawOutputs) {
 		Pool pool = new Pool();
 		

@@ -1,26 +1,9 @@
 package rekkura.util;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import com.google.common.base.Function;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * (One-to-Many Utilities)
@@ -348,20 +331,10 @@ public class OtmUtil {
 		return OtmUtil.randomAssignment(actions, new Random());
 	}
 	
-	/**
-	 * Sorts in increasing order of support size.
-	 * @param positives
-	 * @param support
-	 */
-	public static <U,V> void sortByValueSize(List<U> positives,
-			final Multimap<U, V> support) {
-		Collections.sort(positives, new Comparator<U>() {
-			@Override public int compare(U first, U second) {
-				int firstSize = support.get(first).size();
-				int secondSize = support.get(second).size();
-				return firstSize - secondSize;
-			}
-		});
+	public static <U,V> Map<U,Integer> getNumValues(Multimap<U, V> map) {
+		Map<U,Integer> result = Maps.newHashMap();
+		for (U u : map.keySet()) result.put(u, map.get(u).size());
+		return result;
 	}
 	
 	public static <U,V> long cartesianSize(Multimap<U,V> map) {

@@ -78,7 +78,7 @@ public class Unification {
 	public void clear() { Colut.nullOut(this.assigned); }
 
 	@Override public String toString() { return Arrays.toString(assigned); }
-	
+		
 	public static final ImmutableMap<Dob, Dob> EMPTY_MAP = ImmutableMap.of();
 	public static final Unification EMPTY_UNIFICATION = new Unification(ImmutableList.<Dob>of());
 

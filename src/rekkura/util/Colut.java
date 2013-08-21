@@ -358,13 +358,13 @@ public class Colut {
 		return result;
 	}
 
-	public static <U> List<U> select(List<U> ordering, Collection<U> keep) {
+	public static <U> List<U> intersect(List<U> ordering, Collection<U> keep) {
 		List<U> result = Lists.newArrayList();
 		for (U u : ordering) if (keep.contains(u)) result.add(u);
 		return result;
 	}
 
-	public static <U> List<U> deselect(List<U> ordering, Collection<U> remove) {
+	public static <U> List<U> remove(List<U> ordering, Collection<U> remove) {
 		if (remove == null) return Lists.newArrayList(ordering);
 		List<U> result = Lists.newArrayList();
 		for (U u : ordering) if (!remove.contains(u)) result.add(u);
@@ -414,12 +414,6 @@ public class Colut {
 		return result;
 	}
 	
-	public static <U> List<U> sortBy(Iterable<U> elems, Comparator<U> comp) {
-		List<U> result = Lists.newArrayList(elems);
-		Collections.sort(result, comp);
-		return result;
-	}
-	
 	public static List<Integer> listInts(int begin, int end) {
 		List<Integer> result = Lists.newArrayList();
 		for (int i = begin; i < end; i++) result.add(i);
@@ -451,5 +445,25 @@ public class Colut {
 		};
 	}
 	
-
+	public static <U> void sortByMultiset(List<U> elems, final Multiset<U> values) {
+		Collections.sort(elems, new Comparator<U>() {
+			@Override public int compare(U o1, U o2) {
+				return Integer.compare(values.count(o1), values.count(o2));
+			}
+		});
+	}
+	
+	public static <U,V extends Comparable<V>> void sortByMap(List<U> elems, 
+		final Map<U,V> values, final V def) {
+		
+		Collections.sort(elems, new Comparator<U>() {
+			@Override public int compare(U o1, U o2) {
+				V v1 = values.get(o1);
+				V v2 = values.get(o2);
+				if (v1 == null) v1 = def;
+				if (v2 == null) v2 = def;
+				return v1.compareTo(v2);
+			}
+		});
+	}
 }

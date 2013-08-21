@@ -13,7 +13,6 @@ import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
 import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
-import rekkura.util.OtmUtil;
 import rekkura.util.RankedCarry;
 
 import com.google.common.collect.*;
@@ -35,19 +34,18 @@ public class Terra {
 		return Cartesian.asIterator(space);
 	}
 
-	public static List<Atom> getGreedyVarCoverExpanders(Rule rule,
-			final Multimap<Atom, Dob> support) {
+	public static List<Atom> getGreedyVarCoverExpanders(Rule rule, Map<Atom,Integer> costs) {
 		// Sort the dimensions of the space so that the smallest ones come first.
 		List<Atom> positives = Atom.filterPositives(rule.body);
-		OtmUtil.sortByValueSize(positives, support);
+		Colut.sortByMap(positives, costs, 0);
 		
 		// Then greedily find a variable cover and resort for the final support
 		List<Atom> expanders = Terra.getGreedyVarCover(positives, rule.vars);
 		if (expanders == null) return null;
-		OtmUtil.sortByValueSize(expanders, support);
+		Colut.sortByMap(expanders, costs, 0);
 		return expanders;
 	}
-	
+		
 	/**
 	 * This method exposes an efficient rendering process for a collection of ground dobs.
 	 * If you want to apply a single assignment in a vaccuum, consider applyBodies.
@@ -207,7 +205,7 @@ public class Terra {
 			for (Dob ground : grounds) {
 				Map<Dob, Dob> unify = Unifier.unifyVars(atom.dob, ground, rule.vars);
 				Unification wrapped = unify == null ? null : Unification.from(unify, rule.vars);
-				unifies.add(wrapped); 
+				if (wrapped != null) unifies.add(wrapped); 
 			}
 			result.add(unifies);
 		}
