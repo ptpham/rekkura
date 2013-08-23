@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import rekkura.ggp.milleu.Game;
 import rekkura.ggp.milleu.Player.ProverBased;
 import rekkura.logic.model.Dob;
-import rekkura.state.algorithm.DepthCharge;
+import rekkura.state.algorithm.DepthCharger;
 import rekkura.util.Colut;
 import rekkura.util.RankedCarry;
 
@@ -76,7 +76,7 @@ public class MonteCarloPlayer extends ProverBased {
 			Map<Dob, Dob> fixed = Maps.newHashMap();
 			fixed.put(role, action);
 			
-			List<Set<Dob>> charge = DepthCharge.fire(state, machine, fixed, rand);
+			List<Set<Dob>> charge = DepthCharger.fire(state, machine, fixed, rand);
 
 			Set<Dob> terminal = Colut.end(charge);
 			int goal = Colut.get(machine.getGoals(terminal), role, 0);

@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import rekkura.ggp.machina.BackwardStateMachine;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.state.algorithm.DepthCharge;
+import rekkura.state.algorithm.DepthCharger;
 import rekkura.state.model.StateMachine;
 import rekkura.util.Colut;
 import rekkura.util.Synchron;
@@ -142,7 +142,7 @@ public abstract class Player implements Runnable {
 			// Make sure we can do a typical suite of actions
 			// in a reasonable time -- if not, just bail.
 			this.machine = constructMachine(config.rules);
-			try { DepthCharge.runBasicSuite(this.machine); }
+			try { DepthCharger.runBasicSuite(this.machine); }
 			catch (Exception e) {
 				logger.severe("Unable to complete machine construction");
 				return false;

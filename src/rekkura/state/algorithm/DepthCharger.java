@@ -7,44 +7,41 @@ import java.util.Random;
 import rekkura.logic.model.Dob;
 import rekkura.state.model.StateMachine;
 import rekkura.util.Colut;
+import rekkura.util.Limiter;
 import rekkura.util.OtmUtil;
 import rekkura.util.Synchron;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
-public class DepthCharge<S,A> {
-	
+public class DepthCharger<S,A> {
 	public final StateMachine<S,A> machine;
+	public final Limiter.Operations limitOps = Limiter.forOperations();
+	public final Limiter.Time limitTime = Limiter.forTime();
 	public Random rand = new Random();
-	public int maxDepth = Integer.MAX_VALUE;
-	public long maxTime = Long.MAX_VALUE;
-	Map<Dob, A> fixed = null;
+	public Map<Dob, A> fixed = null;
 	
-	private DepthCharge(StateMachine<S,A> machine) {
+	private final Limiter limits = Limiter.combine(limitOps, limitTime);
+	private DepthCharger(StateMachine<S,A> machine) {
 		this.machine = machine;
 	}
 	
-	public static <S,A> DepthCharge<S,A> create(StateMachine<S,A> machine) {
-		return new DepthCharge<S,A>(machine);
+	public static <S,A> DepthCharger<S,A> create(StateMachine<S,A> machine) {
+		return new DepthCharger<S,A>(machine);
 	}
 	
 	public List<S> fire(S state) {
 		List<S> result = Lists.newArrayList();
 		result.add(state);
+		limits.begin();
 		
-		int depth = 0;
-		long begin = System.currentTimeMillis();
-		while (!machine.isTerminal(state)) {
+		while (!machine.isTerminal(state) && !limits.exceeded()) {
 			ListMultimap<Dob, A> actions = machine.getActions(state);
 			Map<Dob, A> joint = OtmUtil.randomAssignment(actions, fixed, rand);
 			fixed = null;
 			
 			state = machine.nextState(state, joint);
 			result.add(state);
-			
-			if (++depth >= maxDepth) break;
-			if (System.currentTimeMillis() - begin > maxTime) break;
 		}
 		
 		return result;
@@ -73,7 +70,7 @@ public class DepthCharge<S,A> {
 	 */
 	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine, 
 			Map<Dob, A> fixed, Random rand) {
-		DepthCharge<S, A> charger = new DepthCharge<S,A>(machine);
+		DepthCharger<S, A> charger = new DepthCharger<S,A>(machine);
 		if (rand != null) charger.rand = rand;
 		charger.fixed = fixed;
 		return charger.fire(state);
@@ -82,7 +79,7 @@ public class DepthCharge<S,A> {
 	public static <S,A> double measureCps(StateMachine<S,A> machine, int charges) {
 		S initial = machine.getInitial();
 		long begin = System.currentTimeMillis();
-		for (int i = 0; i < charges; i++) DepthCharge.fire(initial, machine);
+		for (int i = 0; i < charges; i++) DepthCharger.fire(initial, machine);
 		long interval = System.currentTimeMillis() - begin;
 		return 1000*charges/(double)interval;
 	}
@@ -96,7 +93,7 @@ public class DepthCharge<S,A> {
 			threads.add(new Thread(new Runnable() {
 				@Override public void run() {
 					for (int i = 0; i < perMachine; i++) {
-						DepthCharge.fire(initial, machine);
+						DepthCharger.fire(initial, machine);
 					}
 				}
 			}));

@@ -371,7 +371,7 @@ public class Colut {
 		return result;
 	}
 
-	public static <U,V> Map<V, U> uniqeMapInvert(Map<U,V> index) {
+	public static <U,V> Map<V, U> invertBijection(Map<U,V> index) {
 		Map<V,U> result = Maps.newHashMap();
 		for (U u : index.keySet()) result.put(index.get(u), u);
 		return result;
