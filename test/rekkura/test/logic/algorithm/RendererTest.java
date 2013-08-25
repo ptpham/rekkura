@@ -1,13 +1,14 @@
 package rekkura.test.logic.algorithm;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import rekkura.logic.algorithm.Renderer;
+import rekkura.logic.algorithm.Terra;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
@@ -17,7 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
-public abstract class ExpansionTest {
+public abstract class RendererTest {
 
 	protected abstract Renderer getExpansion();
 	
@@ -102,7 +103,8 @@ public abstract class ExpansionTest {
 		Multimap<Atom,Dob> support = Renderer.getTrivialSupport(rule, truths);
 		
 		Set<Dob> expected = Sets.newHashSet(pool.dobs.submergeStrings(rawOutputs));
-		Set<Dob> generated = getExpansion().apply(rule, truths, support, pool);
+		List<Map<Dob,Dob>> unifies = getExpansion().apply(rule, truths, support, pool);
+		Set<Dob> generated = Terra.renderHeads(unifies, rule, pool);
 		Assert.assertEquals(expected, generated);
 	}
 }

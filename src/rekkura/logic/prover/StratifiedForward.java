@@ -7,6 +7,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import rekkura.logic.algorithm.Renderer;
+import rekkura.logic.algorithm.Terra;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
@@ -100,9 +101,9 @@ public class StratifiedForward extends StratifiedProver {
 		if (!hasMore()) throw new NoSuchElementException();
 		Rule rule = Colut.popAny(this.pendingRules.values());
 		
-		Renderer expander = Renderer.getStandard();
+		Renderer expander = this.renderers.get(rule);
 		ListMultimap<Atom, Dob> support = cachet.getSupport(rule);
-		Set<Dob> generated = expander.apply(rule, truths, support, pool);
+		Set<Dob> generated = Terra.renderHeads(expander.apply(rule, truths, support, pool), rule, pool);
 		
 		// Submerge all of the newly generated dobs
 		List<Dob> result = Lists.newArrayListWithCapacity(generated.size());

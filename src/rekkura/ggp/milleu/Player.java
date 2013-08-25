@@ -102,7 +102,6 @@ public abstract class Player implements Runnable {
 	 * @param <M>
 	 */
 	public static abstract class StateBased<M extends StateMachine<Set<Dob>, Dob>> extends Player {
-		private static final long DEFAULT_MAX_CONSTRUCTION_TIME = 40000;
 		private Set<Dob> state;
 		private int turn;
 		
@@ -137,7 +136,6 @@ public abstract class Player implements Runnable {
 		
 		private boolean setup() {
 			logger.info("Starting machine construction ...");
-			Thread interrupt = Synchron.selfInterrupt(DEFAULT_MAX_CONSTRUCTION_TIME);
 			
 			// Make sure we can do a typical suite of actions
 			// in a reasonable time -- if not, just bail.
@@ -148,7 +146,6 @@ public abstract class Player implements Runnable {
 				return false;
 			}
 			
-			interrupt.interrupt();
 			logger.info("Finished machine construction.");
 			return true;
 		}

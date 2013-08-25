@@ -27,6 +27,11 @@ public class Ucb {
 			this.cumulative = 0;
 			this.count = 0;
 		}
+		
+		@Override
+		public String toString() {
+			return "[E=" + expected() + ", N=" + count + "]";
+		}
 	}
 	
 	public static class Suggestor<U> {

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import rekkura.logic.algorithm.Renderer;
+import rekkura.logic.algorithm.Terra;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
@@ -96,8 +97,11 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	protected Set<Dob> standardRuleExpansion(Rule rule) {
 		ListMultimap<Atom, Dob> support = cachet.getSupport(rule);
 		Set<Dob> generated = expandRecursiveRule(rule, support);
-		Renderer renderer = Renderer.getStandard();
-		if (generated == null) generated = renderer.apply(rule, truths, support, pool);
+		if (generated == null) {
+			Renderer renderer = this.renderers.get(rule);
+			List<Map<Dob,Dob>> unifies = renderer.apply(rule, truths, support, pool);
+			generated = Terra.renderHeads(unifies, rule, pool);
+		}
 		for (Dob dob : generated) preserveTruth(dob);
 		return generated;
 	}
@@ -120,7 +124,7 @@ public abstract class StratifiedBackward extends StratifiedProver {
 			for (Atom atom : current.keySet()) {
 				List<Atom> selected = Lists.newArrayList(atom);
 				Multimap<Atom,Dob> diff = OtmUtil.diffSelective(selected, current, old);
-				generated.addAll(renderer.apply(rule, truths, diff, pool));
+				generated.addAll(Terra.renderHeads(renderer.apply(rule, truths, diff, pool), rule, pool));
 			}
 		}
 		this.previous.put(rule, HashMultimap.create(current));

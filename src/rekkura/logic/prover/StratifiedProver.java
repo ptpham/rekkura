@@ -3,12 +3,15 @@ package rekkura.logic.prover;
 import java.util.Collection;
 import java.util.Set;
 
+import rekkura.logic.algorithm.Renderer;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.structure.Cachet;
 import rekkura.logic.structure.Pool;
 import rekkura.logic.structure.Ruletta;
+import rekkura.util.Cache;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
@@ -28,6 +31,9 @@ public abstract class StratifiedProver {
 	public final Cachet cachet;
 	public final Pool pool = new Pool();
 	public final Set<Dob> truths = Sets.newHashSet();
+	public final Cache<Rule,Renderer> renderers = Cache.create(new Function<Rule,Renderer>() {
+		@Override public Renderer apply(Rule arg0) { return Renderer.getStandardCompound(); }
+	});
 	
 	public abstract Set<Dob> proveAll(Iterable<Dob> truths);
 
