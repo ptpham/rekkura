@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import rekkura.logic.algorithm.Expansion;
+import rekkura.logic.algorithm.Renderer;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
@@ -96,7 +96,8 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	protected Set<Dob> standardRuleExpansion(Rule rule) {
 		ListMultimap<Atom, Dob> support = cachet.getSupport(rule);
 		Set<Dob> generated = expandRecursiveRule(rule, support);
-		if (generated == null) generated = Expansion.standard(rule, truths, support, pool);
+		Renderer renderer = Renderer.getStandard();
+		if (generated == null) generated = renderer.apply(rule, truths, support, pool);
 		for (Dob dob : generated) preserveTruth(dob);
 		return generated;
 	}
@@ -111,6 +112,7 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	protected Set<Dob> expandRecursiveRule(Rule rule, ListMultimap<Atom,Dob> current) {
 		if (!this.recursives.contains(rule)) return null;
 		Multimap<Atom,Dob> old = this.previous.get(rule);
+		Renderer renderer = Renderer.getPartitioning();
 		
 		Set<Dob> generated = null;
 		if (old != null) {
@@ -118,7 +120,7 @@ public abstract class StratifiedBackward extends StratifiedProver {
 			for (Atom atom : current.keySet()) {
 				List<Atom> selected = Lists.newArrayList(atom);
 				Multimap<Atom,Dob> diff = OtmUtil.diffSelective(selected, current, old);
-				generated.addAll(Expansion.standard(rule, truths, diff, pool));
+				generated.addAll(renderer.apply(rule, truths, diff, pool));
 			}
 		}
 		this.previous.put(rule, HashMultimap.create(current));

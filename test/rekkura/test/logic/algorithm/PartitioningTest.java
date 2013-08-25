@@ -1,7 +1,11 @@
 package rekkura.test.logic.algorithm;
 
-import rekkura.logic.algorithm.Expansion;
+import rekkura.logic.algorithm.Renderer;
 
 public class PartitioningTest extends ExpansionTest {
-	@Override protected Expansion getExpansion() { return Expansion.getPartitioning(); }
+	@Override protected Renderer getExpansion() {
+		Renderer.Partitioning result = Renderer.getPartitioning();
+		result.minNonTrival = 1;
+		return result;
+	}
 }

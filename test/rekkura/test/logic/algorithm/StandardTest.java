@@ -1,7 +1,7 @@
 package rekkura.test.logic.algorithm;
 
-import rekkura.logic.algorithm.Expansion;
+import rekkura.logic.algorithm.Renderer;
 
 public class StandardTest extends ExpansionTest {
-	@Override protected Expansion getExpansion() { return Expansion.getStandard(); }
+	@Override protected Renderer getExpansion() { return Renderer.getStandard(); }
 }

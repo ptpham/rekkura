@@ -7,7 +7,7 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-import rekkura.logic.algorithm.Expansion;
+import rekkura.logic.algorithm.Renderer;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
 
 public abstract class ExpansionTest {
 
-	protected abstract Expansion getExpansion();
+	protected abstract Renderer getExpansion();
 	
 	@Test
 	public void basic() {
@@ -99,10 +99,10 @@ public abstract class ExpansionTest {
 		
 		Rule rule = pool.rules.submergeString(rawRule);
 		Set<Dob> truths = Sets.newHashSet(pool.dobs.submergeStrings(rawInputs));
-		Multimap<Atom,Dob> support = Expansion.getTrivialSupport(rule, truths);
+		Multimap<Atom,Dob> support = Renderer.getTrivialSupport(rule, truths);
 		
 		Set<Dob> expected = Sets.newHashSet(pool.dobs.submergeStrings(rawOutputs));
-		Set<Dob> generated = getExpansion().expand(rule, truths, support, pool);
+		Set<Dob> generated = getExpansion().apply(rule, truths, support, pool);
 		Assert.assertEquals(expected, generated);
 	}
 }

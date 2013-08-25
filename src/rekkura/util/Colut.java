@@ -466,4 +466,24 @@ public class Colut {
 			}
 		});
 	}
+	
+	public static <U> List<Integer> indexOf(List<U> list, List<U> selection) {
+		List<Integer> result = Lists.newArrayList();
+		if (list == null || selection == null) return result;
+		for (U elem : selection) result.add(list.indexOf(elem));
+		return result;
+	}
+	
+	public static <U> List<U> select(List<U> list, List<Integer> pos) {
+		List<U> result = Lists.newArrayList();
+		if (list == null) return result;
+		for (Integer i : pos) result.add(Colut.get(list, i));
+		return result;
+	}
+	
+	public static <U> int countNonNull(U[] arr) {
+		int result = 0;
+		for (int i = 0; i < arr.length; i++) if (arr[i] != null) result++;
+		return result;
+	}
 }

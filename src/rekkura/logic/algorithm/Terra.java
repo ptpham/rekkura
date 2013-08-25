@@ -13,6 +13,7 @@ import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
 import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
+import rekkura.util.Limiter;
 import rekkura.util.RankedCarry;
 
 import com.google.common.collect.*;
@@ -45,39 +46,21 @@ public class Terra {
 		Colut.sortByMap(expanders, costs, 0);
 		return expanders;
 	}
-		
-	/**
-	 * This method exposes an efficient rendering process for a collection of ground dobs.
-	 * If you want to apply a single assignment in a vaccuum, consider applyBodies.
-	 * To generate the support for this function, consider using getBodySpace.
-	 * @param rule
-	 * @param support
-	 * @param pool
-	 * @param truths
-	 * @return
-	 */
-	public static List<Map<Dob,Dob>> applyUnifications(Rule rule, 
-		AdvancingIterator<Unification> iterator, List<Atom> check, Pool pool, Set<Dob> truths) {
-		List<Map<Dob,Dob>> result = Lists.newArrayList();
-		
-		// This block deals with the vacuous rule special case ...
-		Dob varless = applyVarless(rule, truths);
-		if (varless != null) {
-			result.add(Maps.<Dob,Dob>newHashMap());
-			return result;
-		}
-		
-		return expandUnifications(rule, check, iterator, pool, truths);
-	}
+
 
 	public static List<Map<Dob, Dob>> expandUnifications(Rule rule, List<Atom> check,
 		Cartesian.AdvancingIterator<Unification> iterator, Pool pool, Set<Dob> truths) {
-		
+		Limiter.Operations limiter = Limiter.forOperations();
+		return expandUnifications(rule, check, iterator, pool, truths, limiter);
+	}
+
+	public static List<Map<Dob, Dob>> expandUnifications(Rule rule,
+		List<Atom> check, Cartesian.AdvancingIterator<Unification> iterator, Pool pool,
+		Set<Dob> truths, Limiter.Operations limiter) {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
 		Unification unify = Unification.from(rule.vars);
 		
-		while (iterator.hasNext()) {
-			if (Thread.interrupted()) throw new RuntimeException();
+		while (iterator.hasNext() && !limiter.exceeded()) {
 			unify.clear();
 
 			// Dobs in the variable cover must contribute in a
@@ -197,7 +180,8 @@ public class Terra {
 	}
 	
 	public static List<List<Unification>> getUnificationSpace(Rule rule,
-			final Multimap<Atom, Dob> support, List<Atom> positives) {
+		final Multimap<Atom, Dob> support, List<Atom> positives) {
+		
 		List<List<Unification>> result = Lists.newArrayList();
  		for (Atom atom : positives) {
 			Collection<Dob> grounds = support.get(atom);
