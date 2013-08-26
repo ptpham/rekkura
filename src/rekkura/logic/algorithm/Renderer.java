@@ -104,7 +104,6 @@ public abstract class Renderer {
 				result.addAll(apply(rule, iterator, check, pool, truths));
 			}
 				
-			this.ops.failed = true;
 			return result;
 		}	
 	}
