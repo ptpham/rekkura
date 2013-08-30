@@ -69,7 +69,7 @@ public class ComprenderTest {
 		
 		Pool pool = new Pool();
 		List<Rule> rules = pool.rules.submergeStrings(Lists.newArrayList(firstRaw, secondRaw));
-		List<Rule> generated = Comprender.mergeAll(rules, pool, Merges.posSub);
+		List<Rule> generated = Comprender.mergeAll(rules, pool, Merges.POSITIVE_SUBSTITUTION);
 		assertEquals(1, generated.size());
 		
 		Rule rule = generated.get(0);
@@ -83,7 +83,7 @@ public class ComprenderTest {
 		String expectedFirst = "{(X)(Y)|<((h)(X)(Y)),true>:-<((g)(Y)(X)),false>}";
 		String expectedSecond = "{(X)(Y)|<((h)(X)(Y)),true>:-<((g)(X)(Y)),false>}";
 		
-		Merge.Operation op = Merge.combine(Merges.posSub, Merges.negSplit);
+		Merge.Operation op = Merge.combine(Merges.POSITIVE_SUBSTITUTION, Merges.negSplit);
 		runMerge(Lists.newArrayList(firstRaw, secondRaw), 
 			Sets.newHashSet(expectedFirst, expectedSecond), op);
 	}
@@ -98,7 +98,7 @@ public class ComprenderTest {
 	}
 	
 	private void runMerge(List<String> rawRules, Set<String> rawExpected) {
-		runMerge(rawRules, rawExpected, Merges.posSub);
+		runMerge(rawRules, rawExpected, Merges.POSITIVE_SUBSTITUTION);
 	}
 	
 	private void runMerge(List<String> rawRules, Set<String> rawExpected, Merge.Operation op) {

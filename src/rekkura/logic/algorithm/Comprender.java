@@ -108,7 +108,7 @@ public class Comprender {
 	
 	public static Rule lift(Rule src, Rule dst, int dstPosition, Pool pool) {
 		Merge.Result merge = Merge.compute(src, dst, dstPosition, pool);
-		if (merge == null) return null;
+		if (merge == null || merge.srcUnify.size() == 0) return null;
 		
 		return Unifier.replace(src, merge.srcUnify, merge.vars);
 	}
