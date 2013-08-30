@@ -1,6 +1,7 @@
 package rekkura.logic.model;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import rekkura.util.Colut;
@@ -78,7 +79,37 @@ public class Unification {
 	public void clear() { Colut.nullOut(this.assigned); }
 
 	@Override public String toString() { return Arrays.toString(assigned); }
+	
+	public static class Distinct {
+		public int posFirst = -1, posSecond = -1;
+		public Dob failFirst, failSecond;
 		
+		public boolean evaluate(Unification unify) {
+			Dob first = Colut.get(unify.assigned, posFirst);
+			Dob second = Colut.get(unify.assigned, posSecond);
+			if (first != null && second != null) return first != second;
+			if (first == null && second == null) return failFirst != failSecond;
+			if (first != null) return first != failFirst;
+			if (second != null) return second != failSecond;
+			return true;
+		}
+	}
+	
+	public static Distinct convert(Rule.Distinct orig, List<Dob> vars) {
+		Distinct result = new Distinct();
+		result.posFirst = vars.indexOf(orig.first);
+		result.posSecond = vars.indexOf(orig.second);
+		if (result.posFirst == -1) result.failSecond = orig.first;
+		if (result.posSecond == -1) result.failFirst = orig.second;
+		return result;
+	}
+	
+	public boolean evaluateDistinct(Iterable<Distinct> distincts) {
+		boolean result = true;
+		for (Distinct distinct : distincts) result &= distinct.evaluate(this);
+		return result;
+	}
+	
 	public static final ImmutableMap<Dob, Dob> EMPTY_MAP = ImmutableMap.of();
 	public static final Unification EMPTY_UNIFICATION = new Unification(ImmutableList.<Dob>of());
 

@@ -486,4 +486,9 @@ public class Colut {
 		for (int i = 0; i < arr.length; i++) if (arr[i] != null) result++;
 		return result;
 	}
+
+	public static Dob get(Dob[] arr, int pos) {
+		if (arr == null || pos < 0 || pos >= arr.length) return null;
+		return arr[pos];
+	}
 }

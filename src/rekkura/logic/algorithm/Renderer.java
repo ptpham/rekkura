@@ -28,7 +28,7 @@ public abstract class Renderer {
 	public static Partitioning getPartitioning() { return new Partitioning(); }
 	public static Compound getStandardCompound() {
 		Standard standard = getStandard();
-		standard.ops.max = 4096;
+		standard.ops.max = 1024;
 		return new Compound(standard, getPartitioning());
 	}
 	
@@ -67,7 +67,7 @@ public abstract class Renderer {
 			Map<Atom,Integer> sizes = OtmUtil.getNumValues(support);
 			ops.begin();
 
-			List<Atom> expanders = Terra.getGreedyVarCoverExpanders(rule, sizes);
+			List<Atom> expanders = Terra.getGreedyExpanders(rule, sizes);
 			List<Atom> check = Colut.remove(rule.body, expanders);
 			Cartesian.AdvancingIterator<Unification> iterator =
 				Terra.getUnificationIterator(rule, expanders, support, truths);
@@ -87,7 +87,7 @@ public abstract class Renderer {
 
 			// Compute expander set
 			Map<Atom,Integer> sizes = OtmUtil.getNumValues(support);
-			List<Atom> expanders = Terra.getGreedyVarCoverExpanders(rule, sizes);
+			List<Atom> expanders = Terra.getGreedyExpanders(rule, sizes);
 			List<Atom> check = Colut.remove(rule.body, expanders);
 			
 			// Partition the space based on the greedy ordering of high overlap variables

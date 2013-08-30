@@ -35,7 +35,7 @@ public class Terra {
 		return Cartesian.asIterator(space);
 	}
 
-	public static List<Atom> getGreedyVarCoverExpanders(Rule rule, Map<Atom,Integer> costs) {
+	public static List<Atom> getGreedyExpanders(Rule rule, Map<Atom,Integer> costs) {
 		// Sort the dimensions of the space so that the smallest ones come first.
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		Colut.sortByMap(positives, costs, 0);
@@ -46,7 +46,6 @@ public class Terra {
 		Colut.sortByMap(expanders, costs, 0);
 		return expanders;
 	}
-
 
 	public static List<Map<Dob, Dob>> expandUnifications(Rule rule, List<Atom> check,
 		Cartesian.AdvancingIterator<Unification> iterator, Pool pool, Set<Dob> truths) {
@@ -60,6 +59,12 @@ public class Terra {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
 		Unification unify = Unification.from(rule.vars);
 		
+		// Convert distincts to fast representation
+		List<Unification.Distinct> distincts = Lists.newArrayList();
+		for (Rule.Distinct distinct : rule.distinct) {
+			distincts.add(Unification.convert(distinct, rule.vars));
+		}
+		
 		while (iterator.hasNext() && !limiter.exceeded()) {
 			unify.clear();
 
@@ -71,6 +76,7 @@ public class Terra {
 			for (int i = 0; i < assignment.size() && failure < 0; i++) {
 				Unification current = assignment.get(i);
 				if (!unify.sloppyDirtyMergeWith(current)) failure = i;
+				if (!unify.evaluateDistinct(distincts)) failure = i;
 			}
 			
 			// Verify that the atoms that did not participate in the unification
@@ -81,9 +87,8 @@ public class Terra {
 			}
 			
 			// Final check for distincts before rendering head
-			if (converted != null && unify.isValid()) {
-				if (rule.evaluateDistinct(converted)) result.add(converted);
-			} else if (failure >= 0) iterator.advance(failure);
+			if (converted != null && unify.isValid()) result.add(converted);
+			else if (failure >= 0) iterator.advance(failure);
 		}
 		return result;
 	}
