@@ -26,7 +26,7 @@ import com.google.common.collect.Multimap;
  *
  */
 public class Cachet {
-	
+
 	/**
 	 * This maps ground dobs to their canonical dobs (the dob at 
 	 * the end of the unify trunk).
@@ -37,14 +37,14 @@ public class Cachet {
 				return Colut.end(rta.fortre.getTrunk(dob));
 			}
 		});
-	
+
 	public Cache<Dob, List<Dob>> canonicalSpines = 
 		Cache.create(new Function<Dob, List<Dob>>() {
 			@Override public List<Dob> apply(Dob dob) {
 				return Lists.newArrayList(rta.fortre.getSpine(dob));
 			}
 		});
-	
+
 	/**
 	 * This caches form spines for given canonical dobs.
 	 */
@@ -53,7 +53,7 @@ public class Cachet {
 			@Override public List<Dob> apply(Dob dob) 
 			{ return canonicalSpines.get(canonicalForms.get(dob)); }
 		});
-	
+
 	/**
 	 * This caches the list of rules affected by each canonical form.
 	 */
@@ -63,13 +63,13 @@ public class Cachet {
 				return Lists.newArrayList(rta.getAffectedRules(dob));
 			}
 		});
-	
+
 	public Cache<Dob, List<Rule>> affectedRules = 
 		Cache.create(new Function<Dob, List<Rule>>() {
 			@Override public List<Rule> apply(Dob dob) 
 			{ return canonicalRules.get(canonicalForms.get(dob)); }
 		});
-	
+
 	/**
 	 * These hold the mappings from a body form B to grounds 
 	 * that are known to successfully unify with B.
@@ -77,7 +77,7 @@ public class Cachet {
 	 * are true in any given proving cycle.
 	 */
 	public final Multimap<Dob, Dob> formToGrounds = HashMultimap.create();
-	
+
 	public final Ruletta rta;
 
 	public Cachet(Ruletta rta) { this.rta = rta; }
@@ -92,19 +92,19 @@ public class Cachet {
 		}
 		return result;
 	}
-	
-    public void storeAllGround(Iterable<Dob> grounds) {
-        for (Dob ground : grounds) storeGround(ground);
-    }
+
+	public void storeAllGround(Iterable<Dob> grounds) {
+		for (Dob ground : grounds) storeGround(ground);
+	}
 
 	public void storeGround(Dob ground) {
 		storeGroundAt(ground, canonicalForms.get(ground));
 	}
-	
+
 	public void storeGroundAt(Dob ground, Dob body) {
 		formToGrounds.put(body, ground);
 	}
-	
+
 	/**
 	 * This method returns an iterable over all exhausted ground dobs 
 	 * that potentially unify with the given body term.
@@ -114,8 +114,8 @@ public class Cachet {
 	public Iterable<Dob> getGroundCandidates(Dob dob) {
 		return OtmUtil.valueIterable(formToGrounds, spines.get(dob));
 	}
-	
-	
+
+
 	/**
 	 * Returns a list that contains the assignment domain of each positive
 	 * body term in the given rule assuming that we want to expand the given
@@ -127,7 +127,7 @@ public class Cachet {
 	 */
 	public ListMultimap<Atom, Dob> getSupport(Rule rule) {
 		ListMultimap<Atom, Dob> candidates = ArrayListMultimap.create();
-		
+
 		for (int i = 0; i < rule.body.size(); i++) {
 			Atom atom = rule.body.get(i);
 			if (!atom.truth) continue;
@@ -135,5 +135,5 @@ public class Cachet {
 		}
 		return candidates;
 	}
-	
+
 }

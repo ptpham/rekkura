@@ -43,8 +43,9 @@ public abstract class Optimizer {
 	}
 	
 	/**
-	 * In order for the merge optimization to apply to a rule, it must
-	 * be possible to non-trivially lift all children of the rule.
+	 * In order for this merge optimization to apply to a rule, it must
+	 * be possible to merge with all children of the rule in exactly one
+	 * position.
 	 * @author ptpham
 	 *
 	 */

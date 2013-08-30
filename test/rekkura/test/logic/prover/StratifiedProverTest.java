@@ -193,7 +193,7 @@ public abstract class StratifiedProverTest {
 		
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
-	
+
 	@Test
 	public void doubleNegation() {
 		String[] rawRules = { 
@@ -203,14 +203,14 @@ public abstract class StratifiedProverTest {
 			"{    | <(K),true> :- <(M),false> }",
 			"{(X) | <((R)(X)),true> :- <((N)(X)),true> <(K),false> }"
 		};
-		
+
 		String[][] rawDobs = {
 			{"((P)(a))", "((Q)(b))"}, {"(M)", "((N)(a))", "((R)(a))"}
 		};
 
 		overallMatchTest(rawRules, rawDobs[0], rawDobs[1]);
 	}
-	
+
 	@Test
 	public void alternatingSpecificity() {
 		String[] rawRules = {

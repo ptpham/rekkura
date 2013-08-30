@@ -20,49 +20,49 @@ public class Colut {
 		while (target.size() <= i) target.add(null);
 		target.set(i, t);
 	}
-	
+
 	public static <T> void addAll(Collection<T> target, Collection<T> other) {
 		if (other == null || target == null) return;
 		target.addAll(other);
 	}
-	
+
 	public static <T> boolean contains(Collection<T> s, T t) {
 		return (s != null && s.contains(t));
 	}
-	
+
 	public static <T> boolean containsAny(Iterable<T> source, Collection<T> targets) {
 		if (source == null) return false;
 		for (T s : source) if (contains(targets, s)) return true;
 		return false;
 	}
-	
+
 	public static <T> boolean containsNone(Iterable<T> source, Collection<T> targets) {
 		return !containsAny(source, targets);
 	}
-	
+
 	public static <T> boolean containsAll(Iterable<T> source, Collection<T> targets) {
-        if (source == null) return false;
+		if (source == null) return false;
 		for (T s : source) if (!targets.contains(s)) return false;
 		return true;
 	}
-	
+
 	public static <T> boolean nonEmpty(Collection<T> s) {
 		return s != null && s.size() > 0;
 	}
-	
+
 	public static <T> boolean empty(Collection<T> s) {
 		return !nonEmpty(s);
 	}
-	
+
 	public static boolean empty(String s) {
 		return s == null || s.isEmpty();
 	}
-	
+
 	public static <T> T any(Collection<T> s) {
 		if (empty(s)) return null;
 		return s.iterator().next();
 	}
-	
+
 	public static <T> T popAny(Collection<T> s) {
 		if (s == null) return null;
 		Iterator<T> iterator = s.iterator();
@@ -71,45 +71,45 @@ public class Colut {
 		iterator.remove();
 		return result;
 	}
-	
+
 	public static <T> boolean remove(Collection<T> s, T t){
 		if (s == null) return false;
 		return s.remove(t);
 	}
-	
+
 	public static <T> T removeEnd(List<T> list) {
 		if (list == null || list.size() == 0) return null;
 		return list.remove(list.size() - 1);
 	}
-	
+
 	public static <T> T end(List<T> list) {
 		if (nonEmpty(list)) return list.get(list.size() - 1);
 		return null;
 	}
-	
+
 	public static <T> T fromEnd(List<T> list, int i) {
 		if (list == null) return null;
 		return get(list, list.size() - i - 1);
 	}
-	
+
 	public static Character end(String s) {
 		if (s == null || s.length() == 0) return null;
 		return s.charAt(s.length() - 1);
 	}
-	
+
 	public static <U> void shiftAll(Multiset<U> counter, Iterable<U> keys, int shift) {
 		for (U u : keys) {
 			int newValue = counter.count(u) + shift;
 			counter.setCount(u, newValue);
 		}
 	}
-	
+
 	public static <U, V> Multimap<U, V> indexBy(Collection<V> collection, Function<V, U> fn) {
 		Multimap<U, V> result = HashMultimap.create();
 		for (V v : collection) result.put(fn.apply(v), v);
 		return result;
 	}
-	
+
 	public static <U> List<U> collapseAsList(Collection<? extends Collection<U>> all) {
 		List<U> result = Lists.newArrayList();
 		for (Collection<U> collection : all) { result.addAll(collection); }
@@ -120,23 +120,23 @@ public class Colut {
 		if (list == null || i < 0 || i >= list.size()) return null;
 		return list.get(i);
 	}
-	
+
 	public static <U, V> V get(Map<U, V> map, U val, V def) {
 		if (map == null || val == null) return def;
 		if (!map.containsKey(val)) return def;
 		return map.get(val);
 	}
-	
+
 	public static <U, V> V get(Map<U, V> map, U val) {
 		return get(map, val, null);
 	}
-	
+
 	public static <U> Set<U> intersection(Iterable<U> first, Collection<U> second) {
 		Set<U> result = Sets.newHashSet(first);
 		result.retainAll(second);
 		return result;
 	}
-	
+
 	public static <U> Set<U> difference(Collection<U> first, Collection<U> second) {
 		Set<U> result = Sets.newHashSet(first);
 		result.removeAll(second);
@@ -151,7 +151,7 @@ public class Colut {
 			@Override public void remove() { raw.remove(); }
 		};
 	}
-	
+
 	public static <U> Iterable<U> firstK(final Iterable<U> raw, final int k) {
 		return new Iterable<U>() {
 			@Override public Iterator<U> iterator() { return firstK(raw.iterator(), k); }
@@ -165,33 +165,33 @@ public class Colut {
 		}
 		return result;
 	}
-	
+
 	public static int parseInt(String s) {
 		int result = 0;
 		try { result = Integer.parseInt(s); } catch (Exception e) { }
 		return result;
 	}
-	
+
 	public static <U> U randomSelection(List<U> vals, Random rand) {
 		int index = rand.nextInt(vals.size());
 		return vals.get(index);
 	}
-	
+
 	public static <U> U randomSelection(List<U> vals) {
 		return randomSelection(vals, new Random());
 	}
-	
+
 	public static <U> List<U> newArrayListOfNulls(int num) {
 		List<U> result = Lists.newArrayList();
 		for (int i = 0; i < num; i++) { result.add(null); }
 		return result;
 	}
-	
+
 	public static <U> boolean noNulls(U[] arr) {
 		for (U u : arr) if (u == null) return false;
 		return true;
 	}
-	
+
 	public static <U> void nullOut(U[] arr) {
 		for (int i = 0; i < arr.length; i++) arr[i] = null;
 	}
@@ -215,24 +215,24 @@ public class Colut {
 	public static <U> List<U> resize(List<U> list, int size) {
 		return resizeWith(list, size, null);
 	}
-	
+
 	public static <U> List<U> resizeWith(List<U> list, int size, U elem) {
 		if (list == null) list = Lists.newArrayList();
 		while (list.size() > size) removeEnd(list);
 		while (list.size() < size) list.add(elem);
 		return list;
 	}
-	
+
 	public static <U> boolean containsSame(Collection<U> first, Collection<U> second) {
 		if (first.size() != second.size()) return false;
 		for (U u : first) if (!second.contains(u)) return false;
 		for (U u : second) if (!first.contains(u)) return false;
 		return true;
 	}
-	
+
 	public static <U> List<U> filterAdjacentRefeq(List<U> elems) {
 		List<U> result = Lists.newArrayList();
-		
+
 		U last = null;
 		for (int i = 0; i < elems.size(); i++) {
 			U elem = elems.get(i);
@@ -241,12 +241,12 @@ public class Colut {
 				result.add(last);
 			}
 		}
-		
+
 		return result;
 	}
-	
+
 	public static <U> boolean equivalent(Collection<? extends Collection<U>> first,
-		Collection<? extends Collection<U>> second) {
+			Collection<? extends Collection<U>> second) {
 		Set<Set<U>> firstSets = setify(first);
 		Set<Set<U>> secondSets = setify(second);
 		return Colut.containsSame(firstSets, secondSets);
@@ -263,62 +263,62 @@ public class Colut {
 		for (U u : collection) if (u != null) return false;
 		return true;
 	}
-	
+
 	public static <U> void clear(Collection<U> collection) {
 		if (collection != null) collection.clear();
 	}
-	
+
 	public static <U, V> Set<U> keySet(Map<U, V> map) {
 		if (map == null) return null;
 		return map.keySet();
 	}
-	
+
 	public static <U, V> Collection<V> values(Map<U, V> map) {
 		if (map == null) return null;
 		return map.values();
 	}
-	
+
 	public static <U> Set<U> union(Iterable<U> first, Iterable<U> second) {
 		Set<U> result = Sets.newHashSet(first);
 		Iterables.addAll(result, second);
 		return result;
 	}
-	
+
 	public static <U> Set<U> union(Iterable<? extends Iterable<U>> sets) {
 		Set<U> result = Sets.newHashSet();
 		for (Iterable<U> set : sets) Iterables.addAll(result, set);
 		return result;
 	}
-	
+
 	public static <U> Iterable<U> prepend(U elem, Iterable<U> rest) {
 		List<U> dummy = Lists.newArrayList();
 		dummy.add(elem);
 		return Iterables.concat(dummy, rest);
 	}
-	
+
 	public static <U> U set(List<U> list, int pos, U elem) {
 		if (list == null || pos < 0 || list.size() <= pos) return null;
 		return list.set(pos, elem);
 	}
-	
+
 	public static <U> List<U> flatten(Iterable<? extends Collection<U>> data) {
 		List<U> result = Lists.newArrayList();
 		if (data == null) return result;
 		for (Collection<U> collection : data) Colut.addAll(result, collection);
 		return result;
 	}
-	
+
 	public static <U> int countIn(Iterable<U> source, Collection<U> target) {
 		int i = 0; for (U u : source) if (target.contains(u)) i++;
 		return i;
 	}
-	
+
 	public static <U> boolean removeAll(Iterable<U> source, Collection<U> target) {
 		boolean result = false;
 		for (U u : source) result |= target.remove(u);
 		return result;
 	}
-	
+
 	public static <U> Comparator<U> getAsStringComparator() {
 		return new Comparator<U>() {
 			@Override public int compare(U o1, U o2) {
@@ -326,16 +326,16 @@ public class Colut {
 			}
 		};
 	}
-	
+
 	public static <U> List<U> sortAsStrings(Collection<U> original) {
 		List<U> result = Lists.newArrayList(original);
 		Collections.sort(result, getAsStringComparator());
 		return result;
 	}
-	
+
 	public static <U> U popEnd(List<U> list) {
 		if (list == null) return null;
-		
+
 		U u = end(list);
 		if (list.size() > 0) list.remove(list.size() - 1);
 		return u;
@@ -352,7 +352,7 @@ public class Colut {
 
 	public static <U,V> List<V> removeAll(Collection<U> remove, Map<U, V> map) {
 		if (map == null) return Lists.newArrayList();
-		
+
 		List<V> result = Lists.newArrayList();
 		for (U key : map.keySet()) result.add(map.remove(key));
 		return result;
@@ -376,7 +376,7 @@ public class Colut {
 		for (U u : index.keySet()) result.put(index.get(u), u);
 		return result;
 	}
-	
+
 	public static <U> boolean equals(U first, U second) {
 		if (first == null ^ second == null) return false;
 		if (first == second) return true;
@@ -389,7 +389,7 @@ public class Colut {
 		for (U u : keys) result.add(map.get(u));
 		return result;
 	}
-	
+
 	public static <U> List<U> getAll(List<U> list, Iterable<Integer> keys) {
 		List<U> result = Lists.newArrayList();
 		if (list == null || keys == null) return result;
@@ -401,25 +401,25 @@ public class Colut {
 		for (U u : elems) if (contains(s, u)) return u;
 		return null;
 	}
-	
+
 	public static <U> Set<String> stringify(Set<U> elems) {
 		Set<String> result = Sets.newHashSet();
 		for (U u : elems) result.add(u.toString());
 		return result;
 	}
-	
+
 	public static <U> Map<U,Integer> invertList(List<U> list) {
 		Map<U, Integer> result = Maps.newHashMap();
 		for (int i = 0; i < list.size(); i++) result.put(list.get(i), i);
 		return result;
 	}
-	
+
 	public static List<Integer> listInts(int begin, int end) {
 		List<Integer> result = Lists.newArrayList();
 		for (int i = begin; i < end; i++) result.add(i);
 		return result;
 	}
-	
+
 	public static <U> void set(Collection<U> target, Iterable<U> source) {
 		if (target == null) return;
 		target.clear();
@@ -437,14 +437,14 @@ public class Colut {
 		Collections.sort(result, getCountComparator(data));
 		return result;
 	}
-	
+
 	public static <U> Comparator<U> getCountComparator(final Multiset<U> data) {
 		return  new Comparator<U>() {
 			@Override public int compare(U o1, U o2)
 			{ return Integer.compare(data.count(o1), data.count(o2)); }
 		};
 	}
-	
+
 	public static <U> void sortByMultiset(List<U> elems, final Multiset<U> values) {
 		Collections.sort(elems, new Comparator<U>() {
 			@Override public int compare(U o1, U o2) {
@@ -452,10 +452,10 @@ public class Colut {
 			}
 		});
 	}
-	
+
 	public static <U,V extends Comparable<V>> void sortByMap(List<U> elems, 
-		final Map<U,V> values, final V def) {
-		
+			final Map<U,V> values, final V def) {
+
 		Collections.sort(elems, new Comparator<U>() {
 			@Override public int compare(U o1, U o2) {
 				V v1 = values.get(o1);
@@ -466,21 +466,21 @@ public class Colut {
 			}
 		});
 	}
-	
+
 	public static <U> List<Integer> indexOf(List<U> list, List<U> selection) {
 		List<Integer> result = Lists.newArrayList();
 		if (list == null || selection == null) return result;
 		for (U elem : selection) result.add(list.indexOf(elem));
 		return result;
 	}
-	
+
 	public static <U> List<U> select(List<U> list, List<Integer> pos) {
 		List<U> result = Lists.newArrayList();
 		if (list == null) return result;
 		for (Integer i : pos) result.add(Colut.get(list, i));
 		return result;
 	}
-	
+
 	public static <U> int countNonNull(U[] arr) {
 		int result = 0;
 		for (int i = 0; i < arr.length; i++) if (arr[i] != null) result++;
