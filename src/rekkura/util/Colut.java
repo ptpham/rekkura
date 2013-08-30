@@ -200,8 +200,8 @@ public class Colut {
 		return Colut.get(list, 0);
 	}
 
-	public static <U> List<U> filterNulls(List<U> list) {
-		List<U> result = Lists.newArrayListWithCapacity(list.size());
+	public static <U> List<U> filterNulls(Iterable<U> list) {
+		List<U> result = Lists.newArrayList();
 		for (U u : list) if (u != null) result.add(u);
 		return result;
 	}

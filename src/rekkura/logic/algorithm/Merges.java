@@ -17,7 +17,7 @@ import com.google.common.collect.Lists;
  *
  */
 public class Merges {
-	public static final PositiveSubstitution posSub = new PositiveSubstitution();
+	public static final PositiveSubstitution POSITIVE_SUBSTITUTION = new PositiveSubstitution();
 	public static final NegationSplit negSplit = new NegationSplit();
 	
 	/**
