@@ -26,24 +26,47 @@ public interface GgpStateMachine extends StateMachine<Set<Dob>, Dob> {
 		}
 	}
 	
-	public static final Factory<ProverStateMachine> GENERIC_FORWARD_PROVER = 
+	public static final Factory<ProverStateMachine> GENERIC_FORWARD_PROVER_OPTIMIZED_STANDARD = 
 	new Factory<ProverStateMachine>() {
 		@Override public ProverStateMachine create(Collection<Rule> rules)  {
 			return ProverStateMachine.createWithStratifiedForward(optimizeStandard(rules));
 		}
 	};
 	
-	public static final Factory<ProverStateMachine> GENERIC_BACKWARD_PROVER = 
+	public static final Factory<ProverStateMachine> GENERIC_FORWARD_PROVER = 
+	new Factory<ProverStateMachine>() {
+		@Override public ProverStateMachine create(Collection<Rule> rules)  {
+			return ProverStateMachine.createWithStratifiedForward(rules);
+		}
+	};
+	
+	public static final Factory<ProverStateMachine> GENERIC_BACKWARD_PROVER_OPTIMIZED_STANDARD = 
 	new Factory<ProverStateMachine>() { 
 		@Override public ProverStateMachine create(Collection<Rule> rules) {
 			return ProverStateMachine.createWithStratifiedBackward(optimizeStandard(rules));
 		}
 	};
 	
-	public static final Factory<BackwardStateMachine> BACKWARD_PROVER = 
+	public static final Factory<ProverStateMachine> GENERIC_BACKWARD_PROVER = 
+	new Factory<ProverStateMachine>() { 
+		@Override public ProverStateMachine create(Collection<Rule> rules) {
+			return ProverStateMachine.createWithStratifiedBackward(rules);
+		}
+	};
+
+	
+	public static final Factory<BackwardStateMachine> BACKWARD_PROVER_OPTIMIZED_STANDARD = 
 	new Factory<BackwardStateMachine>() {
 		@Override public BackwardStateMachine create(Collection<Rule> rules) {
 			return BackwardStateMachine.createForRules(optimizeStandard(rules));
 		}
 	};
+	
+	public static final Factory<BackwardStateMachine> BACKWARD_PROVER = 
+	new Factory<BackwardStateMachine>() {
+		@Override public BackwardStateMachine create(Collection<Rule> rules) {
+			return BackwardStateMachine.createForRules(rules);
+		}
+	};
+
 }
