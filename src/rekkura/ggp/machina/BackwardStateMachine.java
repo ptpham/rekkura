@@ -25,16 +25,18 @@ import com.google.common.collect.Sets;
  * @author ptpham
  *
  */
-public class BackwardStateMachine extends GameLogicContext implements GgpStateMachine {
+public class BackwardStateMachine implements GgpStateMachine {
 
 	public final StratifiedBackward prover;
+	public final GameLogicContext glc;
 	private final Pool pool;
+	
 		
 	public final Multimap<Rule, Dob> knownStatic = HashMultimap.create();
 	public final Set<Rule> queryRules = Sets.newHashSet();
 
 	public BackwardStateMachine(Standard prover, Multimap<Rule, Dob> knownStatics) {
-		super(prover.pool, prover.rta);
+		this.glc = new GameLogicContext(prover.pool, prover.rta);
 		this.prover = prover;
 		this.pool = prover.pool;
 		
@@ -43,42 +45,42 @@ public class BackwardStateMachine extends GameLogicContext implements GgpStateMa
 		prover.proveAll(Lists.<Dob>newArrayList());
 
 		// Construct and add query rules
-		queryRules.addAll(pool.rules.submerge(constructQueryRules()));
-		this.staticRules.addAll(queryRules);
+		queryRules.addAll(pool.rules.submerge(glc.constructQueryRules()));
+		glc.staticRules.addAll(queryRules);
 		
-		for (Rule rule : this.staticRules) {
+		for (Rule rule : this.glc.staticRules) {
 			this.knownStatic.putAll(rule, this.prover.getKnown(rule));
 		}
 	}
 
 	@Override
 	public Set<Dob> getInitial() {
-		return extract(TRUE_QUERY, proverPass(EMPTY_STATE, INIT_QUERY, INIT_UNIFY));
+		return glc.extract(glc.TRUE_QUERY, proverPass(glc.EMPTY_STATE, glc.INIT_QUERY, glc.INIT_UNIFY));
 	}
 
 	@Override
 	public ListMultimap<Dob, Dob> getActions(Set<Dob> state) {
-		return extractActions(proverPass(state, LEGAL_QUERY, LEGAL_UNIFY));
+		return glc.extractActions(proverPass(state, glc.LEGAL_QUERY, glc.LEGAL_UNIFY));
 	}
 
 	@Override
 	public Set<Dob> nextState(Set<Dob> state, Map<Dob, Dob> actions) {
 		Iterable<Dob> complete = Iterables.concat(state, actions.values());
-		return extract(TRUE_QUERY, proverPass(complete, NEXT_QUERY, NEXT_UNIFY));
+		return glc.extract(glc.TRUE_QUERY, proverPass(complete, glc.NEXT_QUERY, glc.NEXT_UNIFY));
 	}
 
 	@Override
 	public boolean isTerminal(Set<Dob> state) {
-		return proverPass(state, TERMINAL, EMTPY_UNIFY).contains(TERMINAL);
+		return proverPass(state, glc.TERMINAL, glc.EMTPY_UNIFY).contains(glc.TERMINAL);
 	}
 
 	@Override
 	public Map<Dob, Integer> getGoals(Set<Dob> state) {
-		return extractGoals(proverPass(state, GOAL_QUERY, EMTPY_UNIFY));
+		return glc.extractGoals(proverPass(state, glc.GOAL_QUERY, glc.EMTPY_UNIFY));
 	}
 	
 	public static StratifiedBackward.Standard createProverForRules(Collection<Rule> rules) {
-		List<Rule> augmented = augmentWithQueryRules(rules);
+		List<Rule> augmented = GameLogicContext.augmentWithQueryRules(rules);
 		return new StratifiedBackward.Standard(augmented);
 	}
 

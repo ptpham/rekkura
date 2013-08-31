@@ -1,6 +1,5 @@
 package rekkura.logic.structure;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -73,7 +72,7 @@ public class Ruletta {
 		fortre = new Fortre(Lists.<Dob>newArrayList(), new Pool());
 	}
 	
-	public static Ruletta create(Collection<Rule> rules, Pool pool) {
+	public static Ruletta create(Iterable<Rule> rules, Pool pool) {
 		Ruletta result = new Ruletta();
 		result.allRules.addAll(pool.rules.submerge(rules));
 		
