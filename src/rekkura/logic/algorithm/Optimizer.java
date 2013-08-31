@@ -16,21 +16,23 @@ import com.google.common.collect.Sets;
 
 public abstract class Optimizer {
 
-	public abstract Multimap<Rule,Rule> apply(Ruletta rta, Pool pool);
+	public abstract Multimap<Rule,Rule> apply(Ruletta rta, Set<Rule> probhibited, Pool pool);
 
-	public static List<Rule> standard(Iterable<Rule> rules) {
-		return Optimizer.loop(rules, new Pool(), Optimizer.MERGE_POS_SUB_SINGLE);
+	public static Set<Rule> standard(Iterable<Rule> rules, Set<Rule> prohibited, Pool pool) {
+		return Optimizer.loop(rules, prohibited, pool, Optimizer.MERGE_POS_SUB_SINGLE);
 	}
 
-	public static List<Rule> loop(Iterable<Rule> orig, Pool pool, Optimizer... ops) {
-		List<Rule> result = Lists.newArrayList(orig);
+	public static Set<Rule> loop(Iterable<Rule> orig, Set<Rule> prohibited, Pool pool, Optimizer... ops) {
+		Set<Rule> result = Sets.newHashSet(orig);
 		
 		boolean changed = true;
 		while (changed) {
 			changed = false;
 			for (Optimizer op : ops) {
 				Ruletta rta = Ruletta.create(result, pool);
-				Multimap<Rule,Rule> replace = op.apply(rta, pool);
+				Multimap<Rule,Rule> replace = op.apply(rta, prohibited, pool);
+				replace.removeAll(prohibited);
+				
 				if (replace.size() > 0) {
 					result.removeAll(replace.keySet());
 					result.addAll(Colut.filterNulls(replace.values()));
@@ -51,30 +53,35 @@ public abstract class Optimizer {
 	 */
 	public static Optimizer MERGE_POS_SUB_SINGLE = new Optimizer() {
 		@Override
-		public Multimap<Rule, Rule> apply(Ruletta rta, Pool pool) {
+		public Multimap<Rule, Rule> apply(Ruletta rta, Set<Rule> prohibited, Pool pool) {
 			Multimap<Rule,Rule> result = HashMultimap.create();
-			Set<Rule> prohibited = Sets.newHashSet();
+			Set<Rule> touched = Sets.newHashSet();
 			
 			for (Rule rule : rta.ruleOrder) {
 				boolean success = true;
 				List<Rule> generated = Lists.newArrayList();
 				Collection<Rule> children = rta.ruleToDescRule.get(rule);
-				if (Colut.containsAny(children, prohibited)) continue;
+				if (Colut.containsAny(children, touched)) continue;
 				if (prohibited.contains(rule)) continue;
+				if (touched.contains(rule)) continue;
 
 				for (Rule child : children) {
 					List<Rule> merged = Merge.applyOperation(rule, child, Merges.POSITIVE_SUBSTITUTION, pool);
 					if (merged.size() != 1) merged.clear();
 					
 					Rule current = Colut.first(merged);
-					if (current != null && current.vars.size() < rule.vars.size()) generated.add(current);
-					else success = false;
+					if (current != null && current.vars.size() < rule.vars.size()) {
+						generated.add(current);
+					} else {
+						success = false;
+						break;
+					}
 				}
 				
 				if (success && children.size() > 0) {
 					result.putAll(rule, generated);
-					prohibited.addAll(children);
-					prohibited.add(rule);
+					touched.addAll(children);
+					touched.add(rule);
 				}
 			}
 			

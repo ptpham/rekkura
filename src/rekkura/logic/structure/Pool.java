@@ -12,6 +12,7 @@ import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.model.Vars;
 import rekkura.util.CachingSupplier;
+import rekkura.util.Colut;
 import rekkura.util.Submerger;
 
 import com.google.common.base.Preconditions;
@@ -72,6 +73,17 @@ public class Pool {
 			V v = valSub.submergeString(entry.getValue());
 			result.put(u, v);
 		}
+		return result;
+	}
+	
+	public static Set<Rule> rulesWithHeadContainingAny(Set<Dob> targets, Iterable<Rule> rules) {
+		Set<Rule> result = Sets.newHashSet();
+		for (Rule rule : rules) {
+			if (Colut.containsAny(rule.head.dob.fullIterable(), targets)) {
+				result.add(rule);
+			}
+		}
+		
 		return result;
 	}
 	

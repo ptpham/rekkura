@@ -36,6 +36,7 @@ public class GameLogicContext {
 	// GDL reserve words
 	public final Dob TERMINAL, INIT, LEGAL, BASE, INPUT;
 	public final Dob ROLE, DOES, NEXT, TRUE, GOAL;
+	public final ImmutableList<Dob> KEYWORDS;
 
 	// Data structures for doing GGP manipulations
 	public final Dob ROLE_VAR, GENERIC_VAR;
@@ -85,6 +86,8 @@ public class GameLogicContext {
 		this.NEXT = getTerminalDob(Game.NEXT_NAME);
 		this.GOAL = getTerminalDob(Game.GOAL_NAME);
 		this.ROLE = getTerminalDob(Game.ROLE_NAME);
+		this.KEYWORDS = ImmutableList.of(this.TERMINAL, this.BASE, this.INIT,
+			this.INPUT, this.TRUE, this.DOES, this.LEGAL, this.NEXT, this.GOAL, this.ROLE);
 
 		this.ROLE_VAR = getTerminalDob(ROLE_VAR_NAME);
 		this.GENERIC_VAR = getTerminalDob(GENERIC_VAR_NAME);
@@ -161,7 +164,7 @@ public class GameLogicContext {
 		}
 		return result;
 	}
-
+	
 	/**
 	 * Use this method to generate a set of rules that represent forms 
 	 * with which you may want to make queries.
