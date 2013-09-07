@@ -10,15 +10,22 @@ import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.model.Unification;
 import rekkura.logic.structure.Pool;
-import rekkura.stats.algorithm.Ucb;
 import rekkura.util.Cartesian;
+import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.Limiter;
 import rekkura.util.OtmUtil;
 import rekkura.util.RankedCarry;
-import rekkura.util.Cartesian.AdvancingIterator;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 public abstract class Renderer {
 	public abstract List<Map<Dob,Dob>> apply(Rule rule, Set<Dob> truths, Multimap<Atom,Dob> support, Pool pool);
@@ -26,10 +33,10 @@ public abstract class Renderer {
 	public final Limiter.Operations ops = Limiter.forOperations();
 	public static Standard getStandard() { return new Standard(); }
 	public static Partitioning getPartitioning() { return new Partitioning(); }
-	public static Compound getStandardCompound() {
+	public static Failover getStandardFailover() {
 		Standard standard = getStandard();
 		standard.ops.max = 1024;
-		return new Compound(standard, getPartitioning());
+		return new Failover(standard, getPartitioning());
 	}
 	
 	/**
@@ -103,20 +110,20 @@ public abstract class Renderer {
 				Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(subset);
 				result.addAll(apply(rule, iterator, check, pool, truths));
 			}
-				
+	
 			return result;
 		}	
 	}
 	
-	public static class Compound extends Renderer {
-		private static final double UCB_CONSTANT = 128;
+	public static class Failover extends Renderer {
 		public final ImmutableList<Renderer> children;
-		public final Ucb.Suggestor<Renderer> suggestor;
+		private Renderer current;
 		
-		private Compound(Renderer... children) {
+		private Failover(Renderer... children) {
 			this.children = ImmutableList.copyOf(children);
-			this.suggestor = new Ucb.Suggestor<Renderer>(this.children, UCB_CONSTANT);
+			this.current = Colut.any(this.children);
 			this.ops.max = this.children.size();
+			this.ops.begin();
 		}
 		
 		@Override
@@ -124,16 +131,17 @@ public abstract class Renderer {
 				Multimap<Atom, Dob> support, Pool pool) {
 			List<Map<Dob,Dob>> result = Lists.newArrayList();
 			
-			this.ops.begin();
-			while (!this.ops.exceeded()) {
-				Renderer child = this.suggestor.suggest();
-				result = child.apply(rule, truths, support, pool);
-				long ops = child.ops.failed ? Integer.MIN_VALUE : child.ops.cur;
-				this.suggestor.inform(child, ops);
-				if (!child.ops.failed) break;
+			while (true) {
+				if (current == null) {
+					int pos = (int)this.ops.cur;
+					if (this.ops.exceeded()) return result;
+					current = this.children.get(pos);
+				}
+	
+				result = current.apply(rule, truths, support, pool);
+				if (current.ops.failed) current = null;
+				else return result;
 			}
-			
-			return result;
 		}
 	}
 	
@@ -149,6 +157,7 @@ public abstract class Renderer {
 	public static List<List<List<Unification>>> partitionSpace(List<Dob> vars,
 		List<Dob> candidates, List<List<Unification>> space, List<Integer> expanders,
 		int minNonTrivial, Limiter limiter) {
+		
 		List<List<List<Unification>>> result = Lists.newArrayList();
 		if (Cartesian.size(Colut.select(space, expanders)) < minNonTrivial) {
 			result.add(space);
@@ -189,10 +198,8 @@ public abstract class Renderer {
 			}
 			
 			// Recursive expansion to handle the other variables
-			List<List<List<Unification>>> children =
-				partitionSpace(vars, Lists.newArrayList(candidates), partitioned,
-				expanders,  minNonTrivial, limiter);
-			for (List<List<Unification>> child : children) result.add(child);
+			result.addAll(partitionSpace(vars, Lists.newArrayList(candidates), partitioned,
+				expanders,  minNonTrivial, limiter));
 		}
 		return result;
 	}

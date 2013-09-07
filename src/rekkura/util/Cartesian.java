@@ -44,11 +44,13 @@ public class Cartesian {
 	public static <U> int size(List<? extends Iterable<U>> candidates) {
 		if (Colut.empty(candidates)) return 0;
 		
-		int product = 1;
+		long product = 1;
 		for (Iterable<U> iterable : candidates) {
 			product *= Iterables.size(iterable);
+			if (product > Integer.MAX_VALUE) return Integer.MAX_VALUE;
 		}
-		return product;
+		
+		return (int)product;
 	}
 	
 	public static interface AdvancingIterator<U> extends Iterator<List<U>> {

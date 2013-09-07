@@ -7,6 +7,7 @@ import java.util.Vector;
 import java.util.logging.Logger;
 
 import rekkura.ggp.machina.BackwardStateMachine;
+import rekkura.ggp.machina.GgpStateMachine;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.state.algorithm.DepthCharger;
@@ -176,7 +177,7 @@ public abstract class Player implements Runnable {
 	public static abstract class ProverBased extends StateBased<BackwardStateMachine> {
 		@Override
 		protected BackwardStateMachine constructMachine(Collection<Rule> rules) {
-			return BackwardStateMachine.createForRules(rules);
+			return GgpStateMachine.BACKWARD_PROVER_OPTIMIZED_STANDARD.create(rules);
 		}
 		
 		@Override

@@ -32,7 +32,7 @@ public abstract class StratifiedProver {
 	public final Pool pool = new Pool();
 	public final Set<Dob> truths = Sets.newHashSet();
 	public final Cache<Rule,Renderer> renderers = Cache.create(new Function<Rule,Renderer>() {
-		@Override public Renderer apply(Rule arg0) { return Renderer.getStandardCompound(); }
+		@Override public Renderer apply(Rule arg0) { return Renderer.getStandardFailover(); }
 	});
 	
 	public abstract Set<Dob> proveAll(Iterable<Dob> truths);

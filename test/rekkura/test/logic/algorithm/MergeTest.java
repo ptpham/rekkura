@@ -3,8 +3,7 @@ package rekkura.test.logic.algorithm;
 import java.util.List;
 import java.util.Set;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 
 import rekkura.logic.algorithm.Merge;

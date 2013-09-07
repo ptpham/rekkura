@@ -15,7 +15,12 @@ import rekkura.state.algorithm.Topper;
 import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
 /**
  * This prover tries to do the minimum amount of work to 
@@ -102,6 +107,7 @@ public abstract class StratifiedBackward extends StratifiedProver {
 			List<Map<Dob,Dob>> unifies = renderer.apply(rule, truths, support, pool);
 			generated = Terra.renderHeads(unifies, rule, pool);
 		}
+		
 		for (Dob dob : generated) preserveTruth(dob);
 		return generated;
 	}
