@@ -87,6 +87,9 @@ public class Unification {
 		public boolean evaluate(Unification unify) {
 			Dob first = Colut.get(unify.assigned, posFirst);
 			Dob second = Colut.get(unify.assigned, posSecond);
+
+			if (posFirst > 0 && first == null) return true;
+			if (posSecond > 0 && second == null) return true;
 			if (first != null && second != null) return first != second;
 			if (first == null && second == null) return failFirst != failSecond;
 			if (first != null) return first != failFirst;

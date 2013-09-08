@@ -53,6 +53,6 @@ public class PlayerServer {
 	}
 	
 	public static void main(String args[]) throws IOException {
-		runWith(Player.Legal.class, "Rekkura-Legal", 9148);
+		runWith(Player.Legal.class, "Rekkura-Legal", Integer.parseInt(args[0]));
 	}
 }
