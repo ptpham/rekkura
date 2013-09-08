@@ -163,7 +163,7 @@ public abstract class Player implements Runnable {
 
 			while (!isComplete() && validState()) waitForInput();
 			
-			while (!validState()) {
+			while (!isComplete() && !validState()) {
 				this.state = this.machine.nextState(state, getMemory(turn));
 				turn++;
 			}
