@@ -28,7 +28,7 @@ public class GgpProtocolTest {
 		String stop = "(stop match_id (nil))";
 		demux.handleMessage(stop);
 	}
-	
+
 	@Test
 	public void handlerStartAndStop() {
 		DefaultPlayerHandler<Player.Legal> handler = 

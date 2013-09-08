@@ -86,7 +86,8 @@ public class Merge {
 	public static Merge.Result compute(Request req, Pool pool) {
 		Atom term = req.dst.body.get(req.dstPosition);
 		Map<Dob, Dob> unify = Unifier.unify(req.src.head.dob, term.dob);
-
+		if (unify == null) return null;
+		
 		Result result = new Result(req);
 		for (Map.Entry<Dob, Dob> entry : unify.entrySet()) {
 			Dob key = entry.getKey();

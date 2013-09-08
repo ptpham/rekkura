@@ -208,8 +208,9 @@ public abstract class Player implements Runnable {
 			@Override public void run() {
 				try {
 					player.run();
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					player.logger.severe(e.toString());
+					throw e;
 				}
 			}
 		};

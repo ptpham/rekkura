@@ -185,6 +185,7 @@ public abstract class Renderer {
 		// just return the full space
 		if (rc.getCarry() == null) { result.add(space); return result; }
 		
+		outer:
 		// Expand each assignment defined by the guide
 		for (Dob assign : rc.getCarry()) {
 			List<List<Unification>> partitioned = Lists.newArrayList();
@@ -194,6 +195,7 @@ public abstract class Renderer {
 				ListMultimap<Dob, Unification> index = Terra.indexBy(space.get(i), pos);
 				if (index.containsKey(assign)) slice = index.get(assign);
 				else slice = index.get(null);
+				if (slice.size() == 0) continue outer;
 				partitioned.add(slice);
 			}
 			
