@@ -15,18 +15,18 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 
 public class DepthCharger<S,A> {
-	public final StateMachine<S,A> machine;
+	public final StateMachine.Standard<S,A> machine;
 	public final Limiter.Operations limitOps = Limiter.forOperations();
 	public final Limiter.Time limitTime = Limiter.forTime();
 	public Random rand = new Random();
 	public Map<Dob, A> fixed = null;
 	
 	private final Limiter limits = Limiter.combine(limitOps, limitTime);
-	private DepthCharger(StateMachine<S,A> machine) {
+	private DepthCharger(StateMachine.Standard<S,A> machine) {
 		this.machine = machine;
 	}
 	
-	public static <S,A> DepthCharger<S,A> create(StateMachine<S,A> machine) {
+	public static <S,A> DepthCharger<S,A> create(StateMachine.Standard<S,A> machine) {
 		return new DepthCharger<S,A>(machine);
 	}
 	
@@ -47,15 +47,15 @@ public class DepthCharger<S,A> {
 		return result;
 	}
 
-	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine) {
+	public static <S, A> List<S> fire(S state, StateMachine.Standard<S, A> machine) {
 		return fire(state, machine, null, new Random());
 	}
 	
-	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine, Random rand) {
+	public static <S, A> List<S> fire(S state, StateMachine.Standard<S, A> machine, Random rand) {
 		return fire(state, machine, null, rand);
 	}
 	
-	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine, Map<Dob, A> fixed) {
+	public static <S, A> List<S> fire(S state, StateMachine.Standard<S, A> machine, Map<Dob, A> fixed) {
 		return fire(state, machine, fixed, new Random());
 	}
 	
@@ -68,7 +68,7 @@ public class DepthCharger<S,A> {
 	 * @param rand
 	 * @return
 	 */
-	public static <S, A> List<S> fire(S state, StateMachine<S, A> machine, 
+	public static <S, A> List<S> fire(S state, StateMachine.Standard<S, A> machine, 
 			Map<Dob, A> fixed, Random rand) {
 		DepthCharger<S, A> charger = new DepthCharger<S,A>(machine);
 		if (rand != null) charger.rand = rand;
@@ -76,7 +76,7 @@ public class DepthCharger<S,A> {
 		return charger.fire(state);
 	}
 	
-	public static <S,A> double measureCps(StateMachine<S,A> machine, int charges) {
+	public static <S,A> double measureCps(StateMachine.Standard<S,A> machine, int charges) {
 		S initial = machine.getInitial();
 		long begin = System.currentTimeMillis();
 		for (int i = 0; i < charges; i++) DepthCharger.fire(initial, machine);
@@ -84,12 +84,12 @@ public class DepthCharger<S,A> {
 		return 1000*charges/(double)interval;
 	}
 	
-	public static <S,A>double measureCpsThreaded(StateMachine<S,A>[] machines,
+	public static <S,A>double measureCpsThreaded(StateMachine.Standard<S,A>[] machines,
 		final S initial, final int perMachine) {
 
 		List<Thread> threads = Lists.newArrayList();
 		for (int i = 0; i < machines.length; i++) {
-			final StateMachine<S,A> machine = machines[i];
+			final StateMachine.Standard<S,A> machine = machines[i];
 			threads.add(new Thread(new Runnable() {
 				@Override public void run() {
 					for (int i = 0; i < perMachine; i++) {
@@ -106,7 +106,7 @@ public class DepthCharger<S,A> {
 		return 1000*machines.length*perMachine/(double)interval;
 	}
 	
-	public static <S, A> void runBasicSuite(StateMachine<S,A> machine) {
+	public static <S, A> void runBasicSuite(StateMachine.Standard<S,A> machine) {
 		S initial = machine.getInitial();
 		Map<Dob, A> joint = OtmUtil.randomAssignment(machine.getActions(initial));
 		S next = machine.nextState(initial, joint);

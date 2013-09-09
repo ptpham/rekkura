@@ -7,9 +7,12 @@ import rekkura.logic.model.Dob;
 import com.google.common.collect.ListMultimap;
 
 public interface StateMachine<S, A> {
-	public S getInitial();
-	public ListMultimap<Dob, A> getActions(S state);
-	public S nextState(S state, Map<Dob, A> actions);
-	public boolean isTerminal(S state);
-	public Map<Dob, Integer> getGoals(S state);
+	interface GetInitial<S> { S getInitial(); }
+	interface GetActions<S, A> { ListMultimap<Dob, A> getActions(S state); }
+	interface NextState<S, A> { S nextState(S state, Map<Dob, A> actions); }
+	interface IsTerminal<S> { boolean isTerminal(S state); }
+	interface GetGoals<S> {  Map<Dob, Integer> getGoals(S state); }
+	
+	interface Standard<S, A> extends GetInitial<S>, 
+		GetActions<S, A>, NextState<S, A>, IsTerminal<S>, GetGoals<S> { }
 }

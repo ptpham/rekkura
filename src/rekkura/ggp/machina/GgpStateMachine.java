@@ -13,7 +13,7 @@ import rekkura.state.model.StateMachine;
 
 import com.google.common.collect.Sets;
 
-public interface GgpStateMachine extends StateMachine<Set<Dob>, Dob> {
+public interface GgpStateMachine extends StateMachine.Standard<Set<Dob>, Dob> {
 
 	public static abstract class Factory<M extends GgpStateMachine> {
 		public abstract M create(Collection<Rule> rules);
@@ -55,7 +55,7 @@ public interface GgpStateMachine extends StateMachine<Set<Dob>, Dob> {
 	};
 
 	
-	public static final Factory<BackwardStateMachine> BACKWARD_PROVER_OPTIMIZED_STANDARD = 
+	public static final Factory<BackwardStateMachine> BACKWARD_PROVER_OSTD = 
 	new Factory<BackwardStateMachine>() {
 		@Override public BackwardStateMachine create(Collection<Rule> rules) {
 			return BackwardStateMachine.createForRules(optimizeStandard(rules));

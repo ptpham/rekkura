@@ -23,7 +23,7 @@ import com.google.common.collect.ListMultimap;
  * exactly one game. A player can make moves using the 
  * {@code setDecision} method. 
  * <br><br>
- * If you are using a {@link StateMachine} in any way,
+ * If you are using a {@link StateMachine.Standard} in any way,
  * consider subclassing from {@link Player.StateBased}
  * or {@link Player.ProverBased}.
  * @author ptpham
@@ -102,7 +102,7 @@ public abstract class Player implements Runnable {
 	 *
 	 * @param <M>
 	 */
-	public static abstract class StateBased<M extends StateMachine<Set<Dob>, Dob>> extends Player {
+	public static abstract class StateBased<M extends StateMachine.Standard<Set<Dob>, Dob>> extends Player {
 		private Set<Dob> state;
 		private int turn;
 		
@@ -177,7 +177,7 @@ public abstract class Player implements Runnable {
 	public static abstract class ProverBased extends StateBased<BackwardStateMachine> {
 		@Override
 		protected BackwardStateMachine constructMachine(Collection<Rule> rules) {
-			return GgpStateMachine.BACKWARD_PROVER_OPTIMIZED_STANDARD.create(rules);
+			return GgpStateMachine.BACKWARD_PROVER_OSTD.create(rules);
 		}
 		
 		@Override

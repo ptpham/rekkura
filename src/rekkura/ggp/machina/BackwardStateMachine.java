@@ -9,7 +9,6 @@ import rekkura.ggp.milleu.GameLogicContext;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.logic.prover.StratifiedBackward;
-import rekkura.logic.prover.StratifiedBackward.Standard;
 import rekkura.logic.structure.Pool;
 
 import com.google.common.collect.HashMultimap;
@@ -35,7 +34,7 @@ public class BackwardStateMachine implements GgpStateMachine {
 	public final Multimap<Rule, Dob> knownStatic = HashMultimap.create();
 	public final Set<Rule> queryRules = Sets.newHashSet();
 
-	public BackwardStateMachine(Standard prover, Multimap<Rule, Dob> knownStatics) {
+	public BackwardStateMachine(StratifiedBackward.Standard prover, Multimap<Rule, Dob> knownStatics) {
 		this.glc = new GameLogicContext(prover.pool, prover.rta);
 		this.prover = prover;
 		this.pool = prover.pool;

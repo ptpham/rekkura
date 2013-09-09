@@ -1,6 +1,6 @@
 package rekkura.test.ggp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Map;
 import java.util.Set;
@@ -10,7 +10,6 @@ import org.junit.Test;
 import rekkura.ggp.machina.GgpStateMachine;
 import rekkura.logic.model.Dob;
 import rekkura.state.model.StateMachine;
-import rekkura.test.ggp.SimpleGames;
 import rekkura.util.Colut;
 
 import com.google.common.collect.ListMultimap;
@@ -22,7 +21,7 @@ public abstract class StateMachineTest {
 	
 	@Test
 	public void ticTacToe() {
-		StateMachine<Set<Dob>, Dob> machine = getFactory().create(SimpleGames.getTicTacToe());
+		StateMachine.Standard<Set<Dob>, Dob> machine = getFactory().create(SimpleGames.getTicTacToe());
 		Set<Dob> initial = machine.getInitial();
 		assertEquals(10, initial.size());
 		
@@ -40,7 +39,7 @@ public abstract class StateMachineTest {
 	
 	@Test
 	public void connectFour() {
-		StateMachine<Set<Dob>, Dob> machine = getFactory().create(SimpleGames.getConnectFour());
+		StateMachine.Standard<Set<Dob>, Dob> machine = getFactory().create(SimpleGames.getConnectFour());
 		Set<Dob> initial = machine.getInitial();
 		assertEquals(43, initial.size());
 		
