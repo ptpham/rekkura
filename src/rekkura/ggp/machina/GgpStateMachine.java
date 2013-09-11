@@ -26,7 +26,7 @@ public interface GgpStateMachine extends StateMachine.Standard<Set<Dob>, Dob> {
 		}
 	}
 	
-	public static final Factory<ProverStateMachine> GENERIC_FORWARD_PROVER_OPTIMIZED_STANDARD = 
+	public static final Factory<ProverStateMachine> GENERIC_FORWARD_PROVER_OSTD = 
 	new Factory<ProverStateMachine>() {
 		@Override public ProverStateMachine create(Collection<Rule> rules)  {
 			return ProverStateMachine.createWithStratifiedForward(optimizeStandard(rules));
@@ -40,7 +40,7 @@ public interface GgpStateMachine extends StateMachine.Standard<Set<Dob>, Dob> {
 		}
 	};
 	
-	public static final Factory<ProverStateMachine> GENERIC_BACKWARD_PROVER_OPTIMIZED_STANDARD = 
+	public static final Factory<ProverStateMachine> GENERIC_BACKWARD_PROVER_OSTD = 
 	new Factory<ProverStateMachine>() { 
 		@Override public ProverStateMachine create(Collection<Rule> rules) {
 			return ProverStateMachine.createWithStratifiedBackward(optimizeStandard(rules));

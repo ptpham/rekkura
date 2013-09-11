@@ -7,7 +7,6 @@ import java.util.Set;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.logic.model.Vars;
 import rekkura.logic.structure.Pool;
 
 import com.google.common.collect.Lists;
@@ -182,7 +181,7 @@ public class Merge {
 		for (Dob var : req.src.vars) {
 			if (!srcTouched.contains(var)) {
 				if (vars.contains(var) && !srcHeadFlattened.contains(var)) {
-					Dob safe = Vars.request(vars, pool.context);
+					Dob safe = pool.vargen.request(vars);
 					merge.srcUnify.put(var, safe);
 					vars.add(safe);
 				} else vars.add(var);

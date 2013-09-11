@@ -127,10 +127,16 @@ public class GameLogicContext {
 		return this.pool.dobs.submerge(new Dob(name));
 	}
 
+	/**
+	 * Parses any goals in the given dobs into a map. If there are multiple
+	 * goal dobs with the same roles, the entry in the map will be undefined.
+	 * @param dobs
+	 * @return
+	 */
 	public Map<Dob, Integer> extractGoals(Iterable<Dob> dobs) {
 		Map<Dob, Integer> result = Maps.newHashMap();
 		for (Dob dob : dobs) {
-			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, pool.context.getAll());
+			Map<Dob, Dob> unify = Unifier.unifyVars(GOAL_QUERY, dob, pool.allVars);
 			if (unify == null) continue;
 
 			Dob role = unify.get(ROLE_VAR);

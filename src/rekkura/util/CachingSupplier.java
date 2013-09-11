@@ -28,4 +28,22 @@ public abstract class CachingSupplier<T> implements Supplier<T> {
 		receiver.addAll(created);
 		created.clear();
 	}
+	
+	public Set<T> request(int num) {
+		while (created.size() < num) create();
+		return Sets.newHashSet(Colut.firstK(created, num));
+	}
+	
+	public T request() { return request(Sets.<T>newHashSet()); }
+
+	/**
+	 * Request a set of items from the supplier that
+	 * does not overlap with the given set.
+	 * @param conflicts
+	 * @return
+	 */
+	public T request(Set<T> conflicts) {
+		for (T elem : created) { if (!conflicts.contains(elem)) return elem; }
+		return create();
+	}
 }

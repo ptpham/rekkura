@@ -10,7 +10,6 @@ import rekkura.logic.format.StandardFormat;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
-import rekkura.logic.model.Vars;
 import rekkura.util.CachingSupplier;
 import rekkura.util.Colut;
 import rekkura.util.Submerger;
@@ -24,6 +23,13 @@ import com.google.common.collect.*;
  * construct a corresponding dob such that all sub-trees
  * of the dob can be compared with reference equality against
  * all other dobs currently in the pool.
+ * <br>
+ * A pool assumes that the set of all dobs noted as variables in
+ * the rules it maintains is disjoint of the set of all dobs that
+ * are not noted as variables in the rules it maintains. By making
+ * this assumption, it becomes unnecessary to recompute the union
+ * of variable sets.
+ * 
  * @author ptpham
  *
  */
@@ -35,8 +41,7 @@ public class Pool {
 	public final Submerger<Dob> dobs = createDobSubmerger();
 	public final Submerger<Atom> atoms = createAtomSubmerger();
 	public final Submerger<Rule> rules = createRuleSubmerger();
-	public final Set<Dob> allVars = Sets.newHashSet();
-	public final Vars.Context context = Vars.asContext(allVars, vargen);
+	public final Set<Dob> allVars = vargen.created;
 	
 	private final Map<Class<?>, Submerger<?>> submergers = 
 		ImmutableMap.of(Dob.class, dobs, Atom.class, atoms, Rule.class, rules);
@@ -174,5 +179,13 @@ public class Pool {
 	
 	public Dob render(Dob dob, Map<Dob,Dob> unify) {
 		return dobs.submerge(Unifier.replace(dob, unify));
+	}
+	
+	public Atom render(Atom atom, Map<Dob,Dob> unify) {
+		return atoms.submerge(Unifier.replace(atom, unify));
+	}
+	
+	public Rule render(Rule rule, Map<Dob,Dob> unify) {
+		return rules.submerge(Unifier.replace(rule, unify, rule.vars));
 	}
 }

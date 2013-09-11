@@ -6,11 +6,7 @@ import rekkura.logic.format.StandardFormat;
 import rekkura.util.Colut;
 import rekkura.util.NestedIterator;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * Like the other logical objects, rules are immutable.
@@ -325,7 +321,17 @@ public class Rule {
 	}
 	
 	public static Iterable<Dob> dobIterableFromRule(Rule rule) {
-		return Atom.asDobIterable(asAtomIterable(rule));
+		return Iterables.concat(Atom.asDobIterable(asAtomIterable(rule)),
+			dobIterableFromDistincts(rule.distinct));
+	}
+	
+	public static List<Dob> dobIterableFromDistincts(Iterable<Distinct> distincts) {
+		List<Dob> result = Lists.newArrayList();
+		for (Distinct distinct : distincts) {
+			result.add(distinct.first);
+			result.add(distinct.second);
+		}
+		return result;
 	}
 	
 	@Override public String toString() { return StandardFormat.inst.toString(this); }

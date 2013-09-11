@@ -63,10 +63,42 @@ public abstract class RendererTest {
 	}
 	
 	@Test
-	public void distinctVars() {
+	public void distinctVarBoth() {
 		String rawRule = "{(X)(Y)|<((Q)(X)(Y)),true> :- <((P)(X)),true><((R)(Y)),true><(X)!=(Y)>}";
 		List<String> rawInputs = Lists.newArrayList("((P)(a))", "((P)(b))", "((R)(a))", "((R)(b))");
 		List<String> rawOutputs = Lists.newArrayList("((Q)(a)(b))","((Q)(b)(a))");
+		runTest(rawRule, rawInputs, rawOutputs);
+	}
+	
+	@Test
+	public void distinctVarLeft() {
+		String rawRule = "{(X)(Y)|<((Q)(X)(Y)),true> :- <((P)(X)),true><((R)(Y)),true><(X)!=(Y)><(Y)!=(a)>}";
+		List<String> rawInputs = Lists.newArrayList("((P)(a))", "((P)(b))", "((R)(a))", "((R)(b))");
+		List<String> rawOutputs = Lists.newArrayList("((Q)(a)(b))");
+		runTest(rawRule, rawInputs, rawOutputs);
+	}
+	
+	@Test
+	public void distinctVarRight() {
+		String rawRule = "{(X)(Y)|<((Q)(X)(Y)),true> :- <((P)(X)),true><((R)(Y)),true><(X)!=(Y)><(a)!=(X)>}";
+		List<String> rawInputs = Lists.newArrayList("((P)(a))", "((P)(b))", "((R)(a))", "((R)(b))");
+		List<String> rawOutputs = Lists.newArrayList("((Q)(b)(a))");
+		runTest(rawRule, rawInputs, rawOutputs);
+	}
+	
+	@Test
+	public void distinctConstantSuccess() {
+		String rawRule = "{(X)(Y)|<((Q)(X)(Y)),true> :- <((P)(X)),true><((R)(Y)),true><(a)!=(b)>}";
+		List<String> rawInputs = Lists.newArrayList("((P)(a))", "((P)(b))", "((R)(a))", "((R)(b))");
+		List<String> rawOutputs = Lists.newArrayList("((Q)(a)(b))","((Q)(b)(a))", "((Q)(a)(a))", "((Q)(b)(b))");
+		runTest(rawRule, rawInputs, rawOutputs);
+	}
+	
+	@Test
+	public void distinctConstantFailure() {
+		String rawRule = "{(X)(Y)|<((Q)(X)(Y)),true> :- <((P)(X)),true><((R)(Y)),true><(a)!=(a)>}";
+		List<String> rawInputs = Lists.newArrayList("((P)(a))", "((P)(b))", "((R)(a))", "((R)(b))");
+		List<String> rawOutputs = Lists.newArrayList();
 		runTest(rawRule, rawInputs, rawOutputs);
 	}
 	
