@@ -340,6 +340,16 @@ public class Topper {
 		return topSort(edges, findRoots(edges)).elementSet().size() < all.size();
 	}
 
+	public static <U> Multimap<U,U> induceSubgraph(Multimap<U,U> base, Collection<U> target) {
+		Multimap<U,U> result = HashMultimap.create();
+		for (U node : target) {
+			for (U other : base.get(node)) {
+				if (target.contains(other)) result.put(node, other);
+			}
+		}
+		return result;
+	}
+
 	private static <U> Set<U> degeneratedOuts(Multimap<U, U> edges) {
 		Set<U> result = Sets.newHashSet();
 		for (U u : edges.keySet()) if (edges.get(u).size() == 1) result.add(u);

@@ -41,10 +41,10 @@ public class StandardFormat extends LogicFormat {
 	}
 	
 	protected void appendDobToString(Dob dob, StringBuilder builder) {
-		builder.append("(");
+		builder.append('(');
 		if (dob.isTerminal()) builder.append(dob.name);
 		else appendDobsToString(dob.childIterable(), builder);
-		builder.append(")");
+		builder.append(')');
 	}
 	
 	protected void appendDobsToString(Iterable<Dob> iterator, StringBuilder builder) {
@@ -156,11 +156,11 @@ public class StandardFormat extends LogicFormat {
 	}
 
 	private void appendDistinct(StringBuilder distinct, Rule.Distinct entry) {
-		distinct.append("<");
+		distinct.append('<');
 		distinct.append(toString(entry.first));
 		distinct.append("!=");
 		distinct.append(toString(entry.second));
-		distinct.append(">");
+		distinct.append('>');
 	}
 	
 	public List<Atom> atomListFromString(String s) {

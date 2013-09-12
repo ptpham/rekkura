@@ -132,7 +132,7 @@ public class KifFormat extends LogicFormat {
 		this.append(pair.first, distinct);
 		distinct.append(' ');
 		this.append(pair.second, distinct);
-		distinct.append(")");
+		distinct.append(')');
 	}
 
 	@Override

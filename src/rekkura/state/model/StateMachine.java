@@ -13,6 +13,7 @@ public interface StateMachine<S, A> {
 	interface IsTerminal<S> { boolean isTerminal(S state); }
 	interface GetGoals<S> {  Map<Dob, Integer> getGoals(S state); }
 	
-	interface Standard<S, A> extends GetInitial<S>, 
-		GetActions<S, A>, NextState<S, A>, IsTerminal<S>, GetGoals<S> { }
+	interface Evaluator<S> extends IsTerminal<S>, GetGoals<S> { }
+	interface Advancer<S, A> extends GetActions<S, A>, NextState<S, A> { }
+	interface Standard<S, A> extends GetInitial<S>, Advancer<S, A>, Evaluator<S> { }
 }
