@@ -34,19 +34,17 @@ public class BackwardStateMachine implements GgpStateMachine {
 	public final Multimap<Rule, Dob> knownStatic = HashMultimap.create();
 	public final Set<Rule> queryRules = Sets.newHashSet();
 
-	public BackwardStateMachine(StratifiedBackward.Standard prover, Multimap<Rule, Dob> knownStatics) {
+	public BackwardStateMachine(StratifiedBackward.Standard prover) {
 		this.glc = new GameLogicContext(prover.pool, prover.rta);
 		this.prover = prover;
 		this.pool = prover.pool;
-		
-		// Store the subset of known that will never change
-		this.prover.putKnown(pool.submerge(knownStatics));
-		prover.proveAll(Lists.<Dob>newArrayList());
 
 		// Construct and add query rules
 		queryRules.addAll(pool.rules.submerge(glc.constructQueryRules()));
 		glc.staticRules.addAll(queryRules);
-		
+
+		// Store the subset of known that will never change
+		prover.proveAll(Lists.<Dob>newArrayList());
 		for (Rule rule : this.glc.staticRules) {
 			this.knownStatic.putAll(rule, this.prover.getKnown(rule));
 		}
@@ -84,18 +82,14 @@ public class BackwardStateMachine implements GgpStateMachine {
 	}
 
 	public static BackwardStateMachine createForRules(Collection<Rule> rules) {
-		return createWithStatics(rules, HashMultimap.<Rule,Dob>create());
-	}
-	
-	public static BackwardStateMachine createWithStatics(Collection<Rule> rules,
-		Multimap<Rule,Dob> knownStatics) {
-		return new BackwardStateMachine(createProverForRules(rules), knownStatics);
+		return new BackwardStateMachine(createProverForRules(rules));
 	}
 	
 	private Set<Dob> proverPass(Iterable<Dob> state, Dob query, Map<Dob, Dob> unify) {
 		prover.clear();
 		prover.preserveTruths(state);
 		prover.putKnown(knownStatic);
+		prover.setVisited(knownStatic.keySet());
 		Set<Dob> proven = prover.ask(query);
 		Set<Dob> submerged = ProverStateMachine.submersiveReplace(proven, unify, pool);
 		return submerged;

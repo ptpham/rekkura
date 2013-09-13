@@ -30,10 +30,8 @@ import com.google.common.collect.Sets;
  *
  */
 public abstract class StratifiedBackward extends StratifiedProver {
-	
 	private final BackwardTraversal<Rule, Dob> traversal;
 	private final BackwardTraversal.Visitor<Rule, Dob> visitor;
-	private final Multimap<Rule,Dob> processed = HashMultimap.create();
 	
 	/**
 	 * This multimap stores the previous supports of recursive rules.
@@ -54,7 +52,6 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	public void clear() {
 		this.truths.clear();
 		this.previous.clear();
-		this.processed.clear();
 		this.cachet.formToGrounds.clear();
 		this.traversal.clear();
 	}
@@ -75,7 +72,18 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	public Set<Dob> getKnown(Rule rule) { return this.traversal.known.get(rule); }
 
 	/**
-	 * Returns the set of 
+	 * Rules added through this method will not be expanded until the
+	 * prover is cleared. When these rules are asked, only truths previously
+	 * generated and truths added through putKnown will be returned.
+	 * @param keySet
+	 */
+	public void setVisited(Set<Rule> keySet) {
+		this.traversal.visited.addAll(keySet);
+	}
+	
+	/**
+	 * Ask all rules with a head that potentially generates the given
+	 * (grounded or ungrounded) dob, and return the union of the results.
 	 * @param dob
 	 * @return
 	 */
@@ -148,4 +156,5 @@ public abstract class StratifiedBackward extends StratifiedProver {
 			};
 		}
 	}
+
 }
