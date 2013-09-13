@@ -97,6 +97,14 @@ public class Game {
 		return roles;
 	}
 	
+	/**
+	 * A "move" is the part of an "action" that conveys what the
+	 * player is doing. I.e. an "action" is the combination of a
+	 * role and move.
+	 * @param role
+	 * @param move
+	 * @return
+	 */
 	public static Dob convertMoveToAction(Dob role, Dob move) {
 		return new Dob(new Dob(DOES_NAME), role, move);
 	}

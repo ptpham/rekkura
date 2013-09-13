@@ -20,7 +20,9 @@ import com.google.common.collect.*;
 
 /**
  * This class holds a collection of utilities for generating
- * and using groundings.
+ * and using groundings. In general, a "support" is a Multimap
+ * that maps from Atoms in the body of a {@link Rule} to the 
+ * groundings that might unify with that atom.
  * @author ptpham
  *
  */
@@ -35,6 +37,17 @@ public class Terra {
 		return Cartesian.asIterator(space);
 	}
 
+	/**
+	 * Selects a subset of the atoms in the body of a rule such that each
+	 * additional atom covers the most variables left uncovered by the atoms
+	 * before it. If there are two atoms that cover the same number of uncovered
+	 * variables, the one with the lower cost will come first.
+	 * Only positive atoms are selected.
+	 * will be selected.
+	 * @param rule
+	 * @param costs
+	 * @return
+	 */
 	public static List<Atom> getGreedyExpanders(Rule rule, Map<Atom,Integer> costs) {
 		// Sort the dimensions of the space so that the smallest ones come first.
 		List<Atom> positives = Atom.filterPositives(rule.body);
@@ -53,6 +66,25 @@ public class Terra {
 		return expandUnifications(rule, check, iterator, pool, truths, limiter);
 	}
 
+	/**
+	 * This is the central loop in the logic package. It will iterate through 
+	 * the provided unification lists in the given iterator. The unifications
+	 * in each list will be combined until one of two cases occurs. If the 
+	 * unification fails, then the iterator will be advanced in the failing
+	 * position. If the unification succeeds, then a submerged unification map
+	 * will be constructed and added to the result.
+	 * @param rule
+	 * @param check once a unification list is merged into a unification, these
+	 * atoms will be unified with that unification and checked for existence in
+	 * the provided truth dobs. The idea is that these atoms were not used in
+	 * the construction of the unification list and therefore need to be checked
+	 * externally.
+	 * @param iterator
+	 * @param pool
+	 * @param truths
+	 * @param limiter
+	 * @return
+	 */
 	public static List<Map<Dob, Dob>> expandUnifications(Rule rule,
 		List<Atom> check, Cartesian.AdvancingIterator<Unification> iterator, Pool pool,
 		Set<Dob> truths, Limiter.Operations limiter) {
@@ -184,6 +216,16 @@ public class Terra {
 		return true;
 	}
 	
+	/**
+	 * Converts a basic support to a more performant representation.
+	 * Each inner list at position i corresponds to the unifications
+	 * that succeeded with the atom at position i in the body of the rule.
+	 * @param rule
+	 * @param support
+	 * @param positives the list of atoms we actually want to keep from the
+	 * support
+	 * @return
+	 */
 	public static List<List<Unification>> getUnificationSpace(Rule rule,
 		final Multimap<Atom, Dob> support, List<Atom> positives) {
 		

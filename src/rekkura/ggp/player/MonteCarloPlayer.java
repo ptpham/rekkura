@@ -21,8 +21,9 @@ import com.google.common.collect.Multiset;
 
 /**
  * This basic Monte Carlo player will expand and represent 
- * only its actions in any given turn before resorting to
- * purely random depth charges.
+ * only the actions belonging to its role in any given turn
+ * and will estimate the value of those actions with uniformly
+ * random depth charges.
  * @author ptpham
  *
  */
