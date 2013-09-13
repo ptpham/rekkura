@@ -3,7 +3,6 @@ package rekkura.util;
 import java.util.Map;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Maps;
 
 /**
  * Not sure why Guava's caches suck so much.
@@ -12,7 +11,7 @@ import com.google.common.collect.Maps;
  */
 public class Cache<U, V> {
 
-	public final Map<U, V> stored = Maps.newHashMap();
+	public final Map<U, V> stored = Synchron.newHashmap();
 	private Function<V, Boolean> checker;
 	private Function<U, V> fn;
 	
@@ -23,18 +22,19 @@ public class Cache<U, V> {
 		this.fn = fn;
 	}
 	
-	public V get(U u) {
+	public synchronized V get(U u) {
 		V result = validate(stored.get(u));
 		if (result == null) {
 			result = fn.apply(u);
+			if (result == null) return null;
 			stored.put(u, result);
 		}
 		return result;
 	}
 
-	public V propose(U u, V v) {
+	public synchronized V propose(U u, V v) {
 		V result = validate(stored.get(u));
-		if (result == null) {
+		if (result == null && v != null) {
 			stored.put(u, v);
 			return v;
 		}
