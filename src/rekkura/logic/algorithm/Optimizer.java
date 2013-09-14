@@ -14,8 +14,23 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
+/**
+ * Optimizers modify sets of rules in order to improve performance.
+ * E.g. of simulating the game.
+ * @author ptpham
+ *
+ */
 public abstract class Optimizer {
 
+	/**
+	 * Keys in the returned map will be removed from the ruleset and replaced
+	 * with the values that they map to. Any null values in the resulting multimap
+	 * will be disregarded.
+	 * @param rta
+	 * @param probhibited
+	 * @param pool
+	 * @return
+	 */
 	public abstract Multimap<Rule,Rule> apply(Ruletta rta, Set<Rule> probhibited, Pool pool);
 
 	public static Set<Rule> standard(Iterable<Rule> rules, Set<Rule> prohibited, Pool pool) {

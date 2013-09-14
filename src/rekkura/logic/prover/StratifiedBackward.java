@@ -11,11 +11,8 @@ import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.state.algorithm.BackwardTraversal;
-import rekkura.state.algorithm.Topper;
-import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -30,22 +27,18 @@ import com.google.common.collect.Sets;
  *
  */
 public abstract class StratifiedBackward extends StratifiedProver {
-	
 	private final BackwardTraversal<Rule, Dob> traversal;
 	private final BackwardTraversal.Visitor<Rule, Dob> visitor;
-	private final Multimap<Rule,Dob> processed = HashMultimap.create();
 	
 	/**
 	 * This multimap stores the previous supports of recursive rules.
 	 */
 	private final Map<Rule,Multimap<Atom,Dob>> previous = Maps.newHashMap();
-	private final Set<Rule> recursives;
 	
 	public StratifiedBackward(Collection<Rule> rules) {
 		super(rules);
 		this.visitor = createVisitor();
 		this.traversal = new BackwardTraversal<Rule,Dob>(visitor, this.rta.ruleToGenRule);
-		this.recursives = Sets.newHashSet(Colut.flatten(Topper.stronglyConnected(rta.ruleToGenRule)));
 		clear();
 	}
 	
@@ -54,7 +47,6 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	public void clear() {
 		this.truths.clear();
 		this.previous.clear();
-		this.processed.clear();
 		this.cachet.formToGrounds.clear();
 		this.traversal.clear();
 	}
@@ -75,7 +67,18 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	public Set<Dob> getKnown(Rule rule) { return this.traversal.known.get(rule); }
 
 	/**
-	 * Returns the set of 
+	 * Rules added through this method will not be expanded until the
+	 * prover is cleared. When these rules are asked, only truths previously
+	 * generated and truths added through putKnown will be returned.
+	 * @param keySet
+	 */
+	public void setVisited(Set<Rule> keySet) {
+		this.traversal.visited.addAll(keySet);
+	}
+	
+	/**
+	 * Ask all rules with a head that potentially generates the given
+	 * (grounded or ungrounded) dob, and return the union of the results.
 	 * @param dob
 	 * @return
 	 */
@@ -100,43 +103,36 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	}
 	
 	protected Set<Dob> standardRuleExpansion(Rule rule) {
-		ListMultimap<Atom, Dob> support = cachet.getSupport(rule);
-		Set<Dob> generated = expandRecursiveRule(rule, support);
-		if (generated == null) {
-			Renderer renderer = this.renderers.get(rule);
+		ListMultimap<Atom, Dob> raw = cachet.getSupport(rule);
+		List<Multimap<Atom,Dob>> supports = Lists.newArrayList();
+		
+		// Replace support with a diffed version if this rule has
+		// been expanded before.
+		if (this.previous.containsKey(rule)) {
+			Multimap<Atom,Dob> old = this.previous.get(rule);
+			Multimap<Atom,Dob> current = raw;
+			for (Atom atom : current.keySet()) {
+				List<Atom> selected = Lists.newArrayList(atom);
+				Multimap<Atom,Dob> diff = OtmUtil.diffSelective(selected, current, old);
+				supports.add(diff);
+			}
+		} else supports.add(raw);
+		
+		// Generate using the requested supports
+		Set<Dob> generated = Sets.newHashSet();
+		Renderer renderer = this.renderers.get(rule);
+		for (Multimap<Atom,Dob> support : supports) {
 			List<Map<Dob,Dob>> unifies = renderer.apply(rule, truths, support, pool);
-			generated = Terra.renderHeads(unifies, rule, pool);
+			generated.addAll(Terra.renderHeads(unifies, rule, pool));
 		}
 		
+		// Store the current support in previous so that we can do
+		// a selective diff next time we see this rule.
+		this.previous.put(rule, raw);
 		for (Dob dob : generated) preserveTruth(dob);
 		return generated;
 	}
 	
-	/**
-	 * This method performs a more efficient recursive expansion by diffing the 
-	 * previous support with the current one in each term.
-	 * @param rule
-	 * @param current
-	 * @return
-	 */
-	protected Set<Dob> expandRecursiveRule(Rule rule, ListMultimap<Atom,Dob> current) {
-		if (!this.recursives.contains(rule)) return null;
-		Multimap<Atom,Dob> old = this.previous.get(rule);
-		Renderer renderer = Renderer.getPartitioning();
-		
-		Set<Dob> generated = null;
-		if (old != null) {
-			generated = Sets.newHashSet();
-			for (Atom atom : current.keySet()) {
-				List<Atom> selected = Lists.newArrayList(atom);
-				Multimap<Atom,Dob> diff = OtmUtil.diffSelective(selected, current, old);
-				generated.addAll(Terra.renderHeads(renderer.apply(rule, truths, diff, pool), rule, pool));
-			}
-		}
-		this.previous.put(rule, HashMultimap.create(current));
-		return generated;
-	}
-
 	public static class Standard extends StratifiedBackward {
 		public Standard(Collection<Rule> rules) { super(rules); }
 
@@ -148,4 +144,5 @@ public abstract class StratifiedBackward extends StratifiedProver {
 			};
 		}
 	}
+
 }

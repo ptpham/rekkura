@@ -132,7 +132,7 @@ public abstract class RendererTest {
 		
 		Rule rule = pool.rules.submergeString(rawRule);
 		Set<Dob> truths = Sets.newHashSet(pool.dobs.submergeStrings(rawInputs));
-		Multimap<Atom,Dob> support = Renderer.getTrivialSupport(rule, truths);
+		Multimap<Atom,Dob> support = Renderer.getNaiveSupport(rule, truths);
 		
 		Set<Dob> expected = Sets.newHashSet(pool.dobs.submergeStrings(rawOutputs));
 		List<Map<Dob,Dob>> unifies = getExpansion().apply(rule, truths, support, pool);

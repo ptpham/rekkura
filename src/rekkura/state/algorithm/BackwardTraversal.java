@@ -35,6 +35,7 @@ public class BackwardTraversal<N, D> {
 	 */
 	public final HashMultimap<N, D> known = HashMultimap.create();
 	public final Map<N, Set<N>> components = Maps.newHashMap();
+	public final Set<N> visited = Sets.newHashSet();
 	private final Visitor<N,D> visitor;
 	
 	public BackwardTraversal(Visitor<N,D> visitor, Multimap<N,N> graph) {
@@ -50,16 +51,24 @@ public class BackwardTraversal<N, D> {
 		}
 	}
 
-	public void clear() { this.known.clear(); }
+	public void clear() {
+		this.known.clear();
+		this.visited.clear();
+	}
+	
 	public boolean ask(N node, Set<D> result) {
-		if (known.containsKey(node)) {
+		if (visited.contains(node)) {
 			result.addAll(known.get(node));
 			return false;
 		}
 		
+		boolean modified = false;
 		Set<N> component = this.components.get(node);
-		if (component != null) return expandComponent(component, result);
-		else return expandNodeRecursive(node, result);
+		if (component != null) modified = expandComponent(component, result);
+		else modified = expandNodeRecursive(node, result);
+		this.visited.add(node);
+		
+		return modified;
 	}
 
 	private boolean expandComponent(Set<N> component, Set<D> result) {

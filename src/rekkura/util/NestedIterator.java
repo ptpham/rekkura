@@ -3,6 +3,14 @@ package rekkura.util;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * This class creates an iterator over elements that are generated
+ * from those of another iterator.
+ * @author ptpham
+ *
+ * @param <U> elements of the original iterator
+ * @param <V> elements of the new iterator
+ */
 public abstract class NestedIterator<U, V> implements Iterator<V> {
 	protected Iterator<U> inner;
 	protected Iterator<V> outer;

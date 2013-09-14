@@ -27,7 +27,24 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
 
+/**
+ * A renderer is responsible for generating all possible implicated dobs
+ * from a single rule and the current state of the world.
+ * @author ptpham
+ *
+ */
 public abstract class Renderer {
+	
+	/**
+	 * This method exposes an efficient rendering process for a collection of ground dobs.
+	 * If you want to apply a single assignment in a vacuum, consider Terra.applyBodies.
+	 * To generate the support for this function, consider using Terra.getBodySpace.
+	 * @param rule
+	 * @param support
+	 * @param pool
+	 * @param truths
+	 * @return
+	 */
 	public abstract List<Map<Dob,Dob>> apply(Rule rule, Set<Dob> truths, Multimap<Atom,Dob> support, Pool pool);
 	
 	public final Limiter.Operations ops = Limiter.forOperations();
@@ -39,16 +56,6 @@ public abstract class Renderer {
 		return new Failover(standard, getPartitioning());
 	}
 	
-	/**
-	 * This method exposes an efficient rendering process for a collection of ground dobs.
-	 * If you want to apply a single assignment in a vaccuum, consider applyBodies.
-	 * To generate the support for this function, consider using getBodySpace.
-	 * @param rule
-	 * @param support
-	 * @param pool
-	 * @param truths
-	 * @return
-	 */
 	protected List<Map<Dob,Dob>> applyUnifications(Rule rule, 
 		AdvancingIterator<Unification> iterator, List<Atom> check, Pool pool, Set<Dob> truths) {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
@@ -83,6 +90,13 @@ public abstract class Renderer {
 		}
 	}
 	
+	/**
+	 * The partitioning renderer separates collections of dobs based on
+	 * common variable assignments. It has more overhead than the Standard
+	 * renderer but it will succeed where the Standard renderer fails.
+	 * @author ptpham
+	 *
+	 */
 	public static class Partitioning extends Renderer {
 		public int minNonTrival = 1024;
 		
@@ -115,6 +129,13 @@ public abstract class Renderer {
 		}	
 	}
 	
+	/**
+	 * Represents the composition of various renderers. If a renderer fails
+	 * to render, it will be discarded and the next renderer will take its
+	 * place. This renderer will fail when it runs out of renderers.
+	 * @author ptpham
+	 *
+	 */
 	public static class Failover extends Renderer {
 		public final ImmutableList<Renderer> children;
 		private Renderer current;
@@ -145,7 +166,7 @@ public abstract class Renderer {
 		}
 	}
 	
-	public static Multimap<Atom,Dob> getTrivialSupport(Rule rule, Set<Dob> truths) {
+	public static Multimap<Atom,Dob> getNaiveSupport(Rule rule, Set<Dob> truths) {
 		Multimap<Atom,Dob> result = HashMultimap.create();
 		for (Atom atom : rule.body) {
 			if (!atom.truth) continue;
@@ -154,6 +175,21 @@ public abstract class Renderer {
 		return result;
 	}
 	
+	/**
+	 * Performs a greedy recursive partitioning of the given space. At each
+	 * level of the recursion, at most one variable is selected on which to
+	 * partition.
+	 * @param vars the list of all variables in the rule -- it will not be modified
+	 * @param candidates the list of variables remaining to be selected in this invocation
+	 * @param space the current space to partition in this invocation
+	 * @param expanders the list of positions in the space that we are claiming will
+	 * actually contribute to the size of our space. This will be used to determine
+	 * whether a space is "too small" to be expanded further.
+	 * @param minNonTrivial the threshold below which a space is considered "too small"
+	 * to be partitioned further.
+	 * @param limiter
+	 * @return
+	 */
 	public static List<List<List<Unification>>> partitionSpace(List<Dob> vars,
 		List<Dob> candidates, List<List<Unification>> space, List<Integer> expanders,
 		int minNonTrivial, Limiter limiter) {
