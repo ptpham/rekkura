@@ -142,7 +142,7 @@ public class GgpProtocol {
 		
 		private DefaultPlayerHandler(Reffle.Factory<P> factory, int max)
 		{ this.factory = factory; this.max = max; }
-		private static final int PLAY_EPSILON = 500;
+		private static final int PLAY_EPSILON = 200;
 		private static final int START_EPSILON = 500;
 		
 		@Override

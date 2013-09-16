@@ -1,11 +1,24 @@
 package rekkura.util;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import rekkura.logic.model.Dob;
 
 import com.google.common.base.Function;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * (Collection Utilities) These methods are supposed to be
@@ -313,7 +326,7 @@ public class Colut {
 		return i;
 	}
 
-	public static <U> boolean removeAll(Iterable<U> source, Collection<U> target) {
+	public static <U> boolean removeAll(Collection<U> target, Iterable<U> source) {
 		boolean result = false;
 		for (U u : source) result |= target.remove(u);
 		return result;
@@ -341,7 +354,7 @@ public class Colut {
 		return u;
 	}
 
-	public static <U,V> Map<U,V> retainAll(Collection<U> keep, Map<U,V> map) {
+	public static <U,V> Map<U,V> retainAll(Map<U,V> map, Collection<U> keep) {
 		if (map == null) return null;
 		Map<U,V> result = Maps.newHashMap();
 		for (U key : map.keySet()) {
@@ -350,7 +363,7 @@ public class Colut {
 		return result;
 	}
 
-	public static <U,V> List<V> removeAll(Collection<U> remove, Map<U, V> map) {
+	public static <U,V> List<V> removeAll(Map<U, V> map, Collection<U> remove) {
 		if (map == null) return Lists.newArrayList();
 
 		List<V> result = Lists.newArrayList();
@@ -490,5 +503,30 @@ public class Colut {
 	public static Dob get(Dob[] arr, int pos) {
 		if (arr == null || pos < 0 || pos >= arr.length) return null;
 		return arr[pos];
+	}
+
+	public static <U> Set<U> retainAll(Iterable<U> collection, Collection<U> keep) {
+		Set<U> result = Sets.newHashSet();
+		if (keep == null || collection == null) return result;
+		for (U u : collection) if (keep.contains(u)) result.add(u);
+		return result;
+	}
+	
+	public static <U> void removeAllInner(Collection<? extends Collection<U>> outer,
+		Collection<U> remove) {
+		if (outer == null || remove == null) return;
+		for (Collection<U> inner : outer) {
+			if (inner == null) continue;
+			inner.removeAll(remove);
+		}
+	}
+	
+	public static <U> void retainAllInner(Collection<? extends Collection<U>> outer,
+		Collection<U> retain) {
+		if (outer == null || retain == null) return;
+		for (Collection<U> inner : outer) {
+			if (inner == null) continue;
+			inner.retainAll(retain);
+		}
 	}
 }

@@ -98,16 +98,17 @@ public abstract class Renderer {
 	 *
 	 */
 	public static class Partitioning extends Renderer {
-		public int minNonTrival = 1024;
+		public int minNonTrivial = 1024;
+		public int maxPartitionDepth = 3;
 		
 		@Override
 		public List<Map<Dob,Dob>> apply(Rule rule, Set<Dob> truths, Multimap<Atom, Dob> support, Pool pool) {
 			List<Atom> positives = Atom.filterPositives(rule.body);
+			Map<Atom,Integer> sizes = OtmUtil.getNumValues(support);
 			List<List<Unification>> space = Terra.getUnificationSpace(rule, support, positives);
 			ops.begin();
-
+			
 			// Compute expander set
-			Map<Atom,Integer> sizes = OtmUtil.getNumValues(support);
 			List<Atom> expanders = Terra.getGreedyExpanders(rule, sizes);
 			List<Atom> check = Colut.remove(rule.body, expanders);
 			
@@ -115,7 +116,7 @@ public abstract class Renderer {
 			List<Integer> selection = Colut.indexOf(positives, expanders); 
 			List<Dob> candidates = Terra.getPartitionCandidates(Atom.asDobIterable(positives), rule.vars);
 			List<List<List<Unification>>> partitions = partitionSpace(rule.vars, candidates,
-				space, selection, minNonTrival, this.ops);
+				space, selection, maxPartitionDepth);
 			
 			// Do the final rendering
 			List<Map<Dob,Dob>> result = Lists.newArrayList();
@@ -126,7 +127,68 @@ public abstract class Renderer {
 			}
 	
 			return result;
-		}	
+		}
+		
+		/**
+		 * Performs a greedy recursive partitioning of the given space. At each
+		 * level of the recursion, at most one variable is selected on which to
+		 * partition.
+		 * @param vars the list of all variables in the rule -- it will not be modified
+		 * @param candidates the list of variables remaining to be selected in this invocation
+		 * @param space the current space to partition in this invocation
+		 * @param expanders the list of positions in the space that we are claiming will
+		 * actually contribute to the size of our space. This will be used to determine
+		 * whether a space is "too small" to be expanded further.
+		 * @return
+		 */
+		public List<List<List<Unification>>> partitionSpace(List<Dob> vars,
+			List<Dob> candidates, List<List<Unification>> space, List<Integer> expanders, int depthRemain) {
+			
+			List<List<List<Unification>>> result = Lists.newArrayList();
+			if (depthRemain == 0 || Cartesian.size(Colut.select(space, expanders)) < minNonTrivial) {
+				result.add(space);
+				return result;
+			}
+
+			// In the set of atom/variable pairs such that the atom has at least two 
+			// assignments in the variable, find the pair such that the variable comes
+			// earliest in the candidate list.
+			int pos = -1;
+			RankedCarry<Integer, Set<Dob>> rc = RankedCarry.createNatural(Integer.MAX_VALUE, null);
+			Multiset<Dob> uniques = HashMultiset.create();
+			while (candidates.size() > 0 && rc.getCarry() == null) {
+				pos = vars.indexOf(Colut.popAny(candidates));
+				for (int i = 0; i < space.size(); i++) {
+					uniques.clear();
+					for (Unification unify : space.get(i)) uniques.add(unify.assigned[pos]);
+					if (uniques.elementSet().size() < 2) continue;
+					rc.consider(uniques.elementSet().size(), Sets.newHashSet(uniques.elementSet()));
+				}
+			}
+			
+			// If we could not partition the space (i.e. could not find a guide),
+			// just return the full space
+			if (rc.getCarry() == null) { result.add(space); return result; }
+			
+			outer:
+			// Expand each assignment defined by the guide
+			for (Dob assign : rc.getCarry()) {
+				List<List<Unification>> partitioned = Lists.newArrayList();
+				for (int i = 0; i < space.size(); i++) {
+					List<Unification> slice = null;
+					ListMultimap<Dob, Unification> index = Terra.indexBy(space.get(i), pos);
+					if (index.containsKey(assign)) slice = index.get(assign);
+					else slice = index.get(null);
+					if (slice.size() == 0) continue outer;
+					partitioned.add(slice);
+				}
+				
+				// Recursive expansion to handle the other variables
+				result.addAll(partitionSpace(vars, Lists.newArrayList(candidates), partitioned,
+					expanders, depthRemain - 1));
+			}
+			return result;
+		}
 	}
 	
 	/**
@@ -175,70 +237,5 @@ public abstract class Renderer {
 		return result;
 	}
 	
-	/**
-	 * Performs a greedy recursive partitioning of the given space. At each
-	 * level of the recursion, at most one variable is selected on which to
-	 * partition.
-	 * @param vars the list of all variables in the rule -- it will not be modified
-	 * @param candidates the list of variables remaining to be selected in this invocation
-	 * @param space the current space to partition in this invocation
-	 * @param expanders the list of positions in the space that we are claiming will
-	 * actually contribute to the size of our space. This will be used to determine
-	 * whether a space is "too small" to be expanded further.
-	 * @param minNonTrivial the threshold below which a space is considered "too small"
-	 * to be partitioned further.
-	 * @param limiter
-	 * @return
-	 */
-	public static List<List<List<Unification>>> partitionSpace(List<Dob> vars,
-		List<Dob> candidates, List<List<Unification>> space, List<Integer> expanders,
-		int minNonTrivial, Limiter limiter) {
-		
-		List<List<List<Unification>>> result = Lists.newArrayList();
-		if (Cartesian.size(Colut.select(space, expanders)) < minNonTrivial) {
-			result.add(space);
-			return result;
-		}
 
-		// In the set of atom/variable pairs such that the atom has at least two 
-		// assignments in the variable, find the pair such that the variable comes
-		// earliest in the candidate list.
-		int pos = -1;
-		RankedCarry<Integer, Set<Dob>> rc = RankedCarry.createNatural(Integer.MAX_VALUE, null);
-		Multiset<Dob> uniques = HashMultiset.create();
-		while (candidates.size() > 0 && rc.getCarry() == null) {
-			pos = vars.indexOf(Colut.popAny(candidates));
-			for (int i = 0; i < space.size(); i++) {
-				uniques.clear();
-				for (Unification unify : space.get(i)) uniques.add(unify.assigned[pos]);
-				if (uniques.elementSet().size() < 2) continue;
-				rc.consider(uniques.elementSet().size(), Sets.newHashSet(uniques.elementSet()));
-				if (limiter.exceeded()) break;
-			}
-		}
-		
-		// If we could not partition the space (i.e. could not find a guide),
-		// just return the full space
-		if (rc.getCarry() == null) { result.add(space); return result; }
-		
-		outer:
-		// Expand each assignment defined by the guide
-		for (Dob assign : rc.getCarry()) {
-			List<List<Unification>> partitioned = Lists.newArrayList();
-			for (int i = 0; i < space.size(); i++) {
-				if (limiter.exceeded()) break;
-				List<Unification> slice = null;
-				ListMultimap<Dob, Unification> index = Terra.indexBy(space.get(i), pos);
-				if (index.containsKey(assign)) slice = index.get(assign);
-				else slice = index.get(null);
-				if (slice.size() == 0) continue outer;
-				partitioned.add(slice);
-			}
-			
-			// Recursive expansion to handle the other variables
-			result.addAll(partitionSpace(vars, Lists.newArrayList(candidates), partitioned,
-				expanders,  minNonTrivial, limiter));
-		}
-		return result;
-	}
 }

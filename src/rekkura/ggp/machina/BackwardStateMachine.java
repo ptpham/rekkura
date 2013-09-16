@@ -46,7 +46,7 @@ public class BackwardStateMachine implements GgpStateMachine {
 		// Store the subset of known that will never change
 		prover.proveAll(Lists.<Dob>newArrayList());
 		for (Rule rule : this.glc.staticRules) {
-			this.knownStatic.putAll(rule, this.prover.getKnown(rule));
+			this.knownStatic.putAll(rule, this.prover.traversal.known.get(rule));
 		}
 	}
 
@@ -88,8 +88,8 @@ public class BackwardStateMachine implements GgpStateMachine {
 	private Set<Dob> proverPass(Iterable<Dob> state, Dob query, Map<Dob, Dob> unify) {
 		prover.clear();
 		prover.preserveTruths(state);
-		prover.putKnown(knownStatic);
-		prover.setVisited(knownStatic.keySet());
+		prover.preserveAndPutKnown(knownStatic);
+		prover.traversal.visited.addAll(knownStatic.keySet());
 		Set<Dob> proven = prover.ask(query);
 		Set<Dob> submerged = ProverStateMachine.submersiveReplace(proven, unify, pool);
 		return submerged;

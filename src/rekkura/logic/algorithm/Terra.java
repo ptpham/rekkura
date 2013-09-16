@@ -16,7 +16,14 @@ import rekkura.util.Colut;
 import rekkura.util.Limiter;
 import rekkura.util.RankedCarry;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 
 /**
  * This class holds a collection of utilities for generating
@@ -146,7 +153,20 @@ public class Terra {
 			Atom atom = carry.getCarry();
 			if (atom == null) return null;
 			
-			Colut.removeAll(atom.dob.fullIterable(), remaining);
+			Colut.removeAll(remaining, atom.dob.fullIterable());
+			result.add(atom);
+		}
+		
+		return result;
+	}
+	
+	public static List<Atom> getVarCover(Iterable<Atom> atoms, Iterable<Dob> vars) {
+		List<Dob> remaining = Lists.newArrayList(vars);
+		List<Atom> result = Lists.newArrayList();
+		
+		for (Atom atom : atoms) {
+			if (remaining.size() == 0) break;
+			Colut.removeAll(remaining, atom.dob.fullIterable());
 			result.add(atom);
 		}
 		

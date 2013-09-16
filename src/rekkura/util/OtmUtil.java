@@ -1,9 +1,24 @@
 package rekkura.util;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
 
 import com.google.common.base.Function;
-import com.google.common.collect.*;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 
 /**
  * (One-to-Many Utilities)
@@ -187,7 +202,7 @@ public class OtmUtil {
 		return result;
 	}
 
-	public static <U, V> Multimap<U, V> getAll(Multimap<U, V> map, Collection<U> keys) {
+	public static <U, V> Multimap<U, V> getAll(Multimap<U, V> map, Iterable<U> keys) {
 		Multimap<U, V> result = HashMultimap.create();
 		if (keys == null) return result;
 		for (U key : keys) result.putAll(key, map.get(key));
@@ -342,4 +357,25 @@ public class OtmUtil {
 		for (U key : map.keySet()) result *= map.get(key).size();
 		return result;
 	}
+
+	public static <U, C extends Collection<U>> Multimap<U,C> indexByElems(Iterable<C> collections) {
+		Multimap<U,C> result = HashMultimap.create();
+		if (collections == null) return result;
+		for (C c : collections) for (U u : c) result.put(u, c);
+		return result;
+	}
+	
+	public static <U, V> Multimap<V, V> transfer(Multimap<U,U> base, Multimap<U,V> prongs) {
+		Multimap<V,V> result = HashMultimap.create();
+		if (base == null || prongs == null) return result;
+		for (Map.Entry<U, U> entry : base.entries()) {
+			for (V first : prongs.get(entry.getKey())) {
+				for (V second : prongs.get(entry.getValue())) {
+					result.put(first, second);
+				}
+			}
+		}
+		return result;
+	}
+	
 }

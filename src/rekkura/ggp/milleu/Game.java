@@ -5,15 +5,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import rekkura.logic.algorithm.Unifier;
 import rekkura.logic.format.StandardFormat;
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
+import rekkura.logic.prover.StratifiedBackward;
+import rekkura.util.Limiter;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 /**
  * This class represents a collection of utilities and 
@@ -151,4 +156,42 @@ public class Game {
 		return result;
 	}
 
+	/**
+	 * Returns for each rule in the game the set of dobs that
+	 * will potentially be generated from it.
+	 * @param raw
+	 * @param limiter
+	 * @return
+	 */
+	public static Multimap<Rule,Dob> generateAll(Iterable<Rule> raw, Limiter limiter) {
+		// Release the negation constraints on rules
+		List<Rule> rules = Lists.newArrayList();
+		for (Rule rule : raw) {
+			List<Atom> positives = Atom.filterPositives(rule.body);
+			rules.add(new Rule(rule.head, positives, rule.vars, rule.distinct));
+		}
+		
+		// Add the rule to handle moving inits to trues
+		Rule helper = StandardFormat.inst.ruleFromString("{(?x)|<((true)(?x)),true>:-<((init)(?x)),true>}");
+		rules.add(helper);
+		
+		// Set up required logic structures
+		StratifiedBackward prover = new StratifiedBackward.Standard(rules);
+		GameLogicContext context = new GameLogicContext(prover.pool, prover.rta);
+		helper = prover.pool.rules.submerge(helper);
+
+		// Spin until we reach the limit or until we don't generate any new dobs
+		limiter.begin();
+		Multimap<Rule,Dob> generated = HashMultimap.create();
+		while (!limiter.exceeded()) {
+			prover.traversal.visited.clear();
+			List<Dob> current = Lists.newArrayList(prover.askAll());
+			current = Unifier.replaceDobs(current, context.LEGAL_UNIFY);
+			current = Unifier.replaceDobs(current, context.NEXT_UNIFY);
+			prover.storeTruths(current);
+			if (!generated.putAll(prover.traversal.known)) break;
+		}
+		
+		return generated;
+	}
 }

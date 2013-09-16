@@ -27,7 +27,7 @@ import com.google.common.collect.Sets;
  *
  */
 public abstract class StratifiedBackward extends StratifiedProver {
-	private final BackwardTraversal<Rule, Dob> traversal;
+	public final BackwardTraversal<Rule, Dob> traversal;
 	private final BackwardTraversal.Visitor<Rule, Dob> visitor;
 	
 	/**
@@ -59,21 +59,9 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	 * the given rule.
 	 * @param addition
 	 */
-	public void putKnown(Multimap<Rule, Dob> addition) {
+	public void preserveAndPutKnown(Multimap<Rule, Dob> addition) {
 		preserveTruths(addition.values());
 		traversal.known.putAll(addition);
-	}
-	
-	public Set<Dob> getKnown(Rule rule) { return this.traversal.known.get(rule); }
-
-	/**
-	 * Rules added through this method will not be expanded until the
-	 * prover is cleared. When these rules are asked, only truths previously
-	 * generated and truths added through putKnown will be returned.
-	 * @param keySet
-	 */
-	public void setVisited(Set<Rule> keySet) {
-		this.traversal.visited.addAll(keySet);
 	}
 	
 	/**
@@ -95,10 +83,12 @@ public abstract class StratifiedBackward extends StratifiedProver {
 	public Set<Dob> proveAll(Iterable<Dob> truths) {
 		this.clear();
 		this.preserveTruths(truths);
-		
+		return askAll();
+	}
+
+	public Set<Dob> askAll() {
 		Set<Dob> result = Sets.newHashSet();
 		for (Rule rule : this.rta.allRules) this.traversal.ask(rule, result);
-		
 		return result;
 	}
 	
@@ -144,5 +134,4 @@ public abstract class StratifiedBackward extends StratifiedProver {
 			};
 		}
 	}
-
 }

@@ -64,9 +64,16 @@ public abstract class StratifiedProver {
 	 * @return
 	 */
 	public boolean storeTruth(Dob dob) {
+		dob = this.pool.dobs.submerge(dob);
 		boolean added = truths.add(dob);
 		this.cachet.storeGround(dob);
 		return added;
+	}
+	
+	public boolean storeTruths(Iterable<Dob> dobs) {
+		boolean result = false;
+		for (Dob dob : dobs) result |= storeTruth(dob);
+		return result;
 	}
 	
 	public void preserveTruths(Iterable<Dob> truths) {
