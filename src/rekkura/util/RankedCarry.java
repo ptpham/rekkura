@@ -14,27 +14,24 @@ import com.google.common.collect.Ordering;
  * @param <V>
  */
 public class RankedCarry<U extends Comparable<U>, V> {
-	private U u;
-	private V v;
+	public U ranker;
+	public V carry;
 	private Comparator<U> comp;
 	
-	private RankedCarry(U u, V v) {
-		this(u, v, Ordering.<U>natural());
+	private RankedCarry(U ranker, V carry) {
+		this(ranker, carry, Ordering.<U>natural());
 	}
 	
-	private RankedCarry(U u, V v, Comparator<U> comp) {
-		this.u = u;
-		this.v = v;
+	private RankedCarry(U ranker, V carry, Comparator<U> comp) {
+		this.ranker = ranker;
+		this.carry = carry;
 		this.comp = comp;
 	}
 	
-	public U getRanker() { return u; }
-	public V getCarry() { return v; }
-	
-	public boolean consider(U ranker, V carry) {
-		if (comp.compare(u, ranker) > 0) {
-			this.u = ranker;
-			this.v = carry;
+	public boolean consider(U newRanker, V newCarry) {
+		if (comp.compare(ranker, newRanker) > 0) {
+			this.ranker = newRanker;
+			this.carry = newCarry;
 			return true;
 		}
 		return false;

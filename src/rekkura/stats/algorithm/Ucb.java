@@ -49,7 +49,7 @@ public class Ucb {
 			for (Map.Entry<U, Entry> entry : entries.entrySet()) {
 				best.consider(entry.getValue().upper(c, total), entry.getKey());
 			}
-			return best.getCarry();
+			return best.carry;
 		}
 		
 		public synchronized void inform(U action, double value) {
@@ -62,7 +62,7 @@ public class Ucb {
 			for (Map.Entry<U, Entry> entry : entries.entrySet()) {
 				best.consider(entry.getValue().expected(), entry.getKey());
 			}
-			return best.getCarry();
+			return best.carry;
 		}
 
 		public synchronized void clear() {

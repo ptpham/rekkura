@@ -150,29 +150,15 @@ public abstract class Renderer {
 				return result;
 			}
 
-			// In the set of atom/variable pairs such that the atom has at least two 
-			// assignments in the variable, find the pair such that the variable comes
-			// earliest in the candidate list.
-			int pos = -1;
-			RankedCarry<Integer, Set<Dob>> rc = RankedCarry.createNatural(Integer.MAX_VALUE, null);
-			Multiset<Dob> uniques = HashMultiset.create();
-			while (candidates.size() > 0 && rc.getCarry() == null) {
-				pos = vars.indexOf(Colut.popAny(candidates));
-				for (int i = 0; i < space.size(); i++) {
-					uniques.clear();
-					for (Unification unify : space.get(i)) uniques.add(unify.assigned[pos]);
-					if (uniques.elementSet().size() < 2) continue;
-					rc.consider(uniques.elementSet().size(), Sets.newHashSet(uniques.elementSet()));
-				}
-			}
-			
 			// If we could not partition the space (i.e. could not find a guide),
 			// just return the full space
-			if (rc.getCarry() == null) { result.add(space); return result; }
-			
+			Guide guide = selectGuide(candidates, vars, space);
+			if (guide.values == null) { result.add(space); return result; }
+			int pos = guide.pos;
+
 			outer:
 			// Expand each assignment defined by the guide
-			for (Dob assign : rc.getCarry()) {
+			for (Dob assign : guide.values) {
 				List<List<Unification>> partitioned = Lists.newArrayList();
 				for (int i = 0; i < space.size(); i++) {
 					List<Unification> slice = null;
@@ -186,6 +172,46 @@ public abstract class Renderer {
 				// Recursive expansion to handle the other variables
 				result.addAll(partitionSpace(vars, Lists.newArrayList(candidates), partitioned,
 					expanders, depthRemain - 1));
+			}
+			return result;
+		}
+
+
+		public static class Guide {
+			Set<Dob> values;
+			int pos;
+		}
+		
+		/**
+		 * In the set of atom/variable pairs such that the atom has at least two 
+		 * assignments in the variable, find the pair such that the variable comes
+		 * earliest in the candidate list.
+		 * @param candidates
+		 * @param vars
+		 * @param space
+		 * @return a ranked carry in which the integer is the position of the selected
+		 * variable in the vars list and the carry is the set of assignments in that dimension
+		 */
+		public static Guide selectGuide(List<Dob> candidates,
+			List<Dob> vars, List<List<Unification>> space) {
+			
+			Guide result = new Guide();
+			Multiset<Dob> uniques = HashMultiset.create();
+			while (candidates.size() > 0 && result.values == null) {
+				int pos = vars.indexOf(Colut.popAny(candidates));
+				RankedCarry<Integer, Set<Dob>> seen = RankedCarry.createNatural(Integer.MAX_VALUE, null);
+				for (int i = 0; i < space.size(); i++) {
+					List<Unification> slice = space.get(i);
+					uniques.clear();
+					
+					if (slice.size() == 0) continue;
+					if (Colut.any(slice).assigned[pos] == null) continue;
+					for (Unification unify : space.get(i)) uniques.add(unify.assigned[pos]);
+					seen.consider(uniques.elementSet().size(), Sets.newHashSet(uniques));
+				}
+				if (seen.ranker < 2) continue;
+				result.values = seen.carry;
+				result.pos = pos;
 			}
 			return result;
 		}

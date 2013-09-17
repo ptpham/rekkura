@@ -55,7 +55,7 @@ public class MonteCarloPlayer extends ProverBased {
 			// See if we need to update the move we want to make
 			for (Dob action : goals.elementSet()) {
 				int value = goals.count(action);
-				if (best.consider(value, action)) setDecision(current.turn, best.getCarry());
+				if (best.consider(value, action)) setDecision(current.turn, best.carry);
 			}
 			wavesComputed.addAndGet(1);
 		}

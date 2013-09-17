@@ -150,7 +150,7 @@ public class Terra {
 				carry.consider(count, candidate);
 			}
 			
-			Atom atom = carry.getCarry();
+			Atom atom = carry.carry;
 			if (atom == null) return null;
 			
 			Colut.removeAll(remaining, atom.dob.fullIterable());
