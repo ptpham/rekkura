@@ -37,7 +37,6 @@ public abstract class Player implements Runnable {
 	private final Vector<Dob> moves = Synchron.newVector();
 	private final Vector<Map<Dob, Dob>> history = Synchron.newVector();
 	private volatile boolean started = false, complete = false;
-	private final Object inputLock = new Object();
 	
 	public volatile Logger logger = Logger.getGlobal();
 	{ logger.setUseParentHandlers(false); }
@@ -70,7 +69,7 @@ public abstract class Player implements Runnable {
 	
 	public final boolean isComplete() { return complete; }
 	
-	protected final synchronized boolean waitForInput() { return Synchron.lightWait(this.inputLock); }
+	protected final synchronized boolean waitForInput() { return Synchron.lightWait(this); }
 	protected final synchronized int getHistoryExtent() { return this.history.size(); }
 	protected final synchronized Map<Dob, Dob> getMemory(int turn) { return Colut.get(history, turn); }
 	protected final synchronized Map<Dob, Dob> getLatestMemory() { return Colut.end(history); }
@@ -86,8 +85,8 @@ public abstract class Player implements Runnable {
 		notifyInput();
 	}
 
-	private void notifyInput() {
-		synchronized(this.inputLock) { this.inputLock.notifyAll(); }
+	private synchronized void notifyInput() {
+		this.notifyAll();
 	}
 	
 	/**
