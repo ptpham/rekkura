@@ -222,6 +222,7 @@ public abstract class Player implements Runnable {
 	
 	public static Thread start(Player player) {
 		Thread thread = new Thread(getWrappedPlayer(player));
+		thread.setName(player.getClass().toString());
 		thread.start();
 		return thread;
 	}

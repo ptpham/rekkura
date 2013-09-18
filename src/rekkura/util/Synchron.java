@@ -67,11 +67,6 @@ public class Synchron {
 		return new ConcurrentHashMap<U, V>();
 	}
 	
-	/**
-	 * This does not actually created a synchronized multiset yet.
-	 * Waiting on Guava to implement it because I am too lazy right now.
-	 * @return
-	 */
 	public static <U> Multiset<U> newHashMultiset() {
 		return ConcurrentHashMultiset.create();
 	}

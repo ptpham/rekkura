@@ -45,12 +45,8 @@ public class Terra {
 	}
 
 	/**
-	 * Selects a subset of the atoms in the body of a rule such that each
-	 * additional atom covers the most variables left uncovered by the atoms
-	 * before it. If there are two atoms that cover the same number of uncovered
-	 * variables, the one with the lower cost will come first.
-	 * Only positive atoms are selected.
-	 * will be selected.
+	 * Selects a subset of the atoms in the body of a rule for expansion based
+	 * on the minimum cost. Stops once all variables are covered.
 	 * @param rule
 	 * @param costs
 	 * @return
@@ -61,9 +57,8 @@ public class Terra {
 		Colut.sortByMap(positives, costs, 0);
 		
 		// Then greedily find a variable cover and resort for the final support
-		List<Atom> expanders = Terra.getGreedyVarCover(positives, rule.vars);
+		List<Atom> expanders = Terra.getVarCover(positives, rule.vars);
 		if (expanders == null) return null;
-		Colut.sortByMap(expanders, costs, 0);
 		return expanders;
 	}
 

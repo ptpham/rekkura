@@ -34,7 +34,7 @@ public abstract class Optimizer {
 	public abstract Multimap<Rule,Rule> apply(Ruletta rta, Set<Rule> probhibited, Pool pool);
 
 	public static Set<Rule> standard(Iterable<Rule> rules, Set<Rule> prohibited, Pool pool) {
-		return Optimizer.loop(rules, prohibited, pool, Optimizer.MERGE_POS_SUB_SINGLE);
+		return Optimizer.loop(rules, prohibited, pool, Optimizer.MERGE_POS_SUB_SINGLE, Optimizer.LIFT);
 	}
 
 	public static Set<Rule> loop(Iterable<Rule> orig, Set<Rule> prohibited, Pool pool, Optimizer... ops) {
@@ -60,40 +60,28 @@ public abstract class Optimizer {
 	}
 	
 	/**
-	 * In order for this merge optimization to apply to a rule, it must
-	 * be possible to merge with all children of the rule in exactly one
-	 * position.
+	 * This class provides the boilerplate for an optimizer that replaces
+	 * a single rule with one or more rules based on the rule's relationship
+	 * with the children. The boilerplate involves code that avoids touching
+	 * rules that have participated in an optimization during the current pass.
 	 * @author ptpham
 	 *
 	 */
-	public static Optimizer MERGE_POS_SUB_SINGLE = new Optimizer() {
+	private static abstract class LocalReplace extends Optimizer {
 		@Override
 		public Multimap<Rule, Rule> apply(Ruletta rta, Set<Rule> prohibited, Pool pool) {
 			Multimap<Rule,Rule> result = HashMultimap.create();
 			Set<Rule> touched = Sets.newHashSet();
 			
 			for (Rule rule : rta.ruleOrder) {
-				boolean success = true;
-				List<Rule> generated = Lists.newArrayList();
 				Collection<Rule> children = rta.ruleToDescRule.get(rule);
 				if (Colut.containsAny(children, touched)) continue;
 				if (prohibited.contains(rule)) continue;
 				if (touched.contains(rule)) continue;
 
-				for (Rule child : children) {
-					List<Rule> merged = Merge.applyOperation(rule, child, Merges.POSITIVE_SUBSTITUTION, pool);
-					if (merged.size() != 1) merged.clear();
-					
-					Rule current = Colut.first(merged);
-					if (current != null && current.vars.size() < rule.vars.size()) {
-						generated.add(current);
-					} else {
-						success = false;
-						break;
-					}
-				}
+				List<Rule> generated = apply(rule, children, pool);
 				
-				if (success && children.size() > 0) {
+				if (generated != null && children.size() > 0) {
 					result.putAll(rule, generated);
 					touched.addAll(children);
 					touched.add(rule);
@@ -101,6 +89,48 @@ public abstract class Optimizer {
 			}
 			
 			return result;
+		}
+
+		protected abstract List<Rule> apply(Rule rule, Iterable<Rule> children, Pool pool);
+	}
+
+	
+	/**
+	 * In order for this merge optimization to apply to a rule, it must
+	 * be possible to merge with all children of the rule in exactly one
+	 * position. Furthermore, the result of merges must have fewer 
+	 * variables than the number of variables in the source rule.
+	 * @author ptpham
+	 *
+	 */
+	public static Optimizer MERGE_POS_SUB_SINGLE = new LocalReplace() {
+		@Override
+		protected List<Rule> apply(Rule rule, Iterable<Rule> children, Pool pool) {
+			List<Rule> generated = Lists.newArrayList();
+			for (Rule child : children) {
+				List<Rule> merged = Merge.applyOperation(rule, child, Merges.POSITIVE_SUBSTITUTION, pool);
+				if (merged.size() != 1) merged.clear();
+				
+				Rule current = Colut.first(merged);
+				if (current != null && current.vars.size() < rule.vars.size()) generated.add(current);
+				else return null;
+			} return generated;
+		}
+	};
+	
+	/**
+	 * If all children of the rule can restrict the rule in some way, then
+	 * we can remove the rule and add all of the restricted versions.
+	 */
+	public static Optimizer LIFT = new LocalReplace() {
+		@Override
+		protected List<Rule> apply(Rule rule, Iterable<Rule> children, Pool pool) {
+			List<Rule> generated = Lists.newArrayList();
+			for (Rule child : children) {
+				List<Rule> lifted = Comprender.lift(rule, child, pool);
+				if (lifted.isEmpty()) return null;
+				generated.addAll(lifted);
+			} return generated;
 		}
 	};
 
