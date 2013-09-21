@@ -144,12 +144,6 @@ public class Colut {
 		return get(map, val, null);
 	}
 
-	public static <U> Set<U> intersection(Iterable<U> first, Collection<U> second) {
-		Set<U> result = Sets.newHashSet(first);
-		result.retainAll(second);
-		return result;
-	}
-
 	public static <U> Set<U> difference(Collection<U> first, Collection<U> second) {
 		Set<U> result = Sets.newHashSet(first);
 		result.removeAll(second);
@@ -371,16 +365,16 @@ public class Colut {
 		return result;
 	}
 
-	public static <U> List<U> intersect(List<U> ordering, Collection<U> keep) {
+	public static <U> List<U> intersect(Iterable<U> all, Collection<U> keep) {
 		List<U> result = Lists.newArrayList();
-		for (U u : ordering) if (keep.contains(u)) result.add(u);
+		for (U u : all) if (keep.contains(u)) result.add(u);
 		return result;
 	}
 
-	public static <U> List<U> remove(List<U> ordering, Collection<U> remove) {
-		if (remove == null) return Lists.newArrayList(ordering);
+	public static <U> List<U> remove(List<U> all, Collection<U> remove) {
+		if (remove == null) return Lists.newArrayList(all);
 		List<U> result = Lists.newArrayList();
-		for (U u : ordering) if (!remove.contains(u)) result.add(u);
+		for (U u : all) if (!remove.contains(u)) result.add(u);
 		return result;
 	}
 

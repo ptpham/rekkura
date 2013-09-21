@@ -1,9 +1,6 @@
 package rekkura.logic.algorithm;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
@@ -14,16 +11,8 @@ import rekkura.util.Cartesian;
 import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.Limiter;
-import rekkura.util.RankedCarry;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This class holds a collection of utilities for generating
@@ -42,6 +31,23 @@ public class Terra {
 		// Construct iterator and expand
 		List<List<Unification>> space = getUnificationSpace(rule, support, expanders);
 		return Cartesian.asIterator(space);
+	}
+	
+	/**
+	 * Returns a comparator that sorts in increasing order of
+	 * overlap with vars. 
+	 * @param vars
+	 * @param other
+	 * @return
+	 */
+	public static Comparator<Atom> getOverlapComparator(final Collection<Dob> vars) {
+		return new Comparator<Atom>() {
+			@Override public int compare(Atom first, Atom second) {
+				int left = Colut.countIn(first.dob.fullIterable(), vars);
+				int right = Colut.countIn(second.dob.fullIterable(), vars);
+				return left - right;
+			}
+		};
 	}
 
 	/**
@@ -129,27 +135,33 @@ public class Terra {
 
 	/**
 	 * Returns a cover of the variables obtained by greedily selecting atoms 
-	 * that cover the most uncovered variables.
+	 * that first cover the most already covered variables and then the 
+	 * most of the uncovered variables.
 	 * @param atoms
 	 * @param vars
 	 * @return
 	 */
-	public static List<Atom> getGreedyVarCover(Iterable<Atom> atoms, Iterable<Dob> vars) {
+	public static List<Atom> getGreedyVarCover(Iterable<Atom> atoms, Collection<Dob> vars) {
 		List<Dob> remaining = Lists.newArrayList(vars);
+		List<Dob> covered = Lists.newArrayList();
+		List<Atom> available = Lists.newArrayList(atoms);
 		List<Atom> result = Lists.newArrayList();
 		
+		List<Comparator<Atom>> comparators = Lists.newArrayList();
+		comparators.add(Collections.reverseOrder(getOverlapComparator(covered)));
+		comparators.add(Collections.reverseOrder(getOverlapComparator(vars)));
+		Comparator<Atom> comparator = Ordering.compound(comparators);
+		
 		while (remaining.size() > 0) {
-			RankedCarry<Integer, Atom> carry = RankedCarry.createReverseNatural(0, null);
-			for (Atom candidate : atoms) {
-				int count = Colut.countIn(candidate.dob.fullIterable(), remaining);
-				carry.consider(count, candidate);
-			}
+			if (available.size() == 0) return null;
+			Atom next = Collections.min(available, comparator);
+			available.remove(next);
 			
-			Atom atom = carry.carry;
-			if (atom == null) return null;
-			
-			Colut.removeAll(remaining, atom.dob.fullIterable());
-			result.add(atom);
+			Iterable<Dob> components = next.dob.fullIterable();
+			if (Colut.countIn(components, remaining) == 0) continue;
+			Colut.removeAll(remaining, components);
+			covered.addAll(Colut.intersect(components, vars));
+			result.add(next);
 		}
 		
 		return result;

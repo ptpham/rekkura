@@ -123,6 +123,8 @@ public class Rule {
 		}
 	}
 	
+	public static enum Canonization { VARS, BODY, DISTINCT }
+	
 	/**
 	 * This method checks that the given unification does not 
 	 * violate the distinct constraints defined by this rule.
@@ -241,19 +243,35 @@ public class Rule {
 	 * @param rule
 	 * @return
 	 */
-	public static Rule canonize(final Rule rule) {
+	public static Rule canonize(final Rule rule) { return canonize(rule, null); }
+	public static Rule canonize(final Rule rule, EnumSet<Canonization> type) {
+		boolean vdist = type == null || type.contains(Canonization.VARS);
+		boolean bdist = type == null || type.contains(Canonization.BODY);
+		boolean ddist = type == null || type.contains(Canonization.DISTINCT);
+		
 		List<Dob> vars = Lists.newArrayList(rule.vars);
 		List<Atom> body = Lists.newArrayList(rule.body);
 		List<Rule.Distinct> distincts = Lists.newArrayListWithCapacity(rule.distinct.size());
-		for (Distinct distinct : rule.distinct) { distincts.add(Distinct.canonize(distinct, rule.vars)); }
+		for (Distinct distinct : rule.distinct) {
+			if (ddist) distincts.add(Distinct.canonize(distinct, rule.vars));
+			else distincts.add(distinct);
+		}
 		
-		Collections.sort(vars, Dob.getComparator());
-		Collections.sort(body, Atom.getComparator(rule.vars));
-		Collections.sort(distincts, Distinct.getComparator(rule.vars));
-		
-		vars = Colut.filterAdjacentRefeq(vars);
-		body = Colut.filterAdjacentRefeq(body);
-		distincts = Colut.filterAdjacentRefeq(distincts);
+		if (vdist) {
+			Collections.sort(vars, Dob.getComparator());
+			vars = Colut.filterAdjacentRefeq(vars);
+		}
+
+		if (bdist) {
+			Collections.sort(body, Atom.getComparator(rule.vars));
+			body = Colut.filterAdjacentRefeq(body);
+		}
+
+		if (ddist) {
+			Collections.sort(distincts, Distinct.getComparator(rule.vars));
+			distincts = Colut.filterAdjacentRefeq(distincts);
+		}
+
 		return new Rule(rule.head, body, vars, distincts);
 	}
 	

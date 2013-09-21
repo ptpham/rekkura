@@ -45,7 +45,7 @@ public class Pool {
 	
 	private final Map<Class<?>, Submerger<?>> submergers = 
 		ImmutableMap.of(Dob.class, dobs, Atom.class, atoms, Rule.class, rules);
-		
+	
 	public Map<Dob, Dob> submergeUnify(Map<Dob, Dob> unify) {
 		Map<Dob, Dob> result = Maps.newHashMap();
 		
