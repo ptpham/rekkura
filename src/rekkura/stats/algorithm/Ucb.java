@@ -8,12 +8,13 @@ import com.google.common.collect.Maps;
 
 public class Ucb {
 	public static class Entry {
-		private volatile double cumulative;
+		private volatile double mean;
 		private volatile int count;
 		
 		public synchronized void update(double value) {
-			cumulative += value;
 			count++;
+			double delta = value - mean;
+			mean += delta/count;
 		}
 		
 		public synchronized double upper(double c, double total) {
@@ -21,11 +22,11 @@ public class Ucb {
  			return expected() + c*Math.sqrt(2*Math.log(total)/count);
 		}
 		
-		public synchronized double expected() { return cumulative/count; }
+		public synchronized double expected() { return mean; }
 		
 		public synchronized void clear() {
-			this.cumulative = 0;
 			this.count = 0;
+			this.mean = 0;
 		}
 		
 		@Override

@@ -148,12 +148,6 @@ public class Terra {
 			distincts.add(Unification.convert(distinct, rule.vars));
 		}
 
-		// Construct data structures to eventually find the earliest
-		// dimension such that we have covered all of the variables 
-		// in the head.
-		List<Integer> headPos = Colut.indexOf(unify.vars, rule.head.dob.fullIterable());
-		Integer margin = null;
-		
 		while (iterator.hasNext() && !limiter.exceeded()) {
 			unify.clear();
 
@@ -166,7 +160,6 @@ public class Terra {
 				Unification current = assignment.get(i);
 				if (!unify.sloppyDirtyMergeWith(current)) failure = i;
 				if (!unify.evaluateDistinct(distincts)) failure = i;
-				if (margin == null && Colut.noNulls(unify.assigned, headPos)) margin = i;
 			}
 			
 			// Verify that the atoms that did not participate in the unification
@@ -179,7 +172,6 @@ public class Terra {
 			// Final check for distincts before rendering head
 			if (converted != null && unify.isValid()) {
 				result.add(converted);
-				iterator.advance(margin);
 			} else if (failure >= 0) {
 				iterator.advance(failure);
 			} 
