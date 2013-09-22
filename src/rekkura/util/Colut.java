@@ -198,6 +198,14 @@ public class Colut {
 		for (U u : arr) if (u == null) return false;
 		return true;
 	}
+	
+	public static <U> boolean noNulls(U[] arr, List<Integer> positions) {
+		for (Integer pos : positions) {
+			if (pos < 0 || pos >= arr.length) continue;
+			if (arr[pos] == null) return false;
+		}
+		return true;
+	}
 
 	public static <U> void nullOut(U[] arr) {
 		for (int i = 0; i < arr.length; i++) arr[i] = null;
@@ -409,8 +417,14 @@ public class Colut {
 		return null;
 	}
 
-	public static <U> Set<String> stringify(Set<U> elems) {
+	public static <U> Set<String> stringifyUnordered(Iterable<U> elems) {
 		Set<String> result = Sets.newHashSet();
+		for (U u : elems) result.add(u.toString());
+		return result;
+	}
+	
+	public static <U> List<String> stringifyOrdered(Iterable<U> elems) {
+		List<String> result = Lists.newArrayList();
 		for (U u : elems) result.add(u.toString());
 		return result;
 	}
@@ -474,7 +488,7 @@ public class Colut {
 		});
 	}
 
-	public static <U> List<Integer> indexOf(List<U> list, List<U> selection) {
+	public static <U> List<Integer> indexOf(List<U> list, Iterable<U> selection) {
 		List<Integer> result = Lists.newArrayList();
 		if (list == null || selection == null) return result;
 		for (U elem : selection) result.add(list.indexOf(elem));

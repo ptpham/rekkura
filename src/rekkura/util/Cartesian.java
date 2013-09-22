@@ -141,7 +141,6 @@ public class Cartesian {
 		{ throw new IllegalAccessError("Remove not allowed!"); }
 
 		@Override public int traversed() { return traversed; }
-		
 	}
 	
 	public static class MultimapIterator<U> implements AdvancingIterator<U> {

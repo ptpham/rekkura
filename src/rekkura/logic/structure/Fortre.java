@@ -20,8 +20,8 @@ public class Fortre {
 	public final Dob root;
 	public final Pool pool;
 	
-	private SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
-	private SetMultimap<Dob, Dob> cognates = HashMultimap.create();
+	public final SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
+	public final SetMultimap<Dob, Dob> cognates = HashMultimap.create();
 
 	private static final String ROOT_VAR_NAME = "[FR]";
 	

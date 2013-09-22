@@ -1,6 +1,11 @@
 package rekkura.logic.algorithm;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
@@ -12,7 +17,15 @@ import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.Limiter;
 
-import com.google.common.collect.*;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.Sets;
 
 /**
  * This class holds a collection of utilities for generating
@@ -65,9 +78,39 @@ public class Terra {
 		// Then greedily find a variable cover and resort for the final support
 		List<Atom> expanders = Terra.getVarCover(positives, rule.vars);
 		if (expanders == null) return null;
+		
+		// Prioritize variables in the head
+		List<Comparator<Atom>> comparators = Lists.newArrayList();
+		comparators.add(getPresenceComparator(Lists.newArrayList(rule.head.dob.fullIterable())));
+		
+		// Prioritize distincts
+		if (rule.distinct.size() > 0) {
+			List<Dob> vars = Colut.intersect(Rule.dobIterableFromDistincts(rule.distinct), rule.vars);
+			comparators.add(getPresenceComparator(vars));
+		}
+		
+		Collections.sort(expanders, Ordering.compound(comparators));
 		return expanders;
 	}
-
+	
+	/**
+	 * Compares such that atoms that contain the given dobs come before
+	 * the onese that do not.
+	 * @param targets
+	 * @return
+	 */
+	public static Comparator<Atom> getPresenceComparator(final Collection<Dob> targets) {
+		return new Comparator<Atom>() {
+			@Override public int compare(Atom left, Atom right) {
+				boolean first = Colut.containsAny(left.dob.fullIterable(), targets);
+				boolean second = Colut.containsAny(right.dob.fullIterable(), targets);
+				if (first == second) return 0;
+				if (first) return -1;
+				return 1;
+			}
+		};
+	}
+	
 	public static List<Map<Dob, Dob>> expandUnifications(Rule rule, List<Atom> check,
 		Cartesian.AdvancingIterator<Unification> iterator, Pool pool, Set<Dob> truths) {
 		Limiter.Operations limiter = Limiter.forOperations();
@@ -104,6 +147,12 @@ public class Terra {
 		for (Rule.Distinct distinct : rule.distinct) {
 			distincts.add(Unification.convert(distinct, rule.vars));
 		}
+
+		// Construct data structures to eventually find the earliest
+		// dimension such that we have covered all of the variables 
+		// in the head.
+		List<Integer> headPos = Colut.indexOf(unify.vars, rule.head.dob.fullIterable());
+		Integer margin = null;
 		
 		while (iterator.hasNext() && !limiter.exceeded()) {
 			unify.clear();
@@ -117,6 +166,7 @@ public class Terra {
 				Unification current = assignment.get(i);
 				if (!unify.sloppyDirtyMergeWith(current)) failure = i;
 				if (!unify.evaluateDistinct(distincts)) failure = i;
+				if (margin == null && Colut.noNulls(unify.assigned, headPos)) margin = i;
 			}
 			
 			// Verify that the atoms that did not participate in the unification
@@ -127,43 +177,13 @@ public class Terra {
 			}
 			
 			// Final check for distincts before rendering head
-			if (converted != null && unify.isValid()) result.add(converted);
-			else if (failure >= 0) iterator.advance(failure);
+			if (converted != null && unify.isValid()) {
+				result.add(converted);
+				iterator.advance(margin);
+			} else if (failure >= 0) {
+				iterator.advance(failure);
+			} 
 		}
-		return result;
-	}
-
-	/**
-	 * Returns a cover of the variables obtained by greedily selecting atoms 
-	 * that first cover the most already covered variables and then the 
-	 * most of the uncovered variables.
-	 * @param atoms
-	 * @param vars
-	 * @return
-	 */
-	public static List<Atom> getGreedyVarCover(Iterable<Atom> atoms, Collection<Dob> vars) {
-		List<Dob> remaining = Lists.newArrayList(vars);
-		List<Dob> covered = Lists.newArrayList();
-		List<Atom> available = Lists.newArrayList(atoms);
-		List<Atom> result = Lists.newArrayList();
-		
-		List<Comparator<Atom>> comparators = Lists.newArrayList();
-		comparators.add(Collections.reverseOrder(getOverlapComparator(covered)));
-		comparators.add(Collections.reverseOrder(getOverlapComparator(vars)));
-		Comparator<Atom> comparator = Ordering.compound(comparators);
-		
-		while (remaining.size() > 0) {
-			if (available.size() == 0) return null;
-			Atom next = Collections.min(available, comparator);
-			available.remove(next);
-			
-			Iterable<Dob> components = next.dob.fullIterable();
-			if (Colut.countIn(components, remaining) == 0) continue;
-			Colut.removeAll(remaining, components);
-			covered.addAll(Colut.intersect(components, vars));
-			result.add(next);
-		}
-		
 		return result;
 	}
 	
@@ -173,8 +193,9 @@ public class Terra {
 		
 		for (Atom atom : atoms) {
 			if (remaining.size() == 0) break;
-			Colut.removeAll(remaining, atom.dob.fullIterable());
-			result.add(atom);
+			if (Colut.removeAll(remaining, atom.dob.fullIterable())) {
+				result.add(atom);
+			}
 		}
 		
 		return result;
