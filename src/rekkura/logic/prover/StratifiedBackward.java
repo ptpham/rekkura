@@ -26,7 +26,7 @@ import com.google.common.collect.Sets;
  * @author ptpham
  *
  */
-public abstract class StratifiedBackward extends StratifiedProver {
+public class StratifiedBackward extends StratifiedProver {
 	public final BackwardTraversal<Rule, Dob> traversal;
 	private final BackwardTraversal.Visitor<Rule, Dob> visitor;
 	
@@ -42,7 +42,12 @@ public abstract class StratifiedBackward extends StratifiedProver {
 		clear();
 	}
 	
-	protected abstract BackwardTraversal.Visitor<Rule, Dob> createVisitor();
+	protected BackwardTraversal.Visitor<Rule, Dob> createVisitor() {
+		return new BackwardTraversal.Visitor<Rule, Dob>() {
+			@Override public Set<Dob> expandNode(Rule rule) 
+			{ return standardRuleExpansion(rule); }
+		};
+	}
 	
 	public void clear() {
 		this.truths.clear();
@@ -121,17 +126,5 @@ public abstract class StratifiedBackward extends StratifiedProver {
 		this.previous.put(rule, raw);
 		for (Dob dob : generated) preserveTruth(dob);
 		return generated;
-	}
-	
-	public static class Standard extends StratifiedBackward {
-		public Standard(Collection<Rule> rules) { super(rules); }
-
-		@Override
-		protected BackwardTraversal.Visitor<Rule, Dob> createVisitor() {
-			return new BackwardTraversal.Visitor<Rule, Dob>() {
-				@Override public Set<Dob> expandNode(Rule rule) 
-				{ return standardRuleExpansion(rule); }
-			};
-		}
 	}
 }

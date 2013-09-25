@@ -79,6 +79,6 @@ public class ProverStateMachine implements GgpStateMachine {
 	
 	public static ProverStateMachine createWithStratifiedBackward(Collection<Rule> rules) {
 		List<Rule> augmented = GameLogicContext.augmentWithQueryRules(rules);
-		return new ProverStateMachine(new StratifiedBackward.Standard(augmented));
+		return new ProverStateMachine(new StratifiedBackward(augmented));
 	}
 }

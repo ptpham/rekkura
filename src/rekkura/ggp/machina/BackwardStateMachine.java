@@ -34,7 +34,7 @@ public class BackwardStateMachine implements GgpStateMachine {
 	public final Multimap<Rule, Dob> knownStatic = HashMultimap.create();
 	public final Set<Rule> queryRules = Sets.newHashSet();
 
-	public BackwardStateMachine(StratifiedBackward.Standard prover) {
+	public BackwardStateMachine(StratifiedBackward prover) {
 		this.glc = new GameLogicContext(prover.pool, prover.rta);
 		this.prover = prover;
 		this.pool = prover.pool;
@@ -76,9 +76,9 @@ public class BackwardStateMachine implements GgpStateMachine {
 		return glc.extractGoals(proverPass(state, glc.GOAL_QUERY, glc.EMTPY_UNIFY));
 	}
 	
-	public static StratifiedBackward.Standard createProverForRules(Collection<Rule> rules) {
+	public static StratifiedBackward createProverForRules(Collection<Rule> rules) {
 		List<Rule> augmented = GameLogicContext.augmentWithQueryRules(rules);
-		return new StratifiedBackward.Standard(augmented);
+		return new StratifiedBackward(augmented);
 	}
 
 	public static BackwardStateMachine createForRules(Collection<Rule> rules) {

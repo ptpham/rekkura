@@ -176,7 +176,7 @@ public class Game {
 		rules.add(helper);
 		
 		// Set up required logic structures
-		StratifiedBackward prover = new StratifiedBackward.Standard(rules);
+		StratifiedBackward prover = new StratifiedBackward(rules);
 		GameLogicContext context = new GameLogicContext(prover.pool, prover.rta);
 		helper = prover.pool.rules.submerge(helper);
 

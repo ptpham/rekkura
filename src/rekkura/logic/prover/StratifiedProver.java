@@ -88,9 +88,9 @@ public abstract class StratifiedProver {
 		}
 	};
 	
-	public static Factory BACKWARD_STANDARD_FACTORY = new Factory() {
+	public static Factory BACKWARD_FACTORY = new Factory() {
 		@Override public StratifiedProver create(Collection<Rule> rules) {
-			return new StratifiedBackward.Standard(rules);
+			return new StratifiedBackward(rules);
 		}
 	};
 }

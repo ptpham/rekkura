@@ -48,6 +48,13 @@ public abstract class Renderer {
 		return new Failover(standard, newChaining());
 	}
 	
+	/**
+	 * This renderer is meant for simple rules because it has
+	 * low overhead. It will not be able to handle rules with many
+	 * variables because it iterates instead of indexing.
+	 * @author ptpham
+	 *
+	 */
 	public static class Standard extends Renderer {
 		@Override public List<Map<Dob,Dob>> apply(Rule rule,
 			Set<Dob> truths, Multimap<Atom, Dob> support, Pool pool) {
@@ -63,6 +70,19 @@ public abstract class Renderer {
 		}
 	}
 
+	/**
+	 * This renderer uses chaining to speed up the rendering of
+	 * rules with many variables. First a "guide" must be constructed
+	 * from a variable covering subset of the positive terms in the
+	 * body and a support for those terms. Let PV(T) for a term T
+	 * be the intersection of the variables in T with the set of 
+	 * variables in terms that came before T. For each term T in the 
+	 * covering, the guide provides an index from the joint assignments
+	 * of variables in PV(T) to compatible full assignments to variables
+	 * in T.
+	 * @author ptpham
+	 *
+	 */
 	public static class Chaining extends Renderer {
 
 		@Override
