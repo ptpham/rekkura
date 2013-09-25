@@ -537,4 +537,18 @@ public class Colut {
 			inner.retainAll(retain);
 		}
 	}
+	
+	public static <U> void maskNonNullWithNonNull(U[] target, U[] mask) {
+		if (target == null || mask == null) return;
+		for (int i = 0; i < target.length && i < mask.length; i++) {
+			if (mask[i] == null) target[i] = null;
+		}
+	}
+	
+	public static <U> void transferNonNull(U[] target, U[] source) {
+		if (target == null || source == null) return;
+		for (int i = 0; i < target.length && i < source.length; i++) {
+			if (source[i] != null) target[i] = source[i];
+		}
+	}
 }

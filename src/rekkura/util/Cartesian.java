@@ -47,7 +47,7 @@ public class Cartesian {
 		long product = 1;
 		for (Iterable<U> iterable : candidates) {
 			product *= Iterables.size(iterable);
-			if (product > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+			if (product > Integer.MAX_VALUE) product = Integer.MAX_VALUE;
 		}
 		
 		return (int)product;

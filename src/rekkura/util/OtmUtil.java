@@ -378,4 +378,10 @@ public class OtmUtil {
 		return result;
 	}
 	
+	public static <U, V> List<List<U>> getKeys(Iterable<? extends Multimap<U, V>> maps) {
+		List<List<U>> keys = Lists.newArrayList();
+		if (maps == null) return keys;
+		for (Multimap<U,V> map : maps) keys.add(Lists.newArrayList(map.keySet()));
+		return keys;
+	}
 }

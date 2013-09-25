@@ -4,11 +4,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import rekkura.util.Cartesian;
 import rekkura.util.Colut;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
 
 /**
  * In general, unifications are best represented as {@code Map<Dob, Dob>}
@@ -75,10 +74,28 @@ public class Unification {
 		return result;
 	}
 
+
+	public int sloppyDirtyMergeWith(List<Unification> others, 
+			List<Unification.Distinct> distincts) {
+		for (int i = 0; i < others.size(); i++) {
+			Unification current = others.get(i);
+			if (!sloppyDirtyMergeWith(current)) return i;
+			if (!evaluateDistinct(distincts)) return i;
+		}
+		return -1;
+	}
+	
 	public boolean isValid() { return Colut.noNulls(this.assigned); }
 	public void clear() { Colut.nullOut(this.assigned); }
 
 	@Override public String toString() { return Arrays.toString(assigned); }
+	@Override public int hashCode() { return Arrays.hashCode(this.assigned); }
+	@Override public boolean equals(Object other) {
+		if (this == other) return true;
+		if (this.getClass() != other.getClass()) return false;
+		Unification cast = (Unification) other;
+		return this.vars.equals(cast.vars) && Arrays.equals(this.assigned, cast.assigned);
+	}
 	
 	public static class Distinct {
 		public int posFirst = -1, posSecond = -1;
@@ -107,9 +124,37 @@ public class Unification {
 		return result;
 	}
 	
+	public static List<Unification.Distinct> convert(Iterable<Rule.Distinct> distincts, ImmutableList<Dob> vars) {
+		List<Unification.Distinct> result = Lists.newArrayList();
+		for (Rule.Distinct distinct : distincts) result.add(Unification.convert(distinct, vars));
+		return result;
+	}
+	
 	public boolean evaluateDistinct(Iterable<Distinct> distincts) {
 		boolean result = true;
 		for (Distinct distinct : distincts) result &= distinct.evaluate(this);
+		return result;
+	}
+		
+	public static List<ListMultimap<Unification,Unification>>
+		getChainingGuide(List<List<Unification>> space, ImmutableList<Dob> vars) {
+		List<ListMultimap<Unification,Unification>> result = Lists.newArrayList();
+		if (Cartesian.size(space) == 0) return result;
+		Unification mask = Unification.from(vars);
+		
+		for (List<Unification> slice : space) {
+			ListMultimap<Unification, Unification> part = ArrayListMultimap.create();
+			
+			for (Unification unify : slice) {
+				Unification copy = unify.copy();
+				Colut.maskNonNullWithNonNull(copy.assigned, mask.assigned);
+				part.put(copy, unify);
+			}
+			
+			Colut.transferNonNull(mask.assigned, Colut.any(slice).assigned);
+			result.add(part);
+		}
+		
 		return result;
 	}
 	

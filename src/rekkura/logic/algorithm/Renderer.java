@@ -1,6 +1,8 @@
 
 package rekkura.logic.algorithm;
 
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,21 +13,11 @@ import rekkura.logic.model.Rule;
 import rekkura.logic.model.Unification;
 import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
-import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.Limiter;
 import rekkura.util.OtmUtil;
-import rekkura.util.RankedCarry;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * A renderer is responsible for generating all possible implicated dobs
@@ -48,31 +40,12 @@ public abstract class Renderer {
 	public abstract List<Map<Dob,Dob>> apply(Rule rule, Set<Dob> truths, Multimap<Atom,Dob> support, Pool pool);
 	
 	public final Limiter.Operations ops = Limiter.forOperations();
-	public static Standard getStandard() { return new Standard(); }
-	public static Partitioning getPartitioning() { return new Partitioning(); }
-	public static Failover getStandardFailover() {
-		Standard standard = getStandard();
+	public static Standard newStandard() { return new Standard(); }
+	public static Chaining newChaining() { return new Chaining(); }
+	public static Failover newStandardFailover() {
+		Standard standard = newStandard();
 		standard.ops.max = 1024;
-		return new Failover(standard, getPartitioning());
-	}
-	
-	protected List<Map<Dob,Dob>> applyUnifications(Rule rule, 
-		AdvancingIterator<Unification> iterator, List<Atom> check, Pool pool, Set<Dob> truths) {
-		List<Map<Dob,Dob>> result = Lists.newArrayList();
-		
-		// This block deals with the vacuous rule special case ...
-		Dob varless = Terra.applyVarless(rule, truths);
-		if (varless != null) {
-			result.add(Maps.<Dob,Dob>newHashMap());
-			return result;
-		}
-		
-		return Terra.expandUnifications(rule, check, iterator, pool, truths, this.ops);
-	}
-	
-	protected List<Map<Dob,Dob>> apply(Rule rule, Cartesian.AdvancingIterator<Unification> iterator,
-		List<Atom> check, Pool pool, Set<Dob> truths) {
-		return applyUnifications(rule, iterator, check, pool, truths);
+		return new Failover(standard, newChaining());
 	}
 	
 	public static class Standard extends Renderer {
@@ -86,134 +59,79 @@ public abstract class Renderer {
 			Cartesian.AdvancingIterator<Unification> iterator =
 				Terra.getUnificationIterator(rule, expanders, support, truths);
 			
-			return apply(rule, iterator, check, pool, truths);
+			return Terra.expandUnifications(rule, check, iterator, pool, truths, this.ops);
 		}
 	}
-	
-	/**
-	 * The partitioning renderer separates collections of dobs based on
-	 * common variable assignments. It has more overhead than the Standard
-	 * renderer but it will succeed where the Standard renderer fails.
-	 * @author ptpham
-	 *
-	 */
-	public static class Partitioning extends Renderer {
-		public int minNonTrivial = 1024;
-		public int maxPartitionDepth = 3;
-		
+
+	public static class Chaining extends Renderer {
+
 		@Override
-		public List<Map<Dob,Dob>> apply(Rule rule, Set<Dob> truths, Multimap<Atom, Dob> support, Pool pool) {
-			List<Atom> positives = Atom.filterPositives(rule.body);
-			Map<Atom,Integer> sizes = OtmUtil.getNumValues(support);
-			List<List<Unification>> space = Terra.getUnificationSpace(rule, support, positives);
+		public List<Map<Dob, Dob>> apply(Rule rule,
+			Set<Dob> truths, Multimap<Atom, Dob> support, Pool pool) {
+			
 			ops.begin();
-			
-			// Compute expander set
-			List<Atom> expanders = Terra.getGreedyExpanders(rule, sizes);
-			List<Atom> check = Colut.remove(rule.body, expanders);
-			
-			// Partition the space based on the greedy ordering of high overlap variables
-			List<Integer> selection = Colut.indexOf(positives, expanders); 
-			List<Dob> candidates = Terra.getPartitionCandidates(Atom.asDobIterable(positives), rule.vars);
-			List<List<List<Unification>>> partitions = partitionSpace(rule.vars, candidates,
-				space, selection, maxPartitionDepth);
-			
-			// Do the final rendering
 			List<Map<Dob,Dob>> result = Lists.newArrayList();
-			for (List<List<Unification>> partition : partitions) {
-				List<List<Unification>> subset = Colut.select(partition, selection);
-				Cartesian.AdvancingIterator<Unification> iterator = Cartesian.asIterator(subset);
-				result.addAll(apply(rule, iterator, check, pool, truths));
-			}
-	
-			return result;
+			if (Terra.applyVarless(rule, truths, result)) return result;
+			List<Atom> positives = Atom.filterPositives(rule.body);
+			List<Atom> expanders = Terra.getChainingCover(positives, rule.vars);
+			List<Atom> check = Colut.remove(rule.body, expanders);
+
+			if (expanders == null) return result;
+			List<List<Unification>> space = Terra.getUnificationSpace(rule, support, expanders);
+			if (Cartesian.size(space) == 0) return result;
+
+			List<ListMultimap<Unification,Unification>> guide = Unification.getChainingGuide(space, rule.vars);
+			return chain(rule, truths, check, guide, pool);
 		}
-		
-		/**
-		 * Performs a greedy recursive partitioning of the given space. At each
-		 * level of the recursion, at most one variable is selected on which to
-		 * partition.
-		 * @param vars the list of all variables in the rule -- it will not be modified
-		 * @param candidates the list of variables remaining to be selected in this invocation
-		 * @param space the current space to partition in this invocation
-		 * @param expanders the list of positions in the space that we are claiming will
-		 * actually contribute to the size of our space. This will be used to determine
-		 * whether a space is "too small" to be expanded further.
-		 * @return
-		 */
-		public List<List<List<Unification>>> partitionSpace(List<Dob> vars,
-			List<Dob> candidates, List<List<Unification>> space, List<Integer> expanders, int depthRemain) {
+
+		protected List<Map<Dob, Dob>> chain(Rule rule, Set<Dob> truths,
+			List<Atom> check, List<ListMultimap<Unification, Unification>> guide, Pool pool) {
 			
-			List<List<List<Unification>>> result = Lists.newArrayList();
-			if (depthRemain == 0 || Cartesian.size(Colut.select(space, expanders)) < minNonTrivial) {
-				result.add(space);
-				return result;
-			}
-
-			// If we could not partition the space (i.e. could not find a guide),
-			// just return the full space
-			Guide guide = selectGuide(candidates, vars, space);
-			if (guide.values == null) { result.add(space); return result; }
-			int pos = guide.pos;
-
-			outer:
-			// Expand each assignment defined by the guide
-			for (Dob assign : guide.values) {
-				List<List<Unification>> partitioned = Lists.newArrayList();
-				for (int i = 0; i < space.size(); i++) {
-					List<Unification> slice = null;
-					ListMultimap<Dob, Unification> index = Terra.indexBy(space.get(i), pos);
-					if (index.containsKey(assign)) slice = index.get(assign);
-					else slice = index.get(null);
-					if (slice.size() == 0) continue outer;
-					partitioned.add(slice);
+			List<Map<Dob, Dob>> result = Lists.newArrayList();
+			List<Unification.Distinct> distincts = Unification.convert(rule.distinct, rule.vars);
+			List<Unification> masks = Lists.newArrayList();
+			for (int i = 0; i < guide.size(); i++) masks.add(Colut.any(guide.get(i).keySet()));
+			
+			Deque<State> frames = Queues.newArrayDeque();
+			frames.push(new State(Colut.first(guide).values().iterator(), rule.vars));
+			
+			while (frames.size() > 0 && !ops.exceeded()) {
+				State top = frames.peek();
+				if (!top.remain.hasNext()) {
+					frames.pop();
+					continue;
 				}
 				
-				// Recursive expansion to handle the other variables
-				result.addAll(partitionSpace(vars, Lists.newArrayList(candidates), partitioned,
-					expanders, depthRemain - 1));
+				// Apply the new partial assignment
+				Colut.transferNonNull(top.unify.assigned, top.remain.next().assigned);
+				if (!top.unify.evaluateDistinct(distincts)) continue;
+
+				// Add a new frame if we still can't properly evaluate the checks
+				if (frames.size() < guide.size()) {
+					Unification key = top.unify.copy();
+					Colut.maskNonNullWithNonNull(key.assigned, masks.get(frames.size()).assigned);
+					State next = new State(guide.get(frames.size()).get(key).iterator(), rule.vars);
+					Colut.transferNonNull(next.unify.assigned, top.unify.assigned);
+					frames.push(next);
+					continue;
+				}
+				
+				// Check the atoms and add if successful
+				Map<Dob,Dob> unify = top.unify.toMap();
+				if (!Terra.checkAtoms(unify, check, truths, pool)) continue;
+				result.add(unify);
 			}
+			
 			return result;
-		}
-
-
-		public static class Guide {
-			Set<Dob> values;
-			int pos;
 		}
 		
-		/**
-		 * In the set of atom/variable pairs such that the atom has at least two 
-		 * assignments in the variable, find the pair such that the variable comes
-		 * earliest in the candidate list.
-		 * @param candidates
-		 * @param vars
-		 * @param space
-		 * @return a ranked carry in which the integer is the position of the selected
-		 * variable in the vars list and the carry is the set of assignments in that dimension
-		 */
-		public static Guide selectGuide(List<Dob> candidates,
-			List<Dob> vars, List<List<Unification>> space) {
-			
-			Guide result = new Guide();
-			Multiset<Dob> uniques = HashMultiset.create();
-			while (candidates.size() > 0 && result.values == null) {
-				int pos = vars.indexOf(Colut.popAny(candidates));
-				RankedCarry<Integer, Set<Dob>> seen = RankedCarry.createNatural(Integer.MAX_VALUE, null);
-				for (int i = 0; i < space.size(); i++) {
-					List<Unification> slice = space.get(i);
-					uniques.clear();
-					
-					if (slice.size() == 0) continue;
-					if (Colut.any(slice).assigned[pos] == null) continue;
-					for (Unification unify : space.get(i)) uniques.add(unify.assigned[pos]);
-					seen.consider(uniques.elementSet().size(), Sets.newHashSet(uniques));
-				}
-				if (seen.ranker < 2) continue;
-				result.values = seen.carry;
-				result.pos = pos;
+		private static class State {
+			public final Unification unify;
+			public final Iterator<Unification> remain;
+			public State(Iterator<Unification> remain, ImmutableList<Dob> vars) {
+				this.unify = Unification.from(vars);
+				this.remain = remain;
 			}
-			return result;
 		}
 	}
 	

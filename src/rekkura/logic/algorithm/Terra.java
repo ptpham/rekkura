@@ -1,11 +1,6 @@
 package rekkura.logic.algorithm;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
@@ -17,15 +12,7 @@ import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
 import rekkura.util.Limiter;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 
 /**
  * This class holds a collection of utilities for generating
@@ -141,13 +128,9 @@ public class Terra {
 		Set<Dob> truths, Limiter.Operations limiter) {
 		List<Map<Dob,Dob>> result = Lists.newArrayList();
 		Unification unify = Unification.from(rule.vars);
+		if (applyVarless(rule, truths, result)) return result;
 		
-		// Convert distincts to fast representation
-		List<Unification.Distinct> distincts = Lists.newArrayList();
-		for (Rule.Distinct distinct : rule.distinct) {
-			distincts.add(Unification.convert(distinct, rule.vars));
-		}
-
+		List<Unification.Distinct> distincts = Unification.convert(rule.distinct, rule.vars);
 		while (iterator.hasNext() && !limiter.exceeded()) {
 			unify.clear();
 
@@ -155,12 +138,7 @@ public class Terra {
 			// non conflicting way to the unification.
 			int failure = -1;
 			List<Unification> assignment = iterator.next();
-			
-			for (int i = 0; i < assignment.size() && failure < 0; i++) {
-				Unification current = assignment.get(i);
-				if (!unify.sloppyDirtyMergeWith(current)) failure = i;
-				if (!unify.evaluateDistinct(distincts)) failure = i;
-			}
+			failure = unify.sloppyDirtyMergeWith(assignment, distincts);
 			
 			// Verify that the atoms that did not participate in the unification
 			// have their truth values satisfied.
@@ -178,6 +156,28 @@ public class Terra {
 		}
 		return result;
 	}
+
+	/**
+	 * This method can be used to handle the vacuous/varless rule special case.
+	 * @param rule
+	 * @param truths
+	 * @return
+	 */
+	public static boolean applyVarless(Rule rule, Set<Dob> truths, List<Map<Dob, Dob>> result) {
+		if (rule.vars.size() == 0) {
+			if(checkGroundAtoms(rule.body, truths)) {
+				result.add(Maps.<Dob,Dob>newHashMap());
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static Dob applyVarless(Rule rule, Set<Dob> truths, Pool pool) {
+		List<Map<Dob,Dob>> result = Lists.newArrayList();
+		if (applyVarless(rule, truths, result)) return pool.render(rule.head.dob, Colut.any(result));
+		return null;
+	}
 	
 	public static List<Atom> getVarCover(Iterable<Atom> atoms, Iterable<Dob> vars) {
 		List<Dob> remaining = Lists.newArrayList(vars);
@@ -194,17 +194,36 @@ public class Terra {
 	}
 	
 	/**
-	 * This method can be used to handle the vacuous/varless rule special case.
-	 * @param rule
-	 * @param truths
+	 * Generates a variable cover that greedily selects in each iteration
+	 * the atom that covers first the most already covered variables and
+	 * then the least uncovered variables.
+	 * @param atoms
+	 * @param vars
 	 * @return
 	 */
-	public static Dob applyVarless(Rule rule, Set<Dob> truths) {
-		if (rule.vars.size() == 0 && checkGroundAtoms(rule.body, truths)) {
-			return rule.head.dob;
-		} else return null;
-	}
+	public static List<Atom> getChainingCover(Iterable<Atom> atoms, Collection<Dob> vars) {
+		List<Atom> available = Lists.newArrayList(atoms);
+		Set<Dob> covered = Sets.newHashSet();
+		List<Atom> result = Lists.newArrayList();
 
+		List<Comparator<Atom>> comparators = Lists.newArrayList();		
+		comparators.add(getOverlapComparator(covered));
+		comparators.add(Collections.reverseOrder(getOverlapComparator(vars)));
+		Comparator<Atom> comparator = Ordering.compound(comparators);
+
+		while (covered.size() < vars.size() && available.size() > 0) {
+			Atom next = Collections.max(available, comparator);
+			
+			available.remove(next);
+			if (covered.addAll(Colut.intersect(next.dob.fullIterable(), vars))) {
+				result.add(next);
+			}
+		}
+		
+		if (covered.size() < vars.size()) return null;
+		return result;
+	}
+	
 	public static boolean checkGroundAtoms(Iterable<Atom> body, Set<Dob> truths) {
 		for (Atom atom : body) {
 			boolean truth = truths.contains(atom.dob);
@@ -229,8 +248,8 @@ public class Terra {
 	 * @return
 	 */
 	public static Dob applyBodies(Rule rule, List<Dob> bodies, Set<Dob> truths, Pool pool) {
-		Dob varless = applyVarless(rule, truths);
-		if (varless != null) return pool.dobs.submerge(varless);
+		Dob varless = applyVarless(rule, truths, pool);
+		if (varless != null) return varless;
 		List<Dob> dobs = Atom.asDobList(Atom.filterPositives(rule.body));
 		Map<Dob, Dob> unify = Unifier.unifyListVars(dobs, bodies, rule.vars);
 		if (!checkAtoms(unify, Atom.filterNegatives(rule.body), truths, pool)) return null;

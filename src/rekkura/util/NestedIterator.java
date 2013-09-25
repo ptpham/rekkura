@@ -33,7 +33,8 @@ public abstract class NestedIterator<U, V> implements Iterator<V> {
 		return outer.next();
 	}
 
-	@Override public void remove() { 
-		throw new IllegalAccessError("Remove not allowed!");
+	@Override public void remove() {
+		if (this.inner != null) this.inner.remove();
+		else throw new IllegalStateException();
 	}
 }
