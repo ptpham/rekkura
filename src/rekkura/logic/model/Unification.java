@@ -158,6 +158,12 @@ public class Unification {
 		return result;
 	}
 	
+	public static ArrayListMultimap<Dob,Unification> indexBy(Iterable<Unification> slice, int pos) {
+		ArrayListMultimap<Dob,Unification> result = ArrayListMultimap.create();
+		for (Unification unify : slice) result.put(unify.assigned[pos], unify);
+		return result;
+	}
+	
 	public static final ImmutableMap<Dob, Dob> EMPTY_MAP = ImmutableMap.of();
 	public static final Unification EMPTY_UNIFICATION = new Unification(ImmutableList.<Dob>of());
 

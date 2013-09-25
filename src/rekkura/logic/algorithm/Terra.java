@@ -10,7 +10,6 @@ import rekkura.logic.structure.Pool;
 import rekkura.util.Cartesian;
 import rekkura.util.Cartesian.AdvancingIterator;
 import rekkura.util.Colut;
-import rekkura.util.Limiter;
 
 import com.google.common.collect.*;
 
@@ -57,7 +56,7 @@ public class Terra {
 	 * @param costs
 	 * @return
 	 */
-	public static List<Atom> getGreedyExpanders(Rule rule, Map<Atom,Integer> costs) {
+	public static List<Atom> getGreedyVarCover(Rule rule, Map<Atom,Integer> costs) {
 		// Sort the dimensions of the space so that the smallest ones come first.
 		List<Atom> positives = Atom.filterPositives(rule.body);
 		Colut.sortByMap(positives, costs, 0);
@@ -66,6 +65,11 @@ public class Terra {
 		List<Atom> expanders = Terra.getVarCover(positives, rule.vars);
 		if (expanders == null) return null;
 		
+		prioritizeExpanders(rule, expanders);
+		return expanders;
+	}
+
+	protected static void prioritizeExpanders(Rule rule, List<Atom> expanders) {
 		// Prioritize variables in the head
 		List<Comparator<Atom>> comparators = Lists.newArrayList();
 		comparators.add(getPresenceComparator(Lists.newArrayList(rule.head.dob.fullIterable())));
@@ -77,7 +81,6 @@ public class Terra {
 		}
 		
 		Collections.sort(expanders, Ordering.compound(comparators));
-		return expanders;
 	}
 	
 	/**
@@ -98,65 +101,6 @@ public class Terra {
 		};
 	}
 	
-	public static List<Map<Dob, Dob>> expandUnifications(Rule rule, List<Atom> check,
-		Cartesian.AdvancingIterator<Unification> iterator, Pool pool, Set<Dob> truths) {
-		Limiter.Operations limiter = Limiter.forOperations();
-		return expandUnifications(rule, check, iterator, pool, truths, limiter);
-	}
-
-	/**
-	 * This is the central loop in the logic package. It will iterate through 
-	 * the provided unification lists in the given iterator. The unifications
-	 * in each list will be combined until one of two cases occurs. If the 
-	 * unification fails, then the iterator will be advanced in the failing
-	 * position. If the unification succeeds, then a submerged unification map
-	 * will be constructed and added to the result.
-	 * @param rule
-	 * @param check once a unification list is merged into a unification, these
-	 * atoms will be unified with that unification and checked for existence in
-	 * the provided truth dobs. The idea is that these atoms were not used in
-	 * the construction of the unification list and therefore need to be checked
-	 * externally.
-	 * @param iterator
-	 * @param pool
-	 * @param truths
-	 * @param limiter
-	 * @return
-	 */
-	public static List<Map<Dob, Dob>> expandUnifications(Rule rule,
-		List<Atom> check, Cartesian.AdvancingIterator<Unification> iterator, Pool pool,
-		Set<Dob> truths, Limiter.Operations limiter) {
-		List<Map<Dob,Dob>> result = Lists.newArrayList();
-		Unification unify = Unification.from(rule.vars);
-		if (applyVarless(rule, truths, result)) return result;
-		
-		List<Unification.Distinct> distincts = Unification.convert(rule.distinct, rule.vars);
-		while (iterator.hasNext() && !limiter.exceeded()) {
-			unify.clear();
-
-			// Dobs in the variable cover must contribute in a
-			// non conflicting way to the unification.
-			int failure = -1;
-			List<Unification> assignment = iterator.next();
-			failure = unify.sloppyDirtyMergeWith(assignment, distincts);
-			
-			// Verify that the atoms that did not participate in the unification
-			// have their truth values satisfied.
-			Map<Dob, Dob> converted = failure == -1 ? unify.toMap() : null;
-			if (converted != null && check.size() > 0) {
-				if (!checkAtoms(converted, check, truths, pool)) continue;
-			}
-			
-			// Final check for distincts before rendering head
-			if (converted != null && unify.isValid()) {
-				result.add(converted);
-			} else if (failure >= 0) {
-				iterator.advance(failure);
-			} 
-		}
-		return result;
-	}
-
 	/**
 	 * This method can be used to handle the vacuous/varless rule special case.
 	 * @param rule
@@ -223,31 +167,6 @@ public class Terra {
 		
 		if (covered.size() < vars.size()) return null;
 		return result;
-	}
-	
-	public static List<Atom> getChainingMarginCover(Rule rule) {
-		List<Atom> positives = Atom.filterPositives(rule.body);
-		List<Dob> headVars = Colut.intersect(rule.head.dob.fullIterable(), rule.vars);
-		return Terra.getChainingMarginCover(positives, headVars, rule.vars);
-	}
-	
-	public static List<Atom> getChainingMarginCover(Iterable<Atom> candidates, Collection<Dob> targets, Collection<Dob> vars) {
-		// Find a covering for the head so that we can put that at the beginning.
-		// This allows us to marginalize more effectively.
-		List<Atom> all = Lists.newArrayList(candidates);
-		Comparator<Atom> tarcomp = Terra.getOverlapComparator(targets);
-		Collections.sort(all, Collections.reverseOrder(tarcomp));
-		List<Atom> tarcov = Terra.getVarCover(all, targets);
-		if (tarcov == null) return null;
-		
-		// Cover the remaining variables
-		Colut.removeAll(all, tarcov);
-		List<Dob> remain = Lists.newArrayList(vars);
-		for (Atom term : tarcov) Colut.removeAll(remain, term.dob.fullIterable());
-		List<Atom> expanders = Terra.getChainingCover(all, remain);
-		if (expanders == null) return null;
-		expanders.addAll(0, tarcov);
-		return expanders;
 	}
 	
 	public static boolean checkGroundAtoms(Iterable<Atom> body, Set<Dob> truths) {
@@ -360,34 +279,6 @@ public class Terra {
 			for (Dob child : dob.fullIterable()) {
 				if (targets.contains(child)) result.put(child, dob);
 			}
-		}
-		return result;
-	}
-	
-	public static ArrayListMultimap<Dob,Unification> indexBy(Iterable<Unification> slice, int pos) {
-		ArrayListMultimap<Dob,Unification> result = ArrayListMultimap.create();
-		for (Unification unify : slice) result.put(unify.assigned[pos], unify);
-		return result;
-	}
-	
-	/**
-	 * This method returns variables that are shared between at least two of the
-	 * given terms. They are sorted in decreasing order of overlap over terms and
-	 * variables with no overlap are not returned.
-	 * @param terms
-	 * @param vars
-	 * @return
-	 */
-	public static List<Dob> getPartitionCandidates(Iterable<Dob> terms, Collection<Dob> vars) {
-		Multiset<Dob> counts = HashMultiset.create();
-		for (Dob dob : terms) {
-			Set<Dob> all = Sets.newHashSet(dob.fullIterable());
-			for (Dob var : vars) if (all.contains(var)) counts.add(var);
-		}
-		
-		List<Dob> result = Lists.reverse(Colut.sortByCount(counts));
-		for (int i = result.size() - 1; i > 0; i--) {
-			if (counts.count(result.get(i)) < 2) result.remove(i);
 		}
 		return result;
 	}
