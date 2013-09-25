@@ -9,7 +9,7 @@ import com.google.common.base.Function;
  * @author "ptpham"
  *
  */
-public class Cache<U, V> {
+public class Cache<U, V> implements Function<U, V>{
 
 	public final Map<U, V> stored = Synchron.newHashmap();
 	private Function<V, Boolean> checker;
@@ -68,4 +68,6 @@ public class Cache<U, V> {
 	public String toString() {
 		return "[" + stored.toString() + " with fn " + fn.toString() + "]";
 	}
+	
+	@Override public V apply(U u) { return get(u); }
 }

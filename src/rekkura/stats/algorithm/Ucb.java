@@ -35,7 +35,7 @@ public class Ucb {
 		}
 	}
 	
-	public static class Suggestor<U> {
+	public static class Suggestor<U> implements Agent.Standard<U> {
 		private volatile int total = 1;
 		public final double c;
 		public final Map<U, Entry> entries = Maps.newHashMap();
@@ -45,7 +45,8 @@ public class Ucb {
 			this.c = c;
 		}
 		
-		public synchronized U suggest() {
+		@Override
+		public synchronized U explore() {
 			RankedCarry<Double, U> best = RankedCarry.createReverseNatural(-Double.MAX_VALUE, null);
 			for (Map.Entry<U, Entry> entry : entries.entrySet()) {
 				best.consider(entry.getValue().upper(c, total), entry.getKey());
@@ -53,11 +54,13 @@ public class Ucb {
 			return best.carry;
 		}
 		
+		@Override
 		public synchronized void inform(U action, double value) {
 			entries.get(action).update(value);
 			this.total++;
 		}
 
+		@Override
 		public synchronized U play() {
 			RankedCarry<Double, U> best = RankedCarry.createReverseNatural(-Double.MAX_VALUE, null);
 			for (Map.Entry<U, Entry> entry : entries.entrySet()) {
