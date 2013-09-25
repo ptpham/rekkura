@@ -135,6 +135,14 @@ public abstract class RendererTest {
 		runTest(rawRule, rawInputs, rawOutputs);
 	}
 	
+	@Test
+	public void marginalize() {
+		String rawRule = "{(X)(Y)|<((Q)(X)),true> :- <((P)(X)),true><((R)(Y)),true>}";
+		List<String> rawInputs = Lists.newArrayList("((P)(a))", "((P)(b))", "((R)(a))", "((R)(b))");
+		List<String> rawOutputs = Lists.newArrayList("((Q)(a))", "((Q)(b))");
+		runTest(rawRule, rawInputs, rawOutputs);
+	}
+	
 	private void runTest(String rawRule, List<String> rawInputs, List<String> rawOutputs) {
 		Pool pool = new Pool();
 		

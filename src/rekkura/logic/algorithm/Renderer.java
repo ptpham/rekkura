@@ -1,11 +1,7 @@
 
 package rekkura.logic.algorithm;
 
-import java.util.Deque;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
@@ -84,7 +80,6 @@ public abstract class Renderer {
 	 *
 	 */
 	public static class Chaining extends Renderer {
-
 		@Override
 		public List<Map<Dob, Dob>> apply(Rule rule,
 			Set<Dob> truths, Multimap<Atom, Dob> support, Pool pool) {
@@ -92,11 +87,12 @@ public abstract class Renderer {
 			ops.begin();
 			List<Map<Dob,Dob>> result = Lists.newArrayList();
 			if (Terra.applyVarless(rule, truths, result)) return result;
-			List<Atom> positives = Atom.filterPositives(rule.body);
-			List<Atom> expanders = Terra.getChainingCover(positives, rule.vars);
-			List<Atom> check = Colut.remove(rule.body, expanders);
-
+			List<Atom> expanders = Terra.getChainingCover(Atom.filterPositives(rule.body), rule.vars);
 			if (expanders == null) return result;
+			
+			// We can only check the size of the space after constructing the unifications
+			// because we may have filtered out some grounds that don't actually unify.
+			List<Atom> check = Colut.remove(rule.body, expanders);
 			List<List<Unification>> space = Terra.getUnificationSpace(rule, support, expanders);
 			if (Cartesian.size(space) == 0) return result;
 
@@ -106,15 +102,17 @@ public abstract class Renderer {
 
 		protected List<Map<Dob, Dob>> chain(Rule rule, Set<Dob> truths,
 			List<Atom> check, List<ListMultimap<Unification, Unification>> guide, Pool pool) {
-			
 			List<Map<Dob, Dob>> result = Lists.newArrayList();
-			List<Unification.Distinct> distincts = Unification.convert(rule.distinct, rule.vars);
+			
+			// Prepare the data structures we need. This involves finding the masks for
+			// each dimension so we can index into it.
 			List<Unification> masks = Lists.newArrayList();
 			for (int i = 0; i < guide.size(); i++) masks.add(Colut.any(guide.get(i).keySet()));
+			List<Unification.Distinct> distincts = Unification.convert(rule.distinct, rule.vars);
 			
+			// Setup initial stack frames
 			Deque<State> frames = Queues.newArrayDeque();
 			frames.push(new State(Colut.first(guide).values().iterator(), rule.vars));
-			
 			while (frames.size() > 0 && !ops.exceeded()) {
 				State top = frames.peek();
 				if (!top.remain.hasNext()) {
@@ -125,7 +123,7 @@ public abstract class Renderer {
 				// Apply the new partial assignment
 				Colut.transferNonNull(top.unify.assigned, top.remain.next().assigned);
 				if (!top.unify.evaluateDistinct(distincts)) continue;
-
+				
 				// Add a new frame if we still can't properly evaluate the checks
 				if (frames.size() < guide.size()) {
 					Unification key = top.unify.copy();

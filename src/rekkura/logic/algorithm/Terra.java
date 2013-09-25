@@ -190,6 +190,7 @@ public class Terra {
 			}
 		}
 		
+		if (remaining.size() > 0) return null;
 		return result;
 	}
 	
@@ -222,6 +223,31 @@ public class Terra {
 		
 		if (covered.size() < vars.size()) return null;
 		return result;
+	}
+	
+	public static List<Atom> getChainingMarginCover(Rule rule) {
+		List<Atom> positives = Atom.filterPositives(rule.body);
+		List<Dob> headVars = Colut.intersect(rule.head.dob.fullIterable(), rule.vars);
+		return Terra.getChainingMarginCover(positives, headVars, rule.vars);
+	}
+	
+	public static List<Atom> getChainingMarginCover(Iterable<Atom> candidates, Collection<Dob> targets, Collection<Dob> vars) {
+		// Find a covering for the head so that we can put that at the beginning.
+		// This allows us to marginalize more effectively.
+		List<Atom> all = Lists.newArrayList(candidates);
+		Comparator<Atom> tarcomp = Terra.getOverlapComparator(targets);
+		Collections.sort(all, Collections.reverseOrder(tarcomp));
+		List<Atom> tarcov = Terra.getVarCover(all, targets);
+		if (tarcov == null) return null;
+		
+		// Cover the remaining variables
+		Colut.removeAll(all, tarcov);
+		List<Dob> remain = Lists.newArrayList(vars);
+		for (Atom term : tarcov) Colut.removeAll(remain, term.dob.fullIterable());
+		List<Atom> expanders = Terra.getChainingCover(all, remain);
+		if (expanders == null) return null;
+		expanders.addAll(0, tarcov);
+		return expanders;
 	}
 	
 	public static boolean checkGroundAtoms(Iterable<Atom> body, Set<Dob> truths) {

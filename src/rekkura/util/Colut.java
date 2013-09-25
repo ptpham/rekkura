@@ -488,7 +488,7 @@ public class Colut {
 		});
 	}
 
-	public static <U> List<Integer> indexOf(List<U> list, Iterable<U> selection) {
+	public static <U> List<Integer> indexOfAll(List<U> list, Iterable<U> selection) {
 		List<Integer> result = Lists.newArrayList();
 		if (list == null || selection == null) return result;
 		for (U elem : selection) result.add(list.indexOf(elem));

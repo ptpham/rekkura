@@ -70,13 +70,13 @@ public class Atom {
 		return Lists.newArrayList(asDobIterable(atoms));
 	}
 
-	public static List<Atom> filterPositives(Collection<Atom> atoms) {
+	public static List<Atom> filterPositives(Iterable<Atom> atoms) {
 		List<Atom> positives = Lists.newArrayList();
 		for (Atom atom : atoms) { if (atom.truth) positives.add(atom); }
 		return positives;
 	}
 	
-	public static List<Atom> filterNegatives(Collection<Atom> atoms) {
+	public static List<Atom> filterNegatives(Iterable<Atom> atoms) {
 		List<Atom> negatives = Lists.newArrayList();
 		for (Atom atom : atoms) { if (!atom.truth) negatives.add(atom); }
 		return negatives;
