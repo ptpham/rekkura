@@ -49,8 +49,8 @@ public abstract class Optimizer {
 				replace.removeAll(prohibited);
 				
 				if (replace.size() > 0) {
-					result.removeAll(replace.keySet());
-					result.addAll(Colut.filterNulls(replace.values()));
+					result.removeAll(pool.rules.submerge(replace.keySet()));
+					result.addAll(pool.rules.submerge(Colut.filterNulls(replace.values())));
 					changed = true;
 				}
 			}
