@@ -133,7 +133,7 @@ public class FortreTest {
 		List<Dob> generated = stringsToDobs(rawGenerated, fmt, pool);
 		pool.allVars.addAll(vars);
 		
-		Fortre fortre = new Fortre(dobs, pool);
+		Fortre fortre = new Fortre(dobs, Colut.any(pool.allVars), pool);
 
 		Map<String, List<Dob>> result = Maps.newHashMap();
 		for (Dob dob : Iterables.concat(dobs, generated)) {

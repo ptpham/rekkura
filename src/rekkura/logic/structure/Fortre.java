@@ -22,16 +22,16 @@ public class Fortre {
 	
 	public final SetMultimap<Dob, Dob> allChildren = HashMultimap.create();
 	public final SetMultimap<Dob, Dob> cognates = HashMultimap.create();
-
-	private static final String ROOT_VAR_NAME = "[FR]";
 	
 	/**
 	 * This constructor requires the full set of variables that
 	 * will potentially be seen during the lifetime of this form tree.
 	 * @param allVars
 	 */
-	public Fortre(Iterable<Dob> allForms, Pool pool) {
-		this.root = new Dob(ROOT_VAR_NAME);
+	public Fortre(Iterable<Dob> allForms, Dob homvar, Pool pool) {
+		if (homvar == null) homvar = pool.dobs.submerge(pool.vargen.get());
+		
+		this.root = homvar;
 		this.pool = pool;
 		this.pool.allVars.add(root);
 
@@ -40,7 +40,7 @@ public class Fortre {
 	
 	private void construct(Iterable<Dob> raw, Pool pool) {
 		// Find the symmetrizing components
-		List<Dob> allForms = Lists.newArrayList(Sets.newHashSet(homogenizeWith(raw, root, pool)));
+		List<Dob> allForms = Lists.newArrayList(Sets.newHashSet(Unifier.homogenize(raw, root, pool)));
 		Multimap<Dob, Dob> symmetricEdges = computeSymmetrizingEdges(allForms, root, pool);
 		List<Set<Dob>> symmetrizingComponents = Topper.stronglyConnected(symmetricEdges);
 		
@@ -90,12 +90,6 @@ public class Fortre {
 		return subsets;
 	}
 	
-	public static List<Dob> homogenizeWith(Iterable<Dob> dobs, Dob var, Pool pool) {
-		List<Dob> result = Lists.newArrayList();
-		for (Dob dob : dobs) result.add(pool.dobs.submerge(Unifier.homogenize(dob, var, pool.allVars)));
-		return result;
-	}
-
 	private static SetMultimap<Dob,Dob> computeCognates(Iterable<Dob> allForms, Pool pool) {
 		// Find cognates (forms that unify against each other)
 		SetMultimap<Dob,Dob> result = HashMultimap.create();

@@ -8,6 +8,7 @@ import rekkura.logic.model.Atom;
 import rekkura.logic.model.Dob;
 import rekkura.logic.model.Rule;
 import rekkura.state.algorithm.Topper;
+import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
 import com.google.common.collect.*;
@@ -22,10 +23,10 @@ import com.google.common.collect.*;
  */
 public class Ruletta {
 	
+	public Dob homvar;
 	public Set<Rule> allRules;
 	public Set<Dob> posDobs, negDobs;
 	public Multimap<Dob, Rule> bodyToRule, headToRule;
-	public Fortre fortre;
 
 	/**
 	 * result holds the set of head dobs that may generate a body dob.
@@ -68,8 +69,6 @@ public class Ruletta {
 		ruleToGenRule = HashMultimap.create();
 		
 		ruleRoots = Sets.newHashSet();
-		
-		fortre = new Fortre(Lists.<Dob>newArrayList(), new Pool());
 	}
 	
 	public static Ruletta create(Iterable<Rule> rules, Pool pool) {
@@ -83,18 +82,14 @@ public class Ruletta {
 		
 		// Extract all variables
 		for (Rule rule : result.allRules) {  pool.allVars.addAll(rule.vars); }
-		
-		// Extract all terms
-		Set<Dob> allTerms = Sets.newHashSet();
-		for (Atom atom : Rule.asAtomIterator(result.allRules)) { allTerms.add(atom.dob); }
-		result.fortre = new Fortre(allTerms, pool);
 
 		// Prepare data structures to compute dependencies
+		result.homvar = Colut.any(pool.allVars);
 		for (Rule rule : result.allRules) { 
-			Dob headForm = result.fortre.getTrunkEnd(rule.head.dob);
+			Dob headForm = Unifier.homogenize(rule.head.dob, result.homvar, pool);
 			result.headToRule.put(headForm, rule);
 			for (Dob body : Atom.asDobIterable(rule.body)) {
-				Dob bodyForm = result.fortre.getTrunkEnd(body);
+				Dob bodyForm = Unifier.homogenize(body, result.homvar, pool);
 				result.bodyToRule.put(bodyForm, rule);	
 			}
 		}
@@ -117,49 +112,16 @@ public class Ruletta {
 		result.ruleOrder = Topper.generalTopSort(result.ruleToDescRule, result.ruleRoots);
 		return result;
 	}
-	
-	/**
-	 * This returns the list of rules mapped to by forms that unify
-	 * against the given query.
-	 * @param query a dob with variables that you want to unify against
-	 * forms in the form tree.
-	 * @param map the place where you want to look up rules after you 
-	 * have filtered the forms you are interested in.
-	 * @return
-	 */
-	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map) {
-		List<Dob> forms = Unifier.retainSuccesses(query, 
-			this.fortre.getCognateSpine(query), this.fortre.pool.allVars);
-		return OtmUtil.valueIterable(map, forms);
-	}
-	
-	/**
-	 * Returns the set of rules that are mapped to by the forms in the
-	 * spine of the given dob.
-	 * @param query
-	 * @param map
-	 * @return
-	 */
-	public Iterable<Rule> getSpineRules(Dob query, Multimap<Dob, Rule> map) {
-		return OtmUtil.valueIterable(map, this.fortre.getCognateSpine(query));
-	}
-	
-	/**
-	 * result method takes a dob and returns the rules where
-	 * it can be applied. result set must be a subset of the rules whose bodies are 
-	 * touched by the subtree of the fortre rooted at the end of the trunk.
-	 * @param dob
-	 * @return
-	 */
-	public Set<Rule> getAffectedRules(Dob dob) {
-		Set<Dob> subtree = Sets.newHashSet();
-		Iterables.addAll(subtree, fortre.getSpine(dob));
-		return Sets.newHashSet(OtmUtil.valueIterable(bodyToRule, subtree));
-	}
-
-	public Iterable<Dob> getAllTerms() {
-		return Iterables.concat(this.headToRule.keySet(), this.bodyToRule.keySet()); 
-	}
 
 	public static Ruletta createEmpty() { return new Ruletta(); }
+
+	public static List<Rule> filterNonConflictingBodies(Dob query, Iterable<Rule> targets, Pool pool) {
+		List<Rule> result = Lists.newArrayList();
+		for (Rule rule : targets) {
+			for (Atom term : rule.body) {
+				if (Unifier.nonConflicting(term.dob, query, pool)) result.add(rule);
+			}
+		}
+		return result;
+	}
 }

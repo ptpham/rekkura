@@ -287,8 +287,15 @@ public class Unifier {
 		return result;
 	}
 	
-	public static Dob homogenize(Dob dob, Dob var, Set<Dob> vars) {
-		return replace(dob, homogenizer(dob, var, vars));
+	public static Dob homogenize(Dob dob, Dob var, Pool pool) {
+		if (var == null) return pool.dobs.submerge(dob);
+		return pool.dobs.submerge(replace(dob, homogenizer(dob, var, pool.allVars)));
+	}
+	
+	public static List<Dob> homogenize(Iterable<Dob> dobs, Dob var, Pool pool) {
+		List<Dob> result = Lists.newArrayList();
+		for (Dob dob : dobs) result.add(Unifier.homogenize(dob, var, pool));
+		return result;
 	}
 	
 	private static boolean conflictCheck(Dob first, Dob second, Pool pool, boolean checkSecond) {
@@ -315,4 +322,5 @@ public class Unifier {
 	public static boolean nonConflicting(Dob first, Dob second, Pool pool) {
 		return conflictCheck(first, second, pool, true);
 	}
+	
 }

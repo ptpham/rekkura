@@ -11,6 +11,7 @@ import rekkura.logic.model.Rule;
 import rekkura.logic.structure.Pool;
 import rekkura.logic.structure.Ruletta;
 import rekkura.util.OtmUtil;
+import rekkura.util.Typoz;
 
 import com.google.common.collect.*;
 
@@ -115,8 +116,8 @@ public class GameLogicContext {
 		Multimaps.invertFrom(this.rta.ruleToGenRule, ruleToDepRule);
 
 		Set<Rule> roots = Sets.newHashSet();
-		roots.addAll(rta.getAffectedRules(DOES_QUERY));
-		roots.addAll(rta.getAffectedRules(TRUE_QUERY));
+		roots.addAll(Ruletta.filterNonConflictingBodies(DOES_QUERY, rta.allRules, pool));
+		roots.addAll(Ruletta.filterNonConflictingBodies(TRUE_QUERY, rta.allRules, pool));
 
 		mutableRules.addAll(OtmUtil.flood(ruleToDepRule, roots));
 		this.staticRules.addAll(this.rta.allRules);
@@ -143,9 +144,8 @@ public class GameLogicContext {
 			Dob value = unify.get(GENERIC_VAR);
 			if (value == null || role == null) continue;			
 
-			int goal = 0;
-			try { goal = Integer.parseInt(value.name); } 
-			catch (Exception e) { continue; }
+			Integer goal = Typoz.lightParseInt(value.name);
+			if (goal == null) continue;
 			result.put(role, goal);
 		}
 

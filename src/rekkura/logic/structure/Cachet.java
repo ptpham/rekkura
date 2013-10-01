@@ -12,11 +12,7 @@ import rekkura.util.Colut;
 import rekkura.util.OtmUtil;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
+import com.google.common.collect.*;
 
 /**
  * It's french. <br>
@@ -26,6 +22,7 @@ import com.google.common.collect.Multimap;
  *
  */
 public class Cachet {
+	public final Fortre fortre;
 
 	/**
 	 * This maps ground dobs to their canonical dobs (the dob at 
@@ -34,14 +31,14 @@ public class Cachet {
 	public Cache<Dob, Dob> canonicalForms = 
 		Cache.create(new Function<Dob, Dob>() {
 			@Override public Dob apply(Dob dob) { 
-				return Colut.end(rta.fortre.getTrunk(dob));
+				return Colut.end(fortre.getTrunk(dob));
 			}
 		});
 
 	public Cache<Dob, List<Dob>> canonicalSpines = 
 		Cache.create(new Function<Dob, List<Dob>>() {
 			@Override public List<Dob> apply(Dob dob) {
-				return Lists.newArrayList(rta.fortre.getSpine(dob));
+				return Lists.newArrayList(fortre.getSpine(dob));
 			}
 		});
 
@@ -60,7 +57,7 @@ public class Cachet {
 	public Cache<Dob, List<Rule>> canonicalRules = 
 		Cache.create(new Function<Dob, List<Rule>>() {
 			@Override public List<Rule> apply(Dob dob) { 
-				return Lists.newArrayList(rta.getAffectedRules(dob));
+				return Lists.newArrayList(getAffectedRules(dob));
 			}
 		});
 
@@ -80,11 +77,17 @@ public class Cachet {
 
 	public final Ruletta rta;
 
-	public Cachet(Ruletta rta) { this.rta = rta; }
+	public Cachet(Ruletta rta, Pool pool) {
+		this.rta = rta;
+		
+		Set<Dob> allTerms = Sets.newHashSet();
+		for (Atom atom : Rule.asAtomIterator(rta.allRules)) { allTerms.add(atom.dob); }
+		this.fortre = new Fortre(allTerms, rta.homvar, pool);
+	}
 
 	public List<Dob> getUnifiableForms(Dob dob) {
 		List<Dob> result = Lists.newArrayList();
-		Set<Dob> vars = rta.fortre.pool.allVars;
+		Set<Dob> vars = fortre.pool.allVars;
 		for (Dob node : spines.get(dob)) {
 			if (Unifier.unifyVars(node, dob, vars) != null) {
 				result.add(node);
@@ -134,6 +137,46 @@ public class Cachet {
 			candidates.putAll(atom, getGroundCandidates(atom.dob));
 		}
 		return candidates;
+	}
+	
+	
+	/**
+	 * This returns the list of rules mapped to by forms that unify
+	 * against the given query.
+	 * @param query a dob with variables that you want to unify against
+	 * forms in the form tree.
+	 * @param map the place where you want to look up rules after you 
+	 * have filtered the forms you are interested in.
+	 * @return
+	 */
+	public Iterable<Rule> getRulesWith(Dob query, Multimap<Dob, Rule> map) {
+		List<Dob> forms = Unifier.retainSuccesses(query, 
+			this.fortre.getCognateSpine(query), this.fortre.pool.allVars);
+		return OtmUtil.valueIterable(map, forms);
+	}
+	
+	/**
+	 * Returns the set of rules that are mapped to by the forms in the
+	 * spine of the given dob.
+	 * @param query
+	 * @param map
+	 * @return
+	 */
+	public Iterable<Rule> getSpineRules(Dob query, Multimap<Dob, Rule> map) {
+		return OtmUtil.valueIterable(map, this.fortre.getCognateSpine(query));
+	}
+
+	/**
+	 * result method takes a dob and returns the rules where
+	 * it can be applied. result set must be a subset of the rules whose bodies are 
+	 * touched by the subtree of the fortre rooted at the end of the trunk.
+	 * @param dob
+	 * @return
+	 */
+	public Set<Rule> getAffectedRules(Dob dob) {
+		Set<Dob> subtree = Sets.newHashSet();
+		Iterables.addAll(subtree, fortre.getSpine(dob));
+		return Sets.newHashSet(OtmUtil.valueIterable(rta.bodyToRule, subtree));
 	}
 
 }

@@ -43,7 +43,7 @@ public abstract class StratifiedProver {
 			Preconditions.checkArgument(rule.head.truth, "Rules must have positive heads!");
 		}
 		
-		this.cachet = new Cachet(rta);
+		this.cachet = new Cachet(rta, pool);
 	}
 
 	/**
