@@ -186,6 +186,6 @@ public class Pool {
 	}
 	
 	public Rule render(Rule rule, Map<Dob,Dob> unify) {
-		return rules.submerge(Unifier.replace(rule, unify, rule.vars));
+		return rules.submerge(Unifier.replace(rule, unify));
 	}
 }

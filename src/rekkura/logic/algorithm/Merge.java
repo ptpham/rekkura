@@ -115,12 +115,12 @@ public class Merge {
 		Rule dst = merge.request.dst;
 		
 		// Apply the unifications to their respective rules
-		Rule srcFixed = pool.rules.submerge(Unifier.replace(src, merge.srcUnify, merge.vars));
-		Rule dstRaw = pool.rules.submerge(Unifier.replace(dst, merge.dstUnify, merge.vars));
+		Rule srcFixed = pool.rules.submerge(Unifier.replaceWithVarFilter(src, merge.srcUnify, merge.vars));
+		Rule dstRaw = pool.rules.submerge(Unifier.replaceWithVarFilter(dst, merge.dstUnify, merge.vars));
 		
 		// Construct the body separately because the unification replace may have changed
 		// the canonical ordering of the terms in the destination body. This is not ideal.
-		List<Atom> fixedBody = Unifier.replace(dst, merge.dstUnify, merge.vars).body;
+		List<Atom> fixedBody = Unifier.replaceWithVarFilter(dst, merge.dstUnify, merge.vars).body;
 		Rule dstFixed = new Rule(dstRaw.head, fixedBody, dstRaw.vars, dstRaw.distinct);
 
 		return new Merge.Application(srcFixed, dstFixed, merge);

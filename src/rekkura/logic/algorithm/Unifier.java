@@ -69,11 +69,9 @@ public class Unifier {
 	 * @param dstVars the set of variables to keep after performing the substitution
 	 * @return
 	 */
-	public static Rule replace(Rule base, Map<Dob, Dob> substitution, Collection<Dob> dstVars) {
-		Atom head = replace(base.head, substitution);
-		List<Atom> body = replaceAtoms(base.body, substitution);
-		List<Rule.Distinct> distincts = replaceDistincts(base.distinct, substitution);
-
+	public static Rule replaceWithVarFilter(Rule base, Map<Dob, Dob> substitution, Collection<Dob> dstVars) {
+		Rule.Builder builder = replaceAsBuilder(base, substitution);
+		
 		List<Dob> vars = Lists.newArrayList();
 		for (Dob var : base.vars) {
 			Dob replacement = replace(var, substitution);
@@ -81,11 +79,25 @@ public class Unifier {
 			vars.add(replacement);
 		}
 		
-		Rule result = new Rule(head, body, vars, distincts);
+		Colut.set(builder.vars, vars);
+		Rule result = builder.build();
 		if (Rule.orderedRefeq(base, result)) return base;
 		return result;
 	}
 	
+	protected static Rule.Builder replaceAsBuilder(Rule base, Map<Dob, Dob> substitution) {
+		Rule.Builder result = new Rule.Builder();
+		result.head = replace(base.head, substitution);
+		result.body.addAll(replaceAtoms(base.body, substitution));
+		result.distinct.addAll(replaceDistincts(base.distinct, substitution));
+		result.vars.addAll(replaceDobs(base.vars, substitution));
+		return result;
+	}
+	
+	public static Rule replace(Rule base, Map<Dob, Dob> substitution) {
+		return replaceAsBuilder(base, substitution).build();
+	}
+
 	public static Rule.Distinct replace(Rule.Distinct base, Map<Dob, Dob> substitution) {
 		Dob first = replace(base.first, substitution);
 		Dob second = replace(base.second, substitution);
@@ -323,4 +335,11 @@ public class Unifier {
 		return conflictCheck(first, second, pool, true);
 	}
 	
+	public static Map<Dob,Dob> erasure(Dob dob, Dob target) {
+		Map<Dob,Dob> result = Maps.newHashMap();
+		for (Dob child : dob.fullIterable()) {
+			if (child.isTerminal()) result.put(child, target);
+		}
+		return result;
+	}
 }

@@ -30,6 +30,7 @@ public class Rule {
 		public final List<Atom> body = Lists.newArrayList();
 		public final List<Distinct> distinct = Lists.newArrayList();
 		public final List<Dob> vars = Lists.newArrayList();
+		public Rule build() { return new Rule(this); }
 	}
 	
 	public Rule(Atom head, Iterable<Atom> body, Iterable<Dob> variables) {
@@ -44,7 +45,7 @@ public class Rule {
 		this.distinct = ImmutableList.copyOf(distinct);
 	}
 	
-	public Rule(Rule.Builder builder) {
+	private Rule(Rule.Builder builder) {
 		this(builder.head, builder.body, builder.vars, builder.distinct);
 	}
 	

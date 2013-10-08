@@ -115,7 +115,7 @@ public class Comprender {
 			if (!pool.allVars.contains(merge.srcUnify.get(var))) groundings++;
 		} if (groundings == 0) return null;
 				 
-		return Unifier.replace(src, merge.srcUnify, merge.vars);
+		return Unifier.replaceWithVarFilter(src, merge.srcUnify, merge.vars);
 	}
 	
 	public static List<Rule> lift(Rule src, Rule dst, Pool pool) {
