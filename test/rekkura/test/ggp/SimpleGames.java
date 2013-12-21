@@ -236,7 +236,7 @@ public class SimpleGames {
 			"(<= (base (phase ?p ?e)) (role ?p) (phase_list ?e))",
 			"(<= (base (moves ?p ?s)) (role ?p) (succ ?s ?o))",
 			"(<= (input ?p noop) (role ?p))",
-			"(<= (input ?p (move ?i ?j ?m ?n)) (role ?p) (index ?i) (index ?j) (index ?m) (index ?n))",
+			"(<= (input ?p (move ?i ?j ?m ?n)) (role ?p) (index ?i) (index ?j) (index ?m) (index ?n) (adjacent ?i ?j ?m ?n))",
 			"(<= (input ?p (raise ?i ?j)) (role ?p) (index ?i) (index ?j))",
 			"(<= (input ?p (place_pilgrim ?i ?j)) (role ?p) (index ?i) (index ?j))",
 

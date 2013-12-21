@@ -1,4 +1,4 @@
-Rekkura 0.0.0: A General Game Playing Framework
+Rekkura 1.0.0: A General Game Playing Framework
 ===============================================
 
 # Introduction

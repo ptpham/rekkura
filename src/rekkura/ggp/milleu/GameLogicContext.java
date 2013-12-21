@@ -152,7 +152,7 @@ public class GameLogicContext {
 		return result;
 	}
 
-	public Set<Dob> extract(Dob query, Set<Dob> dobs) {
+	public Set<Dob> extract(Dob query, Collection<Dob> dobs) {
 		Set<Dob> result = Sets.newHashSetWithExpectedSize(dobs.size());
 		for (Dob dob : dobs) {
 			if (Unifier.unifyVars(query, dob, GENERIC_VAR_LIST) != null) {
